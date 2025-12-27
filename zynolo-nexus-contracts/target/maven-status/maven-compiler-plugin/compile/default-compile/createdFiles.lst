@@ -1,0 +1,9 @@
+com\zynolo_nexus\contracts\modules\ModuleDto$ModuleDtoBuilder.class
+com\zynolo_nexus\contracts\modules\RoleModuleAccessDto$RoleModuleAccessDtoBuilder.class
+com\zynolo_nexus\contracts\modules\ModuleDto.class
+com\zynolo_nexus\contracts\modules\RoleModuleAccessDto.class
+com\zynolo_nexus\contracts\modules\ModuleRequest.class
+com\zynolo_nexus\contracts\modules\RoleModuleAccessDto$RoleModulePermissionItem$RoleModulePermissionItemBuilder.class
+com\zynolo_nexus\contracts\modules\RoleModuleAccessUpdateRequest$ModulePermission.class
+com\zynolo_nexus\contracts\modules\RoleModuleAccessDto$RoleModulePermissionItem.class
+com\zynolo_nexus\contracts\modules\RoleModuleAccessUpdateRequest.class
