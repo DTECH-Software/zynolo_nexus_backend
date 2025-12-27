@@ -11,12 +11,14 @@ import com.zynolo_nexus.contracts.pages.PageTaskDto;
 import com.zynolo_nexus.contracts.pages.PageTaskRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class PageTaskManagementServiceImpl implements PageTaskManagementService {
 
