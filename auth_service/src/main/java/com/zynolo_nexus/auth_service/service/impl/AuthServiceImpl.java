@@ -162,17 +162,16 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public MessageResponseDTO<String> forgotPassword(ForgotPasswordRequest request) {
-        if (request == null || !StringUtils.hasText(request.getUsername())
-                || !StringUtils.hasText(request.getEmail())) {
+        if (request == null || !StringUtils.hasText(request.getUsername())) {
             throw new BadRequestException("auth.password.reset.invalid");
         }
 
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new BadRequestException("auth.password.reset.user.notfound"));
-
-        if (!request.getEmail().equalsIgnoreCase(user.getEmail())) {
-            throw new BadRequestException("auth.password.reset.email.mismatch");
+        Optional<User> userOpt = userRepository.findByUsername(request.getUsername());
+        if (userOpt.isEmpty() || !StringUtils.hasText(userOpt.get().getEmail())) {
+            // Avoid user enumeration and skip if email is missing.
+            return buildMessageResponse("auth.password.reset.code.sent", true);
         }
+        User user = userOpt.get();
 
         String otp = generateOtp();
         PasswordResetToken resetToken = new PasswordResetToken();
