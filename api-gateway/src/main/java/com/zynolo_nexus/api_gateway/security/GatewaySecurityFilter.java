@@ -19,7 +19,22 @@ import java.util.Set;
 public class GatewaySecurityFilter extends OncePerRequestFilter {
 
     private static final List<String> BLOCKED_PREFIXES = List.of("/internal/", "/actuator/");
+    private static final List<String> PUBLIC_PATHS = List.of(
+            "/api/v1/auth/login",
+            "/api/v1/auth/logout",
+            "/api/v1/auth/forgot-password",
+            "/api/v1/auth/reset-password",
+            "/api/auth/sso/google"
+    );
     private static final String INTERNAL_HEADER = "x-internal-token";
+    private static final String AUTH_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+
+    private final JwtValidator jwtValidator;
+
+    public GatewaySecurityFilter(JwtValidator jwtValidator) {
+        this.jwtValidator = jwtValidator;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -34,6 +49,19 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
             return;
         }
 
+        if (!isPublic(path)) {
+            String authHeader = request.getHeader(AUTH_HEADER);
+            if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+            String token = authHeader.substring(BEARER_PREFIX.length());
+            if (jwtValidator.validateAndGetClaims(token) == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+        }
+
         HttpServletRequest sanitized = new HeaderStripRequestWrapper(request, INTERNAL_HEADER);
         filterChain.doFilter(sanitized, response);
     }
@@ -44,6 +72,18 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
         }
         for (String prefix : BLOCKED_PREFIXES) {
             if (path.startsWith(prefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isPublic(String path) {
+        if (path == null) {
+            return false;
+        }
+        for (String p : PUBLIC_PATHS) {
+            if (path.startsWith(p)) {
                 return true;
             }
         }
