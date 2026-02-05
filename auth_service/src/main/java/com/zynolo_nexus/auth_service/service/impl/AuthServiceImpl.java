@@ -443,4 +443,5 @@ public class AuthServiceImpl implements AuthService {
     private String generateOtp() {
         return String.format("%06d", ThreadLocalRandom.current().nextInt(0, 1_000_000));
     }
+
 }
