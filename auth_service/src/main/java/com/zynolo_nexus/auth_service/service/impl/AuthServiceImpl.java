@@ -27,6 +27,7 @@ import com.zynolo_nexus.auth_service.dto.response.CurrentUserDto;
 import com.zynolo_nexus.auth_service.dto.response.ReferenceDataDto;
 import com.zynolo_nexus.auth_service.dto.response.SectionPermissionDto;
 import com.zynolo_nexus.auth_service.dto.response.TokenDetails;
+import com.zynolo_nexus.auth_service.enums.ModuleStatus;
 import com.zynolo_nexus.auth_service.enums.UserStatus;
 import com.zynolo_nexus.auth_service.exception.BadRequestException;
 import com.zynolo_nexus.auth_service.exception.NotFoundException;
@@ -51,6 +52,7 @@ import com.zynolo_nexus.auth_service.repository.SectionRepository;
 import com.zynolo_nexus.auth_service.repository.UserRepository;
 import com.zynolo_nexus.auth_service.service.AuthService;
 import com.zynolo_nexus.auth_service.service.EmailService;
+import com.zynolo_nexus.auth_service.service.ReferenceDataCache;
 import com.zynolo_nexus.auth_service.util.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -78,6 +80,7 @@ public class AuthServiceImpl implements AuthService {
     private final PageRepository pageRepository;
     private final PageTaskRepository pageTaskRepository;
     private final RolePageTaskAccessRepository rolePageTaskAccessRepository;
+    private final ReferenceDataCache referenceDataCache;
 
     @Override
     public MessageResponseDTO<LoginData> login(LoginRequest request) {
@@ -224,13 +227,32 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("auth.user.notfound"));
 
+        String roleCode = user.getRole() != null ? user.getRole().getCode().name() : "UNKNOWN";
+        String cacheKey = roleCode + ":" + user.getUsername();
+        var cached = referenceDataCache.get(cacheKey);
+        if (cached.isPresent()) {
+            return MessageResponseDTO.<ReferenceDataDto>builder()
+                    .success(true)
+                    .message(messageSource.getMessage(
+                            "auth.reference.success",
+                            null,
+                            "Success",
+                            LocaleContextHolder.getLocale()
+                    ))
+                    .data(cached.get())
+                    .errors(null)
+                    .errorCode(0)
+                    .responseTime(LocalDateTime.now())
+                    .build();
+        }
+
         var accesses = roleModuleAccessRepository.findByRole(user.getRole());
         var viewableIds = accesses.stream()
                 .filter(RoleModuleAccess::getCanView)
                 .map(a -> a.getModule().getId())
                 .collect(java.util.stream.Collectors.toSet());
 
-        var modules = moduleRepository.findAllByActiveTrueOrderBySortOrderAsc();
+        var modules = moduleRepository.findAllActiveOrderBySortOrderAsc(ModuleStatus.ACTIVE);
 
         var sections = sectionRepository.findAllByActiveTrueOrderBySortOrderAsc();
         var pages = pageRepository.findAllByActiveTrueOrderBySortOrderAsc();
@@ -279,6 +301,8 @@ public class AuthServiceImpl implements AuthService {
                         .build())
                 .modules(moduleDtos)
                 .build();
+
+        referenceDataCache.put(cacheKey, data);
 
         String message = messageSource.getMessage(
                 "auth.reference.success",

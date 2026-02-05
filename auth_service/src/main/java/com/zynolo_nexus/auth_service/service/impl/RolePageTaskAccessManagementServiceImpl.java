@@ -3,6 +3,7 @@ package com.zynolo_nexus.auth_service.service.impl;
 import com.zynolo_nexus.auth_service.enums.RoleCode;
 import com.zynolo_nexus.auth_service.exception.BadRequestException;
 import com.zynolo_nexus.auth_service.exception.NotFoundException;
+import com.zynolo_nexus.auth_service.enums.ModuleStatus;
 import com.zynolo_nexus.auth_service.model.Module;
 import com.zynolo_nexus.auth_service.model.Page;
 import com.zynolo_nexus.auth_service.model.PageTask;
@@ -44,7 +45,7 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
     public RolePageTaskAccessDto getRolePageTaskAccess(String roleCode) {
         Role role = resolveRole(roleCode);
 
-        List<Module> modules = moduleRepository.findAllByActiveTrueOrderBySortOrderAsc();
+        List<Module> modules = moduleRepository.findAllActiveOrderBySortOrderAsc(ModuleStatus.ACTIVE);
         List<Section> sections = sectionRepository.findAllByActiveTrueOrderBySortOrderAsc();
         List<Page> pages = pageRepository.findAllByActiveTrueOrderBySortOrderAsc();
         List<PageTask> tasks = pageTaskRepository.findAllByActiveTrueOrderBySortOrderAsc();

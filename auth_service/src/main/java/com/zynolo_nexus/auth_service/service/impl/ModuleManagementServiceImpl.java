@@ -2,6 +2,7 @@ package com.zynolo_nexus.auth_service.service.impl;
 
 import com.zynolo_nexus.auth_service.exception.BadRequestException;
 import com.zynolo_nexus.auth_service.exception.NotFoundException;
+import com.zynolo_nexus.auth_service.enums.ModuleStatus;
 import com.zynolo_nexus.auth_service.model.Module;
 import com.zynolo_nexus.auth_service.repository.ModuleRepository;
 import com.zynolo_nexus.auth_service.service.ModuleManagementService;
@@ -31,8 +32,9 @@ public class ModuleManagementServiceImpl implements ModuleManagementService {
                 .code(request.getCode())
                 .name(request.getName())
                 .description(request.getDescription())
+                .url(request.getUrl())
+                .status(resolveStatus(request.getStatus()))
                 .sortOrder(request.getSortOrder())
-                .active(true)
                 .build();
 
         Module saved = moduleRepository.save(module);
@@ -48,6 +50,8 @@ public class ModuleManagementServiceImpl implements ModuleManagementService {
 
         module.setName(request.getName());
         module.setDescription(request.getDescription());
+        module.setUrl(request.getUrl());
+        module.setStatus(resolveStatus(request.getStatus()));
         module.setSortOrder(request.getSortOrder());
 
         Module saved = moduleRepository.save(module);
@@ -56,7 +60,7 @@ public class ModuleManagementServiceImpl implements ModuleManagementService {
 
     @Override
     public List<ModuleDto> getAllModules() {
-        return moduleRepository.findAllByActiveTrueOrderBySortOrderAsc()
+        return moduleRepository.findAllActiveOrderBySortOrderAsc(ModuleStatus.ACTIVE)
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
@@ -67,7 +71,7 @@ public class ModuleManagementServiceImpl implements ModuleManagementService {
         Module module = moduleRepository.findByCode(code)
                 .orElseThrow(() -> new NotFoundException("module.notfound"));
 
-        module.setActive(false);
+        module.setStatus(ModuleStatus.DEACTIVE);
         moduleRepository.save(module);
     }
 
@@ -83,8 +87,23 @@ public class ModuleManagementServiceImpl implements ModuleManagementService {
                 .code(module.getCode())
                 .name(module.getName())
                 .description(module.getDescription())
-                .active(Boolean.TRUE.equals(module.getActive()))
+                .url(module.getUrl())
+                .status(toContractStatus(module.getStatus()))
                 .sortOrder(module.getSortOrder())
                 .build();
+    }
+
+    private ModuleStatus resolveStatus(com.zynolo_nexus.contracts.modules.ModuleStatus status) {
+        if (status == null) {
+            return ModuleStatus.ACTIVE;
+        }
+        return ModuleStatus.valueOf(status.name());
+    }
+
+    private com.zynolo_nexus.contracts.modules.ModuleStatus toContractStatus(ModuleStatus status) {
+        if (status == null) {
+            return com.zynolo_nexus.contracts.modules.ModuleStatus.ACTIVE;
+        }
+        return com.zynolo_nexus.contracts.modules.ModuleStatus.valueOf(status.name());
     }
 }

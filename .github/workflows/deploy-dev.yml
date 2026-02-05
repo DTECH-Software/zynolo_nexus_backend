@@ -1,0 +1,64 @@
+name: Deploy Dev
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+      SSH_PORT: ${{ secrets.DEPLOY_PORT }}
+      SSH_USER: ${{ secrets.DEPLOY_USER }}
+      SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      APP_DIR: ${{ secrets.DEPLOY_APP_DIR }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Build contracts
+        run: mvn -DskipTests -f zynolo-nexus-contracts/pom.xml clean install
+
+      - name: Build auth_service
+        run: mvn -DskipTests -f auth_service/pom.xml clean package
+
+      - name: Build setting_service
+        run: mvn -DskipTests -f setting_service/pom.xml clean package
+
+      - name: Build api-gateway
+        run: mvn -DskipTests -f api-gateway/pom.xml clean package
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${SSH_KEY}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p "${SSH_PORT}" "${SSH_HOST}" >> ~/.ssh/known_hosts
+
+      - name: Upload JARs
+        run: |
+          rsync -avz -e "ssh -p ${SSH_PORT}" \
+            auth_service/target/auth_service-0.0.1-SNAPSHOT.jar \
+            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/auth_service/auth_service.jar
+          rsync -avz -e "ssh -p ${SSH_PORT}" \
+            setting_service/target/setting_service-0.0.1-SNAPSHOT.jar \
+            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/setting_service/setting_service.jar
+          rsync -avz -e "ssh -p ${SSH_PORT}" \
+            api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar \
+            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/api-gateway/api-gateway.jar
+
+      - name: Restart services
+        run: |
+          ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} "
+            sudo systemctl daemon-reload &&
+            sudo systemctl restart auth_service &&
+            sudo systemctl restart setting_service &&
+            sudo systemctl restart api-gateway
+          "

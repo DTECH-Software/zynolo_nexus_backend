@@ -3,6 +3,7 @@ package com.zynolo_nexus.auth_service.service.impl;
 import com.zynolo_nexus.auth_service.enums.RoleCode;
 import com.zynolo_nexus.auth_service.exception.BadRequestException;
 import com.zynolo_nexus.auth_service.exception.NotFoundException;
+import com.zynolo_nexus.auth_service.enums.ModuleStatus;
 import com.zynolo_nexus.auth_service.model.Module;
 import com.zynolo_nexus.auth_service.model.Role;
 import com.zynolo_nexus.auth_service.model.RoleModuleAccess;
@@ -31,7 +32,7 @@ public class RoleModuleAccessManagementServiceImpl implements RoleModuleAccessMa
     public RoleModuleAccessDto getRoleModuleAccess(String roleCode) {
         Role role = resolveRole(roleCode);
 
-        List<Module> modules = moduleRepository.findAllByActiveTrueOrderBySortOrderAsc();
+        List<Module> modules = moduleRepository.findAllActiveOrderBySortOrderAsc(ModuleStatus.ACTIVE);
         List<RoleModuleAccess> existing = roleModuleAccessRepository.findByRole(role);
 
         Map<Long, RoleModuleAccess> accessMap = existing.stream()

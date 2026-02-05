@@ -1,0 +1,15 @@
+[Unit]
+Description=Zynolo Nexus API Gateway
+After=network.target
+
+[Service]
+User=dtech
+WorkingDirectory=/opt/zynolo-nexus/api-gateway
+ExecStart=/usr/bin/java -jar /opt/zynolo-nexus/api-gateway/api-gateway.jar
+SuccessExitStatus=143
+Restart=always
+RestartSec=5
+Environment=SPRING_PROFILES_ACTIVE=dev
+
+[Install]
+WantedBy=multi-user.target

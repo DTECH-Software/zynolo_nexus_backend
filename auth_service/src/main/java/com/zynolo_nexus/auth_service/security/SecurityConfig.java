@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/internal/**").hasRole("SPADMIN")
                         .requestMatchers(
+                                "/api/auth/sso/google",
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/logout",
                                 "/api/v1/auth/forgot-password",

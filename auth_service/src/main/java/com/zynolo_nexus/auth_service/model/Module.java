@@ -2,6 +2,8 @@ package com.zynolo_nexus.auth_service.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -11,6 +13,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import com.zynolo_nexus.auth_service.enums.ModuleStatus;
 
 @Entity
 @Table(name = "modules")
@@ -36,9 +40,13 @@ public class Module {
     @Column(length = 255)
     private String description;
 
+    @Column(length = 255)
+    private String url;
+
     @Builder.Default
-    @Column(nullable = false)
-    private Boolean active = true;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private ModuleStatus status = ModuleStatus.ACTIVE;
 
     @Column(name = "sort_order")
     private Integer sortOrder;
