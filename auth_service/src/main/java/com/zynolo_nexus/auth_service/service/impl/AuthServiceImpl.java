@@ -18,6 +18,7 @@ import com.zynolo_nexus.auth_service.dto.request.ForgotPasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.LoginRequest;
 import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
+import com.zynolo_nexus.auth_service.dto.request.VerifyResetOtpRequest;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
 import com.zynolo_nexus.auth_service.dto.response.ModulePermissionDto;
 import com.zynolo_nexus.auth_service.dto.response.PagePermissionDto;
@@ -25,6 +26,7 @@ import com.zynolo_nexus.auth_service.dto.response.PageTaskPermissionDto;
 import com.zynolo_nexus.auth_service.dto.response.ProfileDetails;
 import com.zynolo_nexus.auth_service.dto.response.CurrentUserDto;
 import com.zynolo_nexus.auth_service.dto.response.ReferenceDataDto;
+import com.zynolo_nexus.auth_service.dto.response.ResetTokenResponse;
 import com.zynolo_nexus.auth_service.dto.response.SectionPermissionDto;
 import com.zynolo_nexus.auth_service.dto.response.TokenDetails;
 import com.zynolo_nexus.auth_service.enums.ModuleStatus;
@@ -188,10 +190,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public MessageResponseDTO<String> resetPassword(ResetPasswordRequest request) {
+    public MessageResponseDTO<ResetTokenResponse> verifyResetOtp(VerifyResetOtpRequest request) {
         if (request == null || !StringUtils.hasText(request.getUsername())
-                || !StringUtils.hasText(request.getOtp())
-                || !StringUtils.hasText(request.getNewPassword())) {
+                || !StringUtils.hasText(request.getOtp())) {
             throw new BadRequestException("auth.password.reset.invalid");
         }
 
@@ -201,6 +202,57 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new BadRequestException("auth.password.reset.invalid"));
 
         if (resetToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("auth.password.reset.invalid");
+        }
+
+        String resetTokenValue = java.util.UUID.randomUUID().toString();
+        resetToken.setResetToken(resetTokenValue);
+        resetToken.setOtpVerified(true);
+        resetToken.setVerifiedAt(LocalDateTime.now());
+        passwordResetTokenRepository.save(resetToken);
+
+        ResetTokenResponse response = ResetTokenResponse.builder()
+                .resetToken(resetTokenValue)
+                .build();
+
+        String message = messageSource.getMessage(
+                "auth.password.reset.otp.verified",
+                null,
+                LocaleContextHolder.getLocale()
+        );
+        return MessageResponseDTO.<ResetTokenResponse>builder()
+                .success(true)
+                .message(message)
+                .data(response)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
+    @Override
+    public MessageResponseDTO<String> resetPassword(ResetPasswordRequest request) {
+        if (request == null || !StringUtils.hasText(request.getUsername())
+                || !StringUtils.hasText(request.getResetToken())
+                || !StringUtils.hasText(request.getNewPassword())
+                || !StringUtils.hasText(request.getConfirmPassword())) {
+            throw new BadRequestException("auth.password.reset.invalid");
+        }
+
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new BadRequestException("auth.password.reset.invalid");
+        }
+
+        PasswordResetToken resetToken = passwordResetTokenRepository
+                .findTopByUsernameAndResetTokenAndUsedFalseOrderByCreatedAtDesc(
+                        request.getUsername(), request.getResetToken())
+                .orElseThrow(() -> new BadRequestException("auth.password.reset.invalid"));
+
+        if (resetToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("auth.password.reset.invalid");
+        }
+
+        if (!resetToken.isOtpVerified()) {
             throw new BadRequestException("auth.password.reset.invalid");
         }
 

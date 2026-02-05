@@ -11,4 +11,9 @@ import com.zynolo_nexus.auth_service.model.PasswordResetToken;
 public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
 
     Optional<PasswordResetToken> findTopByUsernameAndOtpAndUsedFalseOrderByCreatedAtDesc(String username, String otp);
+
+    Optional<PasswordResetToken> findTopByUsernameAndResetTokenAndUsedFalseOrderByCreatedAtDesc(
+            String username,
+            String resetToken
+    );
 }

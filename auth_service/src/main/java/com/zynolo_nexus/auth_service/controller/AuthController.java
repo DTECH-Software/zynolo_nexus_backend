@@ -12,7 +12,9 @@ import com.zynolo_nexus.auth_service.dto.request.ForgotPasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.LoginRequest;
 import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
+import com.zynolo_nexus.auth_service.dto.request.VerifyResetOtpRequest;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
+import com.zynolo_nexus.auth_service.dto.response.ResetTokenResponse;
 import com.zynolo_nexus.auth_service.dto.response.ReferenceDataDto;
 import com.zynolo_nexus.auth_service.service.AuthService;
 
@@ -38,6 +40,11 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public MessageResponseDTO<String> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         return authService.forgotPassword(request);
+    }
+
+    @PostMapping("/verify-reset-otp")
+    public MessageResponseDTO<ResetTokenResponse> verifyResetOtp(@RequestBody VerifyResetOtpRequest request) {
+        return authService.verifyResetOtp(request);
     }
 
     @PostMapping("/reset-password")
