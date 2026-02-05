@@ -40,6 +40,7 @@ public class PageManagementServiceImpl implements PageManagementService {
                 .code(request.getCode())
                 .name(request.getName())
                 .description(request.getDescription())
+                .url(request.getUrl())
                 .sortOrder(request.getSortOrder())
                 .active(true)
                 .build();
@@ -61,6 +62,7 @@ public class PageManagementServiceImpl implements PageManagementService {
         page.setSection(section);
         page.setName(request.getName());
         page.setDescription(request.getDescription());
+        page.setUrl(request.getUrl());
         page.setSortOrder(request.getSortOrder());
 
         Page saved = pageRepository.save(page);
@@ -108,6 +110,7 @@ public class PageManagementServiceImpl implements PageManagementService {
                 .code(page.getCode())
                 .name(page.getName())
                 .description(page.getDescription())
+                .url(page.getUrl())
                 .active(Boolean.TRUE.equals(page.getActive()))
                 .sortOrder(page.getSortOrder())
                 .build();

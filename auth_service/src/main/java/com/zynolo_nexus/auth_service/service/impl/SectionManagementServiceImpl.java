@@ -40,6 +40,7 @@ public class SectionManagementServiceImpl implements SectionManagementService {
                 .code(request.getCode())
                 .name(request.getName())
                 .description(request.getDescription())
+                .url(request.getUrl())
                 .sortOrder(request.getSortOrder())
                 .active(true)
                 .build();
@@ -61,6 +62,7 @@ public class SectionManagementServiceImpl implements SectionManagementService {
         section.setModule(module);
         section.setName(request.getName());
         section.setDescription(request.getDescription());
+        section.setUrl(request.getUrl());
         section.setSortOrder(request.getSortOrder());
 
         Section saved = sectionRepository.save(section);
@@ -108,6 +110,7 @@ public class SectionManagementServiceImpl implements SectionManagementService {
                 .code(section.getCode())
                 .name(section.getName())
                 .description(section.getDescription())
+                .url(section.getUrl())
                 .active(Boolean.TRUE.equals(section.getActive()))
                 .sortOrder(section.getSortOrder())
                 .build();

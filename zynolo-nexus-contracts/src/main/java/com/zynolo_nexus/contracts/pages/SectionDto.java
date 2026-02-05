@@ -16,6 +16,7 @@ public class SectionDto {
     private String code;
     private String name;
     private String description;
+    private String url;
     private boolean active;
     private Integer sortOrder;
 }

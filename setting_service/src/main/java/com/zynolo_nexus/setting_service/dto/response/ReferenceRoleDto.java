@@ -1,4 +1,4 @@
-package com.zynolo_nexus.contracts.pages;
+package com.zynolo_nexus.setting_service.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,14 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PageDto {
+public class ReferenceRoleDto {
 
-    private Long id;
-    private String sectionCode;
     private String code;
-    private String name;
     private String description;
-    private String url;
-    private boolean active;
-    private Integer sortOrder;
 }

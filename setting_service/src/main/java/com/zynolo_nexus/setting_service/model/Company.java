@@ -1,13 +1,13 @@
-package com.zynolo_nexus.auth_service.model;
+package com.zynolo_nexus.setting_service.model;
 
+import com.zynolo_nexus.setting_service.enums.CompanyStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -18,9 +18,9 @@ import lombok.Setter;
 
 @Entity
 @Table(
-        name = "sections",
+        name = "companies",
         uniqueConstraints = {
-                @UniqueConstraint(name = "UK_section_code", columnNames = {"code"})
+                @UniqueConstraint(name = "UK_company_code", columnNames = {"code"})
         }
 )
 @Getter
@@ -28,32 +28,20 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Section {
+public class Company extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "module_id", nullable = false)
-    private Module module;
-
     @Column(nullable = false, unique = true, length = 50)
     private String code;
 
-    @Column(nullable = false, length = 100)
-    private String name;
-
-    @Column(length = 255)
+    @Column(nullable = false, length = 255)
     private String description;
 
-    @Column(length = 255)
-    private String url;
-
     @Builder.Default
-    @Column(nullable = false)
-    private Boolean active = true;
-
-    @Column(name = "sort_order")
-    private Integer sortOrder;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private CompanyStatus status = CompanyStatus.ACTIVE;
 }

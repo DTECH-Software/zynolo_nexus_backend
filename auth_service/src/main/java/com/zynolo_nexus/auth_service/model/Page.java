@@ -47,6 +47,9 @@ public class Page {
     @Column(length = 255)
     private String description;
 
+    @Column(length = 255)
+    private String url;
+
     @Builder.Default
     @Column(nullable = false)
     private Boolean active = true;

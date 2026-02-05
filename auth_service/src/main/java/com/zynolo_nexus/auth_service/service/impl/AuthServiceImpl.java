@@ -345,6 +345,7 @@ public class AuthServiceImpl implements AuthService {
                                     return PagePermissionDto.builder()
                                             .code(page.getCode())
                                             .name(page.getName())
+                                            .url(page.getUrl())
                                             .tasks(taskDtos)
                                             .build();
                                 })
@@ -352,6 +353,7 @@ public class AuthServiceImpl implements AuthService {
                         return SectionPermissionDto.builder()
                                 .code(section.getCode())
                                 .name(section.getName())
+                                .url(section.getUrl())
                                 .pages(pageDtos)
                                 .build();
                     })

@@ -16,14 +16,20 @@ import com.zynolo_nexus.setting_service.dto.request.UpdateUserRequest;
 import com.zynolo_nexus.setting_service.dto.request.validator.CreateUserRequestValidator;
 import com.zynolo_nexus.setting_service.dto.request.validator.UpdateUserRequestValidator;
 import com.zynolo_nexus.setting_service.dto.response.ProfileDetails;
+import com.zynolo_nexus.setting_service.dto.response.ReferenceCompanyDto;
+import com.zynolo_nexus.setting_service.dto.response.ReferenceRoleDto;
+import com.zynolo_nexus.setting_service.dto.response.UserReferenceDataDto;
+import com.zynolo_nexus.setting_service.enums.CompanyStatus;
 import com.zynolo_nexus.setting_service.enums.LoginStatus;
 import com.zynolo_nexus.setting_service.enums.RoleCode;
 import com.zynolo_nexus.setting_service.enums.UserStatus;
 import com.zynolo_nexus.setting_service.exception.BadRequestException;
 import com.zynolo_nexus.setting_service.exception.NotFoundException;
 import com.zynolo_nexus.setting_service.mapper.entityToDto.UserEntityToDtoMapper;
+import com.zynolo_nexus.setting_service.model.Company;
 import com.zynolo_nexus.setting_service.model.Role;
 import com.zynolo_nexus.setting_service.model.User;
+import com.zynolo_nexus.setting_service.repository.CompanyRepository;
 import com.zynolo_nexus.setting_service.repository.RoleRepository;
 import com.zynolo_nexus.setting_service.repository.UserRepository;
 import com.zynolo_nexus.setting_service.service.UserService;
@@ -36,6 +42,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final CompanyRepository companyRepository;
     private final PasswordEncoder passwordEncoder;
     private final MessageSource messageSource;
     private final UserEntityToDtoMapper userMapper;
@@ -44,6 +51,7 @@ public class UserServiceImpl implements UserService {
 
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
+                           CompanyRepository companyRepository,
                            PasswordEncoder passwordEncoder,
                            MessageSource messageSource,
                            UserEntityToDtoMapper userMapper,
@@ -51,6 +59,7 @@ public class UserServiceImpl implements UserService {
                            UpdateUserRequestValidator updateValidator) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.companyRepository = companyRepository;
         this.passwordEncoder = passwordEncoder;
         this.messageSource = messageSource;
         this.userMapper = userMapper;
@@ -160,6 +169,39 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         return buildSimpleResponse("user.deactivate.success");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MessageResponseDTO<UserReferenceDataDto> getReferenceData() {
+        var companies = companyRepository.findAllByStatusOrderByCodeAsc(CompanyStatus.ACTIVE).stream()
+                .map(c -> ReferenceCompanyDto.builder()
+                        .code(c.getCode())
+                        .description(c.getDescription())
+                        .build())
+                .toList();
+
+        var roles = roleRepository.findAll().stream()
+                .map(r -> ReferenceRoleDto.builder()
+                        .code(r.getCode().name())
+                        .description(r.getDescription())
+                        .build())
+                .toList();
+
+        UserReferenceDataDto data = UserReferenceDataDto.builder()
+                .companies(companies)
+                .roles(roles)
+                .build();
+
+        String message = messageSource.getMessage("user.reference.success", null, LocaleContextHolder.getLocale());
+        return MessageResponseDTO.<UserReferenceDataDto>builder()
+                .success(true)
+                .message(message)
+                .data(data)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
     }
 
     private Role resolveRole(String roleCodeText) {

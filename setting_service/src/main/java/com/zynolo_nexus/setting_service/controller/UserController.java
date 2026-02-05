@@ -13,6 +13,7 @@ import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.setting_service.dto.request.CreateUserRequest;
 import com.zynolo_nexus.setting_service.dto.request.UpdateUserRequest;
 import com.zynolo_nexus.setting_service.dto.response.ProfileDetails;
+import com.zynolo_nexus.setting_service.dto.response.UserReferenceDataDto;
 import com.zynolo_nexus.setting_service.service.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -43,5 +44,10 @@ public class UserController {
     @DeleteMapping("/{username}")
     public MessageResponseDTO<String> deactivateUser(@PathVariable String username) {
         return userService.deactivateUser(username);
+    }
+
+    @GetMapping("/reference-data")
+    public MessageResponseDTO<UserReferenceDataDto> referenceData() {
+        return userService.getReferenceData();
     }
 }

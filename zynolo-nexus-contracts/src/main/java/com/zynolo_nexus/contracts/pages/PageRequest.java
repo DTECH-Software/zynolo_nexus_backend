@@ -9,5 +9,6 @@ public class PageRequest {
     private String code;
     private String name;
     private String description;
+    private String url;
     private Integer sortOrder;
 }
