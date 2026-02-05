@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 
 import com.zynolo_nexus.auth_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.auth_service.dto.request.ForgotPasswordRequest;
+import com.zynolo_nexus.auth_service.dto.request.ChangePasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.LoginRequest;
 import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
@@ -271,6 +272,36 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenRepository.deleteByUsername(user.getUsername());
 
         return buildMessageResponse("auth.password.reset.success", true);
+    }
+
+    @Override
+    public MessageResponseDTO<String> changePassword(String username, ChangePasswordRequest request) {
+        if (!StringUtils.hasText(username) || request == null
+                || !StringUtils.hasText(request.getCurrentPassword())
+                || !StringUtils.hasText(request.getNewPassword())
+                || !StringUtils.hasText(request.getConfirmPassword())) {
+            throw new BadRequestException("auth.password.change.invalid");
+        }
+
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new BadRequestException("auth.password.change.invalid");
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BadRequestException("auth.password.change.user.notfound"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new UnauthorizedException("auth.password.change.invalid");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setPasswordExpiredDate(LocalDate.now().plusDays(PASSWORD_EXPIRY_DAYS));
+        user.setExpectingFirstTimeLogging(false);
+        userRepository.save(user);
+
+        refreshTokenRepository.deleteByUsername(user.getUsername());
+
+        return buildMessageResponse("auth.password.change.success", true);
     }
 
     @Override

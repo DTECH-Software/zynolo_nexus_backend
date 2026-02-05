@@ -2,6 +2,7 @@ package com.zynolo_nexus.auth_service.service;
 
 import com.zynolo_nexus.auth_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.auth_service.dto.request.ForgotPasswordRequest;
+import com.zynolo_nexus.auth_service.dto.request.ChangePasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.LoginRequest;
 import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
@@ -21,6 +22,8 @@ public interface AuthService {
     MessageResponseDTO<ResetTokenResponse> verifyResetOtp(VerifyResetOtpRequest request);
 
     MessageResponseDTO<String> resetPassword(ResetPasswordRequest request);
+
+    MessageResponseDTO<String> changePassword(String username, ChangePasswordRequest request);
 
     MessageResponseDTO<ReferenceDataDto> getReferenceData(String username);
 }

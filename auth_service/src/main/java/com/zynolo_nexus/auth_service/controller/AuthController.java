@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.zynolo_nexus.auth_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.auth_service.dto.request.ForgotPasswordRequest;
+import com.zynolo_nexus.auth_service.dto.request.ChangePasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.LoginRequest;
 import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
@@ -50,6 +51,14 @@ public class AuthController {
     @PostMapping("/reset-password")
     public MessageResponseDTO<String> resetPassword(@RequestBody ResetPasswordRequest request) {
         return authService.resetPassword(request);
+    }
+
+    @PostMapping("/change-password")
+    public MessageResponseDTO<String> changePassword(
+            Authentication authentication,
+            @RequestBody ChangePasswordRequest request) {
+        String username = authentication.getName();
+        return authService.changePassword(username, request);
     }
 
     @GetMapping("/reference-data")
