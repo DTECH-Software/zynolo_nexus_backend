@@ -6,6 +6,8 @@ This folder contains a simple GitHub Actions + systemd + Nginx setup for dev.
 
 Set these in your GitHub repo secrets:
 
+HIIII
+
 - `DEPLOY_HOST` = `45.79.125.85`
 - `DEPLOY_PORT` = `231`
 - `DEPLOY_USER` = `dtech`
