@@ -19,7 +19,7 @@ import com.zynolo_nexus.auth_service.dto.request.ModuleDashboardRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.VerifyResetOtpRequest;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
-import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardModuleDto;
+import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardSectionDto;
 import com.zynolo_nexus.auth_service.dto.response.ResetTokenResponse;
 import com.zynolo_nexus.auth_service.dto.response.ReferenceDataDto;
 import com.zynolo_nexus.auth_service.service.AuthService;
@@ -81,7 +81,7 @@ public class AuthController {
     }
 
     @PostMapping("/module-dashboard")
-    public MessageResponseDTO<Map<String, ModuleDashboardModuleDto>> moduleDashboard(
+    public MessageResponseDTO<Map<String, ModuleDashboardSectionDto>> moduleDashboard(
             Authentication authentication,
             @RequestBody ModuleDashboardRequest request) {
         String username = authentication.getName();

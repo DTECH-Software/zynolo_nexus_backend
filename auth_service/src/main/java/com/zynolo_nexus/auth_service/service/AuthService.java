@@ -8,7 +8,7 @@ import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.VerifyResetOtpRequest;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
-import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardModuleDto;
+import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardSectionDto;
 import com.zynolo_nexus.auth_service.dto.response.ResetTokenResponse;
 import com.zynolo_nexus.auth_service.dto.response.ReferenceDataDto;
 import java.util.Map;
@@ -29,5 +29,5 @@ public interface AuthService {
 
     MessageResponseDTO<ReferenceDataDto> getReferenceData(String username);
 
-    MessageResponseDTO<Map<String, ModuleDashboardModuleDto>> getModuleDashboard(String username, String moduleCode);
+    MessageResponseDTO<Map<String, ModuleDashboardSectionDto>> getModuleDashboard(String username, String moduleCode);
 }

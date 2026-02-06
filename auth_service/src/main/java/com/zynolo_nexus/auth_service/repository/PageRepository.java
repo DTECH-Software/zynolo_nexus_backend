@@ -14,4 +14,6 @@ public interface PageRepository extends JpaRepository<Page, Long> {
     List<Page> findAllByActiveTrueOrderBySortOrderAsc();
 
     List<Page> findAllBySectionAndActiveTrueOrderBySortOrderAsc(Section section);
+
+    List<Page> findAllBySectionOrderBySortOrderAsc(Section section);
 }

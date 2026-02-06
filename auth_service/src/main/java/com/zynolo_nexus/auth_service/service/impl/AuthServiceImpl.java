@@ -2,7 +2,7 @@ package com.zynolo_nexus.auth_service.service.impl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,8 +24,8 @@ import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.VerifyResetOtpRequest;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
-import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardModuleDto;
 import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardPageDto;
+import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardSectionDto;
 import com.zynolo_nexus.auth_service.dto.response.ModulePermissionDto;
 import com.zynolo_nexus.auth_service.dto.response.ProfileDetails;
 import com.zynolo_nexus.auth_service.dto.response.CurrentUserDto;
@@ -372,7 +372,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public MessageResponseDTO<Map<String, ModuleDashboardModuleDto>> getModuleDashboard(String username, String moduleCode) {
+    public MessageResponseDTO<Map<String, ModuleDashboardSectionDto>> getModuleDashboard(String username, String moduleCode) {
         if (!StringUtils.hasText(username) || !StringUtils.hasText(moduleCode)) {
             throw new BadRequestException("auth.dashboard.invalid");
         }
@@ -391,30 +391,32 @@ public class AuthServiceImpl implements AuthService {
                 .anyMatch(access -> access.getModule().getId().equals(module.getId())
                         && Boolean.TRUE.equals(access.getCanView()));
 
-        Map<String, ModuleDashboardModuleDto> data = Map.of();
+        Map<String, ModuleDashboardSectionDto> data = Map.of();
         if (canView) {
             List<Section> sections = sectionRepository.findAllByModuleAndActiveTrueOrderBySortOrderAsc(module);
-            List<Page> pages = new ArrayList<>();
+            Map<String, ModuleDashboardSectionDto> sectionMap = new LinkedHashMap<>();
             for (Section section : sections) {
-                pages.addAll(pageRepository.findAllBySectionAndActiveTrueOrderBySortOrderAsc(section));
+                List<Page> pages = pageRepository.findAllBySectionOrderBySortOrderAsc(section);
+                List<ModuleDashboardPageDto> pageDtos = pages.stream()
+                        .map(page -> ModuleDashboardPageDto.builder()
+                                .code(page.getCode())
+                                .url(page.getUrl())
+                                .description(StringUtils.hasText(page.getDescription()) ? page.getDescription() : page.getName())
+                                .status(Boolean.TRUE.equals(page.getActive()) ? "ACTIVE" : "DEACTIVE")
+                                .build())
+                        .toList();
+
+                ModuleDashboardSectionDto sectionDto = ModuleDashboardSectionDto.builder()
+                        .code(section.getCode())
+                        .description(StringUtils.hasText(section.getDescription()) ? section.getDescription() : section.getName())
+                        .url(section.getUrl())
+                        .pages(pageDtos)
+                        .build();
+
+                sectionMap.put(section.getCode(), sectionDto);
             }
 
-            List<ModuleDashboardPageDto> pageDtos = pages.stream()
-                    .map(page -> ModuleDashboardPageDto.builder()
-                            .code(page.getCode())
-                            .url(page.getUrl())
-                            .description(StringUtils.hasText(page.getDescription()) ? page.getDescription() : page.getName())
-                            .status(Boolean.TRUE.equals(page.getActive()) ? "ACTIVE" : "DEACTIVE")
-                            .build())
-                    .toList();
-
-            ModuleDashboardModuleDto moduleDto = ModuleDashboardModuleDto.builder()
-                    .code(module.getCode())
-                    .description(StringUtils.hasText(module.getDescription()) ? module.getDescription() : module.getName())
-                    .pages(pageDtos)
-                    .build();
-
-            data = Map.of(module.getCode(), moduleDto);
+            data = sectionMap;
         }
 
         String message = messageSource.getMessage(
@@ -424,7 +426,7 @@ public class AuthServiceImpl implements AuthService {
                 LocaleContextHolder.getLocale()
         );
 
-        return MessageResponseDTO.<Map<String, ModuleDashboardModuleDto>>builder()
+        return MessageResponseDTO.<Map<String, ModuleDashboardSectionDto>>builder()
                 .success(true)
                 .message(message)
                 .data(data)
