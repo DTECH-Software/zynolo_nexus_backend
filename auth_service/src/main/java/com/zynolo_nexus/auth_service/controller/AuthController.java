@@ -11,6 +11,7 @@ import com.zynolo_nexus.auth_service.dto.request.ForgotPasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.ChangePasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.LoginRequest;
 import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
+import com.zynolo_nexus.auth_service.dto.request.MainDashboardRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.VerifyResetOtpRequest;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
@@ -60,8 +61,10 @@ public class AuthController {
         return authService.changePassword(username, request);
     }
 
-    @PostMapping("/reference-data")
-    public MessageResponseDTO<ReferenceDataDto> referenceData(Authentication authentication) {
+    @PostMapping("/main-dashboard")
+    public MessageResponseDTO<ReferenceDataDto> mainDashboard(
+            Authentication authentication,
+            @RequestBody(required = false) MainDashboardRequest request) {
         String username = authentication.getName();
         return authService.getReferenceData(username);
     }

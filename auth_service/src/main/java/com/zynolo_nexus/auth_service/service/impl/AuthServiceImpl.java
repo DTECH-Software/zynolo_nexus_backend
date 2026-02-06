@@ -22,13 +22,10 @@ import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.VerifyResetOtpRequest;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
 import com.zynolo_nexus.auth_service.dto.response.ModulePermissionDto;
-import com.zynolo_nexus.auth_service.dto.response.PagePermissionDto;
-import com.zynolo_nexus.auth_service.dto.response.PageTaskPermissionDto;
 import com.zynolo_nexus.auth_service.dto.response.ProfileDetails;
 import com.zynolo_nexus.auth_service.dto.response.CurrentUserDto;
 import com.zynolo_nexus.auth_service.dto.response.ReferenceDataDto;
 import com.zynolo_nexus.auth_service.dto.response.ResetTokenResponse;
-import com.zynolo_nexus.auth_service.dto.response.SectionPermissionDto;
 import com.zynolo_nexus.auth_service.dto.response.TokenDetails;
 import com.zynolo_nexus.auth_service.enums.ModuleStatus;
 import com.zynolo_nexus.auth_service.enums.UserStatus;
@@ -38,20 +35,13 @@ import com.zynolo_nexus.auth_service.exception.UnauthorizedException;
 import com.zynolo_nexus.auth_service.mapper.entityToDto.UserEntityToDtoMapper;
 import com.zynolo_nexus.auth_service.model.Module;
 import com.zynolo_nexus.auth_service.model.PasswordResetToken;
-import com.zynolo_nexus.auth_service.model.Page;
-import com.zynolo_nexus.auth_service.model.PageTask;
 import com.zynolo_nexus.auth_service.model.RefreshToken;
 import com.zynolo_nexus.auth_service.model.RoleModuleAccess;
-import com.zynolo_nexus.auth_service.model.Section;
 import com.zynolo_nexus.auth_service.model.User;
 import com.zynolo_nexus.auth_service.repository.ModuleRepository;
-import com.zynolo_nexus.auth_service.repository.PageRepository;
-import com.zynolo_nexus.auth_service.repository.PageTaskRepository;
 import com.zynolo_nexus.auth_service.repository.PasswordResetTokenRepository;
-import com.zynolo_nexus.auth_service.repository.RolePageTaskAccessRepository;
 import com.zynolo_nexus.auth_service.repository.RoleModuleAccessRepository;
 import com.zynolo_nexus.auth_service.repository.RefreshTokenRepository;
-import com.zynolo_nexus.auth_service.repository.SectionRepository;
 import com.zynolo_nexus.auth_service.repository.UserRepository;
 import com.zynolo_nexus.auth_service.service.AuthService;
 import com.zynolo_nexus.auth_service.service.EmailService;
@@ -79,10 +69,6 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final ModuleRepository moduleRepository;
     private final RoleModuleAccessRepository roleModuleAccessRepository;
-    private final SectionRepository sectionRepository;
-    private final PageRepository pageRepository;
-    private final PageTaskRepository pageTaskRepository;
-    private final RolePageTaskAccessRepository rolePageTaskAccessRepository;
     private final ReferenceDataCache referenceDataCache;
 
     @Override
@@ -336,41 +322,12 @@ public class AuthServiceImpl implements AuthService {
 
         var modules = moduleRepository.findAllActiveOrderBySortOrderAsc(ModuleStatus.ACTIVE);
 
-        var sections = sectionRepository.findAllByActiveTrueOrderBySortOrderAsc();
-        var pages = pageRepository.findAllByActiveTrueOrderBySortOrderAsc();
-        var tasks = pageTaskRepository.findAllByActiveTrueOrderBySortOrderAsc();
-
-        var sectionsByModule = new java.util.HashMap<Long, java.util.List<Section>>();
-        for (Section section : sections) {
-            sectionsByModule.computeIfAbsent(section.getModule().getId(), k -> new java.util.ArrayList<>()).add(section);
-        }
-
-        var pagesBySection = new java.util.HashMap<Long, java.util.List<Page>>();
-        for (Page page : pages) {
-            pagesBySection.computeIfAbsent(page.getSection().getId(), k -> new java.util.ArrayList<>()).add(page);
-        }
-
-        var tasksByPage = new java.util.HashMap<Long, java.util.List<PageTask>>();
-        for (PageTask task : tasks) {
-            tasksByPage.computeIfAbsent(task.getPage().getId(), k -> new java.util.ArrayList<>()).add(task);
-        }
-
-        var taskAccessMap = rolePageTaskAccessRepository.findByRole(user.getRole()).stream()
-                .collect(java.util.stream.Collectors.toMap(
-                        a -> a.getPageTask().getId(),
-                        a -> Boolean.TRUE.equals(a.getCanAccess()),
-                        (left, right) -> left
-                ));
-
         var moduleDtos = modules.stream()
-                .map(m -> toPermissionDto(
-                        m,
-                        viewableIds.contains(m.getId()),
-                        sectionsByModule,
-                        pagesBySection,
-                        tasksByPage,
-                        taskAccessMap
-                ))
+                .map(m -> ModulePermissionDto.builder()
+                        .code(m.getCode())
+                        .name(m.getName())
+                        .canView(viewableIds.contains(m.getId()))
+                        .build())
                 .toList();
 
         ReferenceDataDto data = ReferenceDataDto.builder()
@@ -400,53 +357,6 @@ public class AuthServiceImpl implements AuthService {
                 .errors(null)
                 .errorCode(0)
                 .responseTime(LocalDateTime.now())
-                .build();
-    }
-
-    private ModulePermissionDto toPermissionDto(
-            Module module,
-            boolean canView,
-            java.util.Map<Long, java.util.List<Section>> sectionsByModule,
-            java.util.Map<Long, java.util.List<Page>> pagesBySection,
-            java.util.Map<Long, java.util.List<PageTask>> tasksByPage,
-            java.util.Map<Long, Boolean> taskAccessMap
-    ) {
-        java.util.List<SectionPermissionDto> sectionDtos = java.util.List.of();
-        if (canView) {
-            sectionDtos = sectionsByModule.getOrDefault(module.getId(), java.util.List.of()).stream()
-                    .map(section -> {
-                        var pageDtos = pagesBySection.getOrDefault(section.getId(), java.util.List.of()).stream()
-                                .map(page -> {
-                                    var taskDtos = tasksByPage.getOrDefault(page.getId(), java.util.List.of()).stream()
-                                            .map(task -> PageTaskPermissionDto.builder()
-                                                    .code(task.getCode())
-                                                    .name(task.getName())
-                                                    .canAccess(taskAccessMap.getOrDefault(task.getId(), Boolean.FALSE))
-                                                    .build())
-                                            .toList();
-                                    return PagePermissionDto.builder()
-                                            .code(page.getCode())
-                                            .name(page.getName())
-                                            .url(page.getUrl())
-                                            .tasks(taskDtos)
-                                            .build();
-                                })
-                                .toList();
-                        return SectionPermissionDto.builder()
-                                .code(section.getCode())
-                                .name(section.getName())
-                                .url(section.getUrl())
-                                .pages(pageDtos)
-                                .build();
-                    })
-                    .toList();
-        }
-
-        return ModulePermissionDto.builder()
-                .code(module.getCode())
-                .name(module.getName())
-                .canView(canView)
-                .sections(sectionDtos)
                 .build();
     }
 

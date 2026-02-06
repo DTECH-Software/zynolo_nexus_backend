@@ -1,5 +1,6 @@
 package com.zynolo_nexus.auth_service.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +12,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ModulePermissionDto {
 
     private String code;     // SETTINGS, PO, CHEQUE, TREASURY_LOAN, STATIONARY, VEHICLE, MEETING_ROOM

@@ -25,6 +25,7 @@ public class AuditLogFilter extends OncePerRequestFilter {
             Map.entry("/api/v1/auth/forgot-password", "AUTH_FORGOT_PASSWORD"),
             Map.entry("/api/v1/auth/verify-reset-otp", "AUTH_VERIFY_RESET_OTP"),
             Map.entry("/api/v1/auth/reset-password", "AUTH_RESET_PASSWORD"),
+            Map.entry("/api/v1/auth/main-dashboard", "AUTH_MAIN_DASHBOARD"),
             Map.entry("/api/auth/sso/google", "AUTH_SSO_GOOGLE"),
             Map.entry("/api/v1/modules", "MODULE_CREATE"),
             Map.entry("/api/v1/sections", "SECTION_CREATE"),
