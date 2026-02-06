@@ -2,6 +2,9 @@ package com.zynolo_nexus.auth_service.service.impl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -21,6 +24,8 @@ import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.VerifyResetOtpRequest;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
+import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardModuleDto;
+import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardPageDto;
 import com.zynolo_nexus.auth_service.dto.response.ModulePermissionDto;
 import com.zynolo_nexus.auth_service.dto.response.ProfileDetails;
 import com.zynolo_nexus.auth_service.dto.response.CurrentUserDto;
@@ -34,14 +39,18 @@ import com.zynolo_nexus.auth_service.exception.NotFoundException;
 import com.zynolo_nexus.auth_service.exception.UnauthorizedException;
 import com.zynolo_nexus.auth_service.mapper.entityToDto.UserEntityToDtoMapper;
 import com.zynolo_nexus.auth_service.model.Module;
+import com.zynolo_nexus.auth_service.model.Page;
 import com.zynolo_nexus.auth_service.model.PasswordResetToken;
 import com.zynolo_nexus.auth_service.model.RefreshToken;
 import com.zynolo_nexus.auth_service.model.RoleModuleAccess;
+import com.zynolo_nexus.auth_service.model.Section;
 import com.zynolo_nexus.auth_service.model.User;
 import com.zynolo_nexus.auth_service.repository.ModuleRepository;
+import com.zynolo_nexus.auth_service.repository.PageRepository;
 import com.zynolo_nexus.auth_service.repository.PasswordResetTokenRepository;
 import com.zynolo_nexus.auth_service.repository.RoleModuleAccessRepository;
 import com.zynolo_nexus.auth_service.repository.RefreshTokenRepository;
+import com.zynolo_nexus.auth_service.repository.SectionRepository;
 import com.zynolo_nexus.auth_service.repository.UserRepository;
 import com.zynolo_nexus.auth_service.service.AuthService;
 import com.zynolo_nexus.auth_service.service.EmailService;
@@ -68,6 +77,8 @@ public class AuthServiceImpl implements AuthService {
     private final UserEntityToDtoMapper userMapper;
     private final EmailService emailService;
     private final ModuleRepository moduleRepository;
+    private final SectionRepository sectionRepository;
+    private final PageRepository pageRepository;
     private final RoleModuleAccessRepository roleModuleAccessRepository;
     private final ReferenceDataCache referenceDataCache;
 
@@ -351,6 +362,69 @@ public class AuthServiceImpl implements AuthService {
         );
 
         return MessageResponseDTO.<ReferenceDataDto>builder()
+                .success(true)
+                .message(message)
+                .data(data)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
+    @Override
+    public MessageResponseDTO<Map<String, ModuleDashboardModuleDto>> getModuleDashboard(String username, String moduleCode) {
+        if (!StringUtils.hasText(username) || !StringUtils.hasText(moduleCode)) {
+            throw new BadRequestException("auth.dashboard.invalid");
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("auth.user.notfound"));
+
+        Module module = moduleRepository.findByCode(moduleCode)
+                .orElseThrow(() -> new NotFoundException("module.notfound"));
+
+        if (module.getStatus() != ModuleStatus.ACTIVE) {
+            throw new NotFoundException("module.notfound");
+        }
+
+        boolean canView = roleModuleAccessRepository.findByRole(user.getRole()).stream()
+                .anyMatch(access -> access.getModule().getId().equals(module.getId())
+                        && Boolean.TRUE.equals(access.getCanView()));
+
+        Map<String, ModuleDashboardModuleDto> data = Map.of();
+        if (canView) {
+            List<Section> sections = sectionRepository.findAllByModuleAndActiveTrueOrderBySortOrderAsc(module);
+            List<Page> pages = new ArrayList<>();
+            for (Section section : sections) {
+                pages.addAll(pageRepository.findAllBySectionAndActiveTrueOrderBySortOrderAsc(section));
+            }
+
+            List<ModuleDashboardPageDto> pageDtos = pages.stream()
+                    .map(page -> ModuleDashboardPageDto.builder()
+                            .code(page.getCode())
+                            .url(page.getUrl())
+                            .description(StringUtils.hasText(page.getDescription()) ? page.getDescription() : page.getName())
+                            .status(Boolean.TRUE.equals(page.getActive()) ? "ACTIVE" : "DEACTIVE")
+                            .build())
+                    .toList();
+
+            ModuleDashboardModuleDto moduleDto = ModuleDashboardModuleDto.builder()
+                    .code(module.getCode())
+                    .description(StringUtils.hasText(module.getDescription()) ? module.getDescription() : module.getName())
+                    .pages(pageDtos)
+                    .build();
+
+            data = Map.of(module.getCode(), moduleDto);
+        }
+
+        String message = messageSource.getMessage(
+                "auth.module.dashboard.success",
+                null,
+                "Success",
+                LocaleContextHolder.getLocale()
+        );
+
+        return MessageResponseDTO.<Map<String, ModuleDashboardModuleDto>>builder()
                 .success(true)
                 .message(message)
                 .data(data)
