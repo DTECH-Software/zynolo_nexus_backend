@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -65,8 +67,11 @@ public class AuditLogFilter extends OncePerRequestFilter {
         String endpoint = request.getServletPath();
         String event = POST_EVENTS.getOrDefault(endpoint, "POST_" + sanitize(endpoint));
 
+        String authenticatedUsername = getAuthenticatedUsername();
+        String payloadUsername = readText(node, "username");
+
         AuditLog log = AuditLog.builder()
-                .username(readText(node, "username"))
+                .username(authenticatedUsername != null ? authenticatedUsername : payloadUsername)
                 .channel(readText(node, "channel"))
                 .ip(readText(node, "ip"))
                 .userAgent(readText(node, "userAgent"))
@@ -97,5 +102,17 @@ public class AuditLogFilter extends OncePerRequestFilter {
 
     private String sanitize(String path) {
         return path == null ? "UNKNOWN" : path.replace("/", "_");
+    }
+
+    private String getAuthenticatedUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal == null || "anonymousUser".equals(principal)) {
+            return null;
+        }
+        return authentication.getName();
     }
 }

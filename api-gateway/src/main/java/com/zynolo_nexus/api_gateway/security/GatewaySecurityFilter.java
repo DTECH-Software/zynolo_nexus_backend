@@ -5,6 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -32,9 +34,11 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtValidator jwtValidator;
+    private final ObjectMapper objectMapper;
 
-    public GatewaySecurityFilter(JwtValidator jwtValidator) {
+    public GatewaySecurityFilter(JwtValidator jwtValidator, ObjectMapper objectMapper) {
         this.jwtValidator = jwtValidator;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -57,14 +61,43 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
                 return;
             }
             String token = authHeader.substring(BEARER_PREFIX.length());
-            if (jwtValidator.validateAndGetClaims(token) == null) {
+            var claims = jwtValidator.validateAndGetClaims(token);
+            if (claims == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
+            }
+
+            if ("POST".equalsIgnoreCase(request.getMethod())) {
+                CachedBodyHttpServletRequest cached = new CachedBodyHttpServletRequest(request);
+                String payloadUsername = extractUsername(cached.getCachedBody());
+                String tokenUsername = claims.getSubject();
+                if (payloadUsername != null && tokenUsername != null && !payloadUsername.equals(tokenUsername)) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"success\":false,\"message\":\"Invalid username\",\"errorCode\":403}");
+                    return;
+                }
+                request = cached;
             }
         }
 
         HttpServletRequest sanitized = new HeaderStripRequestWrapper(request, INTERNAL_HEADER);
         filterChain.doFilter(sanitized, response);
+    }
+
+    private String extractUsername(byte[] body) {
+        if (body == null || body.length == 0) {
+            return null;
+        }
+        try {
+            JsonNode node = objectMapper.readTree(body);
+            if (node != null && node.hasNonNull("username")) {
+                return node.get("username").asText();
+            }
+        } catch (IOException ex) {
+            return null;
+        }
+        return null;
     }
 
     private boolean isBlocked(String path) {

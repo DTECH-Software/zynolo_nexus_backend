@@ -1,10 +1,13 @@
 package com.zynolo_nexus.auth_service.controller;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import com.zynolo_nexus.auth_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.auth_service.dto.request.ForgotPasswordRequest;
@@ -66,6 +69,10 @@ public class AuthController {
             Authentication authentication,
             @RequestBody(required = false) MainDashboardRequest request) {
         String username = authentication.getName();
+        if (request != null && StringUtils.hasText(request.getUsername())
+                && !request.getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid username");
+        }
         return authService.getReferenceData(username);
     }
 }
