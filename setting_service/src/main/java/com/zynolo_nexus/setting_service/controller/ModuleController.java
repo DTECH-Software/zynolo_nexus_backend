@@ -30,19 +30,19 @@ public class ModuleController {
         return moduleService.createModule(request);
     }
 
-    @PutMapping("/{code}")
+    @PostMapping("/{code}/update")
     public MessageResponseDTO<ModuleDto> updateModule(
             @PathVariable String code,
             @RequestBody ModuleRequest request) {
         return moduleService.updateModule(code, request);
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public MessageResponseDTO<List<ModuleDto>> getAllModules() {
         return moduleService.getAllModules();
     }
 
-    @DeleteMapping("/{code}")
+    @PostMapping("/{code}/deactivate")
     public MessageResponseDTO<String> deactivateModule(@PathVariable String code) {
         return moduleService.deactivateModule(code);
     }

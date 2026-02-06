@@ -28,17 +28,17 @@ public class PageInternalController {
         return pageManagementService.createPage(request);
     }
 
-    @PutMapping("/{code}")
+    @PostMapping("/{code}/update")
     public PageDto updatePage(@PathVariable String code, @RequestBody PageRequest request) {
         return pageManagementService.updatePage(code, request);
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public List<PageDto> getAllPages(@RequestParam(required = false) String sectionCode) {
         return pageManagementService.getAllPages(sectionCode);
     }
 
-    @DeleteMapping("/{code}")
+    @PostMapping("/{code}/deactivate")
     public void deactivatePage(@PathVariable String code) {
         pageManagementService.deactivatePage(code);
     }

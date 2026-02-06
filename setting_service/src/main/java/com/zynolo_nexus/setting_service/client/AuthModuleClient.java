@@ -33,64 +33,64 @@ public interface AuthModuleClient {
     @PostMapping("/internal/modules")
     ModuleDto createModule(@RequestBody ModuleRequest request);
 
-    @PutMapping("/internal/modules/{code}")
+    @PostMapping("/internal/modules/{code}/update")
     ModuleDto updateModule(@PathVariable("code") String code,
                            @RequestBody ModuleRequest request);
 
-    @GetMapping("/internal/modules")
+    @PostMapping("/internal/modules/list")
     List<ModuleDto> getAllModules();
 
-    @DeleteMapping("/internal/modules/{code}")
+    @PostMapping("/internal/modules/{code}/deactivate")
     void deactivateModule(@PathVariable("code") String code);
 
-    @GetMapping("/internal/role-modules/{roleCode}")
+    @PostMapping("/internal/role-modules/{roleCode}/get")
     RoleModuleAccessDto getRoleModuleAccess(@PathVariable("roleCode") String roleCode);
 
-    @PutMapping("/internal/role-modules")
+    @PostMapping("/internal/role-modules/update")
     RoleModuleAccessDto updateRoleModuleAccess(@RequestBody RoleModuleAccessUpdateRequest request);
 
     @PostMapping("/internal/sections")
     SectionDto createSection(@RequestBody SectionRequest request);
 
-    @PutMapping("/internal/sections/{code}")
+    @PostMapping("/internal/sections/{code}/update")
     SectionDto updateSection(@PathVariable("code") String code, @RequestBody SectionRequest request);
 
-    @GetMapping("/internal/sections")
+    @PostMapping("/internal/sections/list")
     List<SectionDto> getAllSections();
 
-    @DeleteMapping("/internal/sections/{code}")
+    @PostMapping("/internal/sections/{code}/deactivate")
     void deactivateSection(@PathVariable("code") String code);
 
     @PostMapping("/internal/pages")
     PageDto createPage(@RequestBody PageRequest request);
 
-    @PutMapping("/internal/pages/{code}")
+    @PostMapping("/internal/pages/{code}/update")
     PageDto updatePage(@PathVariable("code") String code, @RequestBody PageRequest request);
 
-    @GetMapping("/internal/pages")
+    @PostMapping("/internal/pages/list")
     List<PageDto> getAllPages();
 
-    @DeleteMapping("/internal/pages/{code}")
+    @PostMapping("/internal/pages/{code}/deactivate")
     void deactivatePage(@PathVariable("code") String code);
 
     @PostMapping("/internal/page-tasks")
     PageTaskDto createTask(@RequestBody PageTaskRequest request);
 
-    @PutMapping("/internal/page-tasks/{pageCode}/{taskCode}")
+    @PostMapping("/internal/page-tasks/{pageCode}/{taskCode}/update")
     PageTaskDto updateTask(@PathVariable("pageCode") String pageCode,
                            @PathVariable("taskCode") String taskCode,
                            @RequestBody PageTaskRequest request);
 
-    @GetMapping("/internal/page-tasks")
+    @PostMapping("/internal/page-tasks/list")
     List<PageTaskDto> getAllTasks();
 
-    @DeleteMapping("/internal/page-tasks/{pageCode}/{taskCode}")
+    @PostMapping("/internal/page-tasks/{pageCode}/{taskCode}/deactivate")
     void deactivateTask(@PathVariable("pageCode") String pageCode,
                         @PathVariable("taskCode") String taskCode);
 
-    @GetMapping("/internal/role-page-tasks/{roleCode}")
+    @PostMapping("/internal/role-page-tasks/{roleCode}/get")
     RolePageTaskAccessDto getRolePageTaskAccess(@PathVariable("roleCode") String roleCode);
 
-    @PutMapping("/internal/role-page-tasks")
+    @PostMapping("/internal/role-page-tasks/update")
     RolePageTaskAccessDto updateRolePageTaskAccess(@RequestBody RolePageTaskAccessUpdateRequest request);
 }

@@ -28,18 +28,18 @@ public class PageController {
         return pageService.createPage(request);
     }
 
-    @PutMapping("/{code}")
+    @PostMapping("/{code}/update")
     public MessageResponseDTO<PageDto> updatePage(@PathVariable String code,
                                                   @RequestBody PageRequest request) {
         return pageService.updatePage(code, request);
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public MessageResponseDTO<List<PageDto>> getAllPages() {
         return pageService.getAllPages();
     }
 
-    @DeleteMapping("/{code}")
+    @PostMapping("/{code}/deactivate")
     public MessageResponseDTO<String> deactivatePage(@PathVariable String code) {
         return pageService.deactivatePage(code);
     }

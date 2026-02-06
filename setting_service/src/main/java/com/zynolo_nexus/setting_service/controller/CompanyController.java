@@ -28,22 +28,22 @@ public class CompanyController {
         return companyService.createCompany(request);
     }
 
-    @PutMapping("/{code}")
+    @PostMapping("/{code}/update")
     public MessageResponseDTO<CompanyDto> update(@PathVariable String code, @RequestBody CompanyRequest request) {
         return companyService.updateCompany(code, request);
     }
 
-    @GetMapping("/{code}")
+    @PostMapping("/{code}/get")
     public MessageResponseDTO<CompanyDto> get(@PathVariable String code) {
         return companyService.getCompany(code);
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public MessageResponseDTO<List<CompanyDto>> list() {
         return companyService.getAllCompanies();
     }
 
-    @DeleteMapping("/{code}")
+    @PostMapping("/{code}/deactivate")
     public MessageResponseDTO<String> deactivate(@PathVariable String code) {
         return companyService.deactivateCompany(code);
     }

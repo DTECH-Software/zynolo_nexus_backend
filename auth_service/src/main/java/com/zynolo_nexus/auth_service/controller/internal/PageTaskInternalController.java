@@ -28,19 +28,19 @@ public class PageTaskInternalController {
         return pageTaskManagementService.createTask(request);
     }
 
-    @PutMapping("/{pageCode}/{taskCode}")
+    @PostMapping("/{pageCode}/{taskCode}/update")
     public PageTaskDto updateTask(@PathVariable String pageCode,
                                   @PathVariable String taskCode,
                                   @RequestBody PageTaskRequest request) {
         return pageTaskManagementService.updateTask(pageCode, taskCode, request);
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public List<PageTaskDto> getAllTasks(@RequestParam(required = false) String pageCode) {
         return pageTaskManagementService.getAllTasks(pageCode);
     }
 
-    @DeleteMapping("/{pageCode}/{taskCode}")
+    @PostMapping("/{pageCode}/{taskCode}/deactivate")
     public void deactivateTask(@PathVariable String pageCode, @PathVariable String taskCode) {
         pageTaskManagementService.deactivateTask(pageCode, taskCode);
     }

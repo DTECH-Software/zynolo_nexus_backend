@@ -28,18 +28,18 @@ public class SectionController {
         return sectionService.createSection(request);
     }
 
-    @PutMapping("/{code}")
+    @PostMapping("/{code}/update")
     public MessageResponseDTO<SectionDto> updateSection(@PathVariable String code,
                                                         @RequestBody SectionRequest request) {
         return sectionService.updateSection(code, request);
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public MessageResponseDTO<List<SectionDto>> getAllSections() {
         return sectionService.getAllSections();
     }
 
-    @DeleteMapping("/{code}")
+    @PostMapping("/{code}/deactivate")
     public MessageResponseDTO<String> deactivateSection(@PathVariable String code) {
         return sectionService.deactivateSection(code);
     }

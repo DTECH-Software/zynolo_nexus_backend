@@ -28,17 +28,17 @@ public class SectionInternalController {
         return sectionManagementService.createSection(request);
     }
 
-    @PutMapping("/{code}")
+    @PostMapping("/{code}/update")
     public SectionDto updateSection(@PathVariable String code, @RequestBody SectionRequest request) {
         return sectionManagementService.updateSection(code, request);
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public List<SectionDto> getAllSections(@RequestParam(required = false) String moduleCode) {
         return sectionManagementService.getAllSections(moduleCode);
     }
 
-    @DeleteMapping("/{code}")
+    @PostMapping("/{code}/deactivate")
     public void deactivateSection(@PathVariable String code) {
         sectionManagementService.deactivateSection(code);
     }

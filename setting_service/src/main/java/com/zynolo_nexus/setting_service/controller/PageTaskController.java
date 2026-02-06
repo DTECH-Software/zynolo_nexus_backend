@@ -28,19 +28,19 @@ public class PageTaskController {
         return pageTaskService.createTask(request);
     }
 
-    @PutMapping("/{pageCode}/{taskCode}")
+    @PostMapping("/{pageCode}/{taskCode}/update")
     public MessageResponseDTO<PageTaskDto> updateTask(@PathVariable String pageCode,
                                                       @PathVariable String taskCode,
                                                       @RequestBody PageTaskRequest request) {
         return pageTaskService.updateTask(pageCode, taskCode, request);
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public MessageResponseDTO<List<PageTaskDto>> getAllTasks() {
         return pageTaskService.getAllTasks();
     }
 
-    @DeleteMapping("/{pageCode}/{taskCode}")
+    @PostMapping("/{pageCode}/{taskCode}/deactivate")
     public MessageResponseDTO<String> deactivateTask(@PathVariable String pageCode,
                                                      @PathVariable String taskCode) {
         return pageTaskService.deactivateTask(pageCode, taskCode);

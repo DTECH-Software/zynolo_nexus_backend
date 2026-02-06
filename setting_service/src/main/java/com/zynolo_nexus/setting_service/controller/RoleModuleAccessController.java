@@ -1,8 +1,7 @@
 package com.zynolo_nexus.setting_service.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,12 +20,12 @@ public class RoleModuleAccessController {
 
     private final RoleModuleAccessService roleModuleAccessService;
 
-    @GetMapping("/{roleCode}")
+    @PostMapping("/{roleCode}/get")
     public MessageResponseDTO<RoleModuleAccessDto> getRoleModuleAccess(@PathVariable String roleCode) {
         return roleModuleAccessService.getRoleModuleAccess(roleCode);
     }
 
-    @PutMapping
+    @PostMapping("/update")
     public MessageResponseDTO<RoleModuleAccessDto> updateRoleModuleAccess(
             @RequestBody RoleModuleAccessUpdateRequest request) {
         return roleModuleAccessService.updateRoleModuleAccess(request);

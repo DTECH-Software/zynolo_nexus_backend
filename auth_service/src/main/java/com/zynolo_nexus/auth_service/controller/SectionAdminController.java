@@ -31,13 +31,13 @@ public class SectionAdminController {
         return wrap(section, "section.create.success");
     }
 
-    @PutMapping("/{code}")
+    @PostMapping("/{code}/update")
     public MessageResponseDTO<SectionDto> update(@PathVariable String code, @RequestBody SectionRequest request) {
         SectionDto section = sectionManagementService.updateSection(code, request);
         return wrap(section, "section.update.success");
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public MessageResponseDTO<List<SectionDto>> getAll(@RequestParam(required = false) String moduleCode) {
         List<SectionDto> sections = sectionManagementService.getAllSections(moduleCode);
         return MessageResponseDTO.<List<SectionDto>>builder()
@@ -50,7 +50,7 @@ public class SectionAdminController {
                 .build();
     }
 
-    @DeleteMapping("/{code}")
+    @PostMapping("/{code}/deactivate")
     public MessageResponseDTO<String> deactivate(@PathVariable String code) {
         sectionManagementService.deactivateSection(code);
         return MessageResponseDTO.<String>builder()

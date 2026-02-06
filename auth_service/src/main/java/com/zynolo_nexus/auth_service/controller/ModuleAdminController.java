@@ -41,7 +41,7 @@ public class ModuleAdminController {
         return wrap(toDto(module), "module.create.success");
     }
 
-    @PutMapping("/{code}")
+    @PostMapping("/{code}/update")
     public MessageResponseDTO<ModuleDto> update(@PathVariable String code, @RequestBody ModuleRequest request) {
         validateRequest(request);
         Module module = moduleRepository.findByCode(code)
@@ -57,7 +57,7 @@ public class ModuleAdminController {
         return wrap(toDto(module), "module.update.success");
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public MessageResponseDTO<List<ModuleDto>> getAll() {
         List<ModuleDto> modules = moduleRepository.findAll().stream()
                 .map(this::toDto)
@@ -72,7 +72,7 @@ public class ModuleAdminController {
                 .build();
     }
 
-    @DeleteMapping("/{code}")
+    @PostMapping("/{code}/deactivate")
     public MessageResponseDTO<String> deactivate(@PathVariable String code) {
         Module module = moduleRepository.findByCode(code)
                 .orElseThrow(() -> new NotFoundException("module.notfound"));

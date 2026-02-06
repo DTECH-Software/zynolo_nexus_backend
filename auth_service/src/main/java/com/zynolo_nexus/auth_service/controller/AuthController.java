@@ -1,7 +1,6 @@
 package com.zynolo_nexus.auth_service.controller;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -61,7 +60,7 @@ public class AuthController {
         return authService.changePassword(username, request);
     }
 
-    @GetMapping("/reference-data")
+    @PostMapping("/reference-data")
     public MessageResponseDTO<ReferenceDataDto> referenceData(Authentication authentication) {
         String username = authentication.getName();
         return authService.getReferenceData(username);

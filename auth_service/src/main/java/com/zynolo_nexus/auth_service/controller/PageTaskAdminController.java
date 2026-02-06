@@ -31,7 +31,7 @@ public class PageTaskAdminController {
         return wrap(task, "page.task.create.success");
     }
 
-    @PutMapping("/{pageCode}/{taskCode}")
+    @PostMapping("/{pageCode}/{taskCode}/update")
     public MessageResponseDTO<PageTaskDto> update(@PathVariable String pageCode,
                                                   @PathVariable String taskCode,
                                                   @RequestBody PageTaskRequest request) {
@@ -39,7 +39,7 @@ public class PageTaskAdminController {
         return wrap(task, "page.task.update.success");
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public MessageResponseDTO<List<PageTaskDto>> getAll(@RequestParam(required = false) String pageCode) {
         List<PageTaskDto> tasks = pageTaskManagementService.getAllTasks(pageCode);
         return MessageResponseDTO.<List<PageTaskDto>>builder()
@@ -52,7 +52,7 @@ public class PageTaskAdminController {
                 .build();
     }
 
-    @DeleteMapping("/{pageCode}/{taskCode}")
+    @PostMapping("/{pageCode}/{taskCode}/deactivate")
     public MessageResponseDTO<String> deactivate(@PathVariable String pageCode,
                                                  @PathVariable String taskCode) {
         pageTaskManagementService.deactivateTask(pageCode, taskCode);

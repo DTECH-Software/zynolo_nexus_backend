@@ -14,9 +14,8 @@ import com.zynolo_nexus.contracts.modules.RoleModuleAccessDto;
 import com.zynolo_nexus.contracts.modules.RoleModuleAccessUpdateRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,7 +34,7 @@ public class RoleModuleAccessAdminController {
     private final ModuleRepository moduleRepository;
     private final RoleModuleAccessRepository accessRepository;
 
-    @GetMapping("/{roleCode}")
+    @PostMapping("/{roleCode}/get")
     public MessageResponseDTO<RoleModuleAccessDto> getAccess(@PathVariable String roleCode) {
         Role role = resolveRole(roleCode);
         List<RoleModuleAccess> accesses = accessRepository.findByRole(role);
@@ -65,7 +64,7 @@ public class RoleModuleAccessAdminController {
                 .build();
     }
 
-    @PutMapping
+    @PostMapping("/update")
     @Transactional
     public MessageResponseDTO<RoleModuleAccessDto> updateAccess(@RequestBody RoleModuleAccessUpdateRequest request) {
         if (request == null || request.getRoleCode() == null) {

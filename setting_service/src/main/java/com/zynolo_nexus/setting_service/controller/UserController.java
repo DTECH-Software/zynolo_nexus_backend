@@ -30,23 +30,23 @@ public class UserController {
         return userService.createUser(request);
     }
 
-    @GetMapping("/{username}")
+    @PostMapping("/{username}/get")
     public MessageResponseDTO<ProfileDetails> getUser(@PathVariable String username) {
         return userService.getUser(username);
     }
 
-    @PutMapping("/{username}")
+    @PostMapping("/{username}/update")
     public MessageResponseDTO<ProfileDetails> updateUser(@PathVariable String username,
                                                          @RequestBody UpdateUserRequest request) {
         return userService.updateUser(username, request);
     }
 
-    @DeleteMapping("/{username}")
+    @PostMapping("/{username}/deactivate")
     public MessageResponseDTO<String> deactivateUser(@PathVariable String username) {
         return userService.deactivateUser(username);
     }
 
-    @GetMapping("/reference-data")
+    @PostMapping("/reference-data")
     public MessageResponseDTO<UserReferenceDataDto> referenceData() {
         return userService.getReferenceData();
     }
