@@ -23,7 +23,7 @@ public class ModuleManagementServiceImpl implements ModuleManagementService {
 
     @Override
     public ModuleDto createModule(ModuleRequest request) {
-        validate(request);
+        validateCreate(request);
 
         moduleRepository.findByCode(request.getCode())
                 .ifPresent(m -> { throw new BadRequestException("module.code.exists"); });
@@ -43,16 +43,26 @@ public class ModuleManagementServiceImpl implements ModuleManagementService {
 
     @Override
     public ModuleDto updateModule(String code, ModuleRequest request) {
-        validate(request);
+        validateUpdate(request);
 
         Module module = moduleRepository.findByCode(code)
                 .orElseThrow(() -> new NotFoundException("module.notfound"));
 
-        module.setName(request.getName());
-        module.setDescription(request.getDescription());
-        module.setUrl(request.getUrl());
-        module.setStatus(resolveStatus(request.getStatus()));
-        module.setSortOrder(request.getSortOrder());
+        if (StringUtils.hasText(request.getName())) {
+            module.setName(request.getName());
+        }
+        if (StringUtils.hasText(request.getDescription())) {
+            module.setDescription(request.getDescription());
+        }
+        if (StringUtils.hasText(request.getUrl())) {
+            module.setUrl(request.getUrl());
+        }
+        if (request.getStatus() != null) {
+            module.setStatus(resolveStatus(request.getStatus()));
+        }
+        if (request.getSortOrder() != null) {
+            module.setSortOrder(request.getSortOrder());
+        }
 
         Module saved = moduleRepository.save(module);
         return toDto(saved);
@@ -75,8 +85,23 @@ public class ModuleManagementServiceImpl implements ModuleManagementService {
         moduleRepository.save(module);
     }
 
-    private void validate(ModuleRequest request) {
+    private void validateCreate(ModuleRequest request) {
         if (request == null || !StringUtils.hasText(request.getCode()) || !StringUtils.hasText(request.getName())) {
+            throw new BadRequestException("module.invalid");
+        }
+    }
+
+    private void validateUpdate(ModuleRequest request) {
+        if (request == null) {
+            throw new BadRequestException("module.invalid");
+        }
+        boolean hasAny =
+                StringUtils.hasText(request.getName()) ||
+                StringUtils.hasText(request.getDescription()) ||
+                StringUtils.hasText(request.getUrl()) ||
+                request.getStatus() != null ||
+                request.getSortOrder() != null;
+        if (!hasAny) {
             throw new BadRequestException("module.invalid");
         }
     }

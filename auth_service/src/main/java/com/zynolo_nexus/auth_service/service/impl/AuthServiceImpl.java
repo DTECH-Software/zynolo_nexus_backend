@@ -409,7 +409,6 @@ public class AuthServiceImpl implements AuthService {
                 ModuleDashboardSectionDto sectionDto = ModuleDashboardSectionDto.builder()
                         .code(section.getCode())
                         .description(StringUtils.hasText(section.getDescription()) ? section.getDescription() : section.getName())
-                        .url(section.getUrl())
                         .pages(pageDtos)
                         .build();
 

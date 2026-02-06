@@ -14,6 +14,5 @@ public class ModuleDashboardSectionDto {
 
     private String code;
     private String description;
-    private String url;
     private List<ModuleDashboardPageDto> pages;
 }
