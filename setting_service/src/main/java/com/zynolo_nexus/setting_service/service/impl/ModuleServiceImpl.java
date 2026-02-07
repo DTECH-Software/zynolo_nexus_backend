@@ -90,6 +90,7 @@ public class ModuleServiceImpl implements ModuleService {
             ModuleDto current = findModuleByCode(code);
             ModuleRequest update = new ModuleRequest();
             update.setCode(code);
+            update.setUsername(request.getUsername());
             update.setName(StringUtils.hasText(request.getName()) ? request.getName() : current.getName());
             update.setDescription(StringUtils.hasText(request.getDescription())
                     ? request.getDescription()
@@ -136,7 +137,7 @@ public class ModuleServiceImpl implements ModuleService {
     }
 
     @Override
-    public MessageResponseDTO<ModuleDto> updateModuleStatus(Long id, ModuleStatus status) {
+    public MessageResponseDTO<ModuleDto> updateModuleStatus(Long id, ModuleStatus status, String username) {
         if (id == null) {
             return MessageResponseDTO.<ModuleDto>builder()
                     .success(false)
@@ -150,6 +151,7 @@ public class ModuleServiceImpl implements ModuleService {
         ModuleDto current = findModuleById(id);
         ModuleRequest update = new ModuleRequest();
         update.setStatus(status != null ? status : current.getStatus());
+        update.setUsername(username);
         ModuleDto module = authModuleClient.updateModule(current.getCode(), update);
         return MessageResponseDTO.<ModuleDto>builder()
                 .success(true)

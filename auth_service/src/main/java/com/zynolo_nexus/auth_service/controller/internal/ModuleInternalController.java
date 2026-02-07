@@ -1,5 +1,6 @@
 package com.zynolo_nexus.auth_service.controller.internal;
 
+import com.zynolo_nexus.auth_service.config.AuditUserContext;
 import com.zynolo_nexus.auth_service.service.ModuleManagementService;
 import com.zynolo_nexus.contracts.modules.ModuleDto;
 import com.zynolo_nexus.contracts.modules.ModuleRequest;
@@ -21,12 +22,14 @@ public class ModuleInternalController {
 
     @PostMapping
     public ModuleDto createModule(@RequestBody ModuleRequest request) {
-        return moduleManagementService.createModule(request);
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> moduleManagementService.createModule(request));
     }
 
     @PostMapping("/{code}/update")
     public ModuleDto updateModule(@PathVariable String code, @RequestBody ModuleRequest request) {
-        return moduleManagementService.updateModule(code, request);
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> moduleManagementService.updateModule(code, request));
     }
 
     @PostMapping("/list")

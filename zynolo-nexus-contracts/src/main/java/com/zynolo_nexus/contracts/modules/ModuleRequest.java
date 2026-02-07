@@ -11,4 +11,5 @@ public class ModuleRequest {
     private String url;
     private ModuleStatus status;
     private Integer sortOrder;
+    private String username;
 }

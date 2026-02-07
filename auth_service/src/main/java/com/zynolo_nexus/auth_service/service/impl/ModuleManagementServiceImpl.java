@@ -124,6 +124,10 @@ public class ModuleManagementServiceImpl implements ModuleManagementService {
                 .status(toContractStatus(module.getStatus()))
                 .statusDescription(module.getStatus() == ModuleStatus.ACTIVE ? "Active" : "Deactive")
                 .sortOrder(module.getSortOrder())
+                .createdDate(module.getCreatedDate())
+                .lastModifiedDate(module.getLastModifiedDate())
+                .createdBy(module.getCreatedBy())
+                .lastModifiedBy(module.getLastModifiedBy())
                 .build();
     }
 

@@ -23,7 +23,7 @@ import com.zynolo_nexus.auth_service.enums.ModuleStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Module {
+public class Module extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

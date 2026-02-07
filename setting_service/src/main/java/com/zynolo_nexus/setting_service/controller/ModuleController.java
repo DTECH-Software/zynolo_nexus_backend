@@ -59,7 +59,11 @@ public class ModuleController {
     @PostMapping("/status")
     public MessageResponseDTO<ModuleDto> updateStatus(@RequestBody ModuleStatusUpdateRequest request) {
         Long id = request != null ? request.getId() : null;
-        return moduleService.updateModuleStatus(id, request != null ? request.getStatus() : null);
+        return moduleService.updateModuleStatus(
+                id,
+                request != null ? request.getStatus() : null,
+                request != null ? request.getUsername() : null
+        );
     }
 
     @PostMapping("/list")

@@ -21,7 +21,7 @@ public interface ModuleService {
 
     MessageResponseDTO<ModuleDto> getModule(Long id);
 
-    MessageResponseDTO<ModuleDto> updateModuleStatus(Long id, com.zynolo_nexus.contracts.modules.ModuleStatus status);
+    MessageResponseDTO<ModuleDto> updateModuleStatus(Long id, com.zynolo_nexus.contracts.modules.ModuleStatus status, String username);
 
     MessageResponseDTO<List<ModuleDto>> getAllModules();
 
