@@ -242,7 +242,7 @@ public class PageServiceImpl implements PageService {
 
         PageFilterResultDto result = PageFilterResultDto.builder()
                 .items(pageItems)
-                .totalElements(totalElements)
+                .totalRecords(totalElements)
                 .totalPages(totalPages)
                 .page(page)
                 .size(size)

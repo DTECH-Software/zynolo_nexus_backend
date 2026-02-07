@@ -256,7 +256,7 @@ public class SectionServiceImpl implements SectionService {
 
         SectionFilterResultDto result = SectionFilterResultDto.builder()
                 .items(pageItems)
-                .totalElements(totalElements)
+                .totalRecords(totalElements)
                 .totalPages(totalPages)
                 .page(page)
                 .size(size)

@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class PageFilterResultDto {
 
     private List<PageListItemDto> items;
-    private long totalElements;
+    private long totalRecords;
     private int totalPages;
     private int page;
     private int size;
