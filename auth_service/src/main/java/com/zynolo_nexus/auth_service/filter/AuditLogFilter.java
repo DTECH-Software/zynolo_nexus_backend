@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.util.StringUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -71,13 +72,33 @@ public class AuditLogFilter extends OncePerRequestFilter {
 
         String authenticatedUsername = getAuthenticatedUsername();
         String payloadUsername = readText(node, "username");
+        String channel = readText(node, "channel");
+        String ip = readText(node, "ip");
+        String userAgent = readText(node, "userAgent");
+        String message = readText(node, "message");
+
+        if (!StringUtils.hasText(channel)) {
+            channel = getHeaderValue(request, "X-Channel", "Channel");
+        }
+        if (!StringUtils.hasText(ip)) {
+            ip = resolveClientIp(request);
+        }
+        if (!StringUtils.hasText(userAgent)) {
+            userAgent = request.getHeader("User-Agent");
+        }
+        if (!StringUtils.hasText(message)) {
+            message = getHeaderValue(request, "X-Message", "Message");
+        }
+        if (!StringUtils.hasText(message)) {
+            message = event;
+        }
 
         AuditLog log = AuditLog.builder()
                 .username(authenticatedUsername != null ? authenticatedUsername : payloadUsername)
-                .channel(readText(node, "channel"))
-                .ip(readText(node, "ip"))
-                .userAgent(readText(node, "userAgent"))
-                .message(readText(node, "message"))
+                .channel(channel)
+                .ip(ip)
+                .userAgent(userAgent)
+                .message(message)
                 .endpoint(endpoint)
                 .event(event)
                 .build();
@@ -116,5 +137,33 @@ public class AuditLogFilter extends OncePerRequestFilter {
             return null;
         }
         return authentication.getName();
+    }
+
+    private String getHeaderValue(HttpServletRequest request, String... names) {
+        if (request == null || names == null) {
+            return null;
+        }
+        for (String name : names) {
+            String value = request.getHeader(name);
+            if (StringUtils.hasText(value)) {
+                return value.trim();
+            }
+        }
+        return null;
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwarded = getHeaderValue(request, "X-Forwarded-For");
+        if (StringUtils.hasText(forwarded)) {
+            String[] parts = forwarded.split(",");
+            if (parts.length > 0 && StringUtils.hasText(parts[0])) {
+                return parts[0].trim();
+            }
+        }
+        String realIp = getHeaderValue(request, "X-Real-IP");
+        if (StringUtils.hasText(realIp)) {
+            return realIp;
+        }
+        return request != null ? request.getRemoteAddr() : null;
     }
 }
