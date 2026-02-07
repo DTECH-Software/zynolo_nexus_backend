@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 public class PageUpdateRequest {
 
+    private String username;
     private String code;
     private String sectionCode;
     private String name;

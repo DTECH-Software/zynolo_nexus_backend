@@ -54,13 +54,21 @@ public class PageController {
     @PostMapping("/{code}/status")
     public MessageResponseDTO<PageDto> updateStatus(@PathVariable String code,
                                                     @RequestBody PageStatusRequest request) {
-        return pageService.updatePageStatus(code, request != null ? request.getStatus() : null);
+        return pageService.updatePageStatus(
+                code,
+                request != null ? request.getStatus() : null,
+                request != null ? request.getUsername() : null
+        );
     }
 
     @PostMapping("/status")
     public MessageResponseDTO<PageDto> updateStatus(@RequestBody PageStatusUpdateRequest request) {
         String code = request != null ? request.getCode() : null;
-        return pageService.updatePageStatus(code, request != null ? request.getStatus() : null);
+        return pageService.updatePageStatus(
+                code,
+                request != null ? request.getStatus() : null,
+                request != null ? request.getUsername() : null
+        );
     }
 
     @PostMapping("/list")

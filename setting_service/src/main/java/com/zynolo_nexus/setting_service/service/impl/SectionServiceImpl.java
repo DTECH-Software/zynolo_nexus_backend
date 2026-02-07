@@ -93,6 +93,7 @@ public class SectionServiceImpl implements SectionService {
             update.setModuleCode(StringUtils.hasText(request.getModuleCode())
                     ? request.getModuleCode()
                     : current.getModuleCode());
+            update.setUsername(request.getUsername());
             update.setName(StringUtils.hasText(request.getName()) ? request.getName() : current.getName());
             update.setDescription(StringUtils.hasText(request.getDescription())
                     ? request.getDescription()
@@ -107,6 +108,7 @@ public class SectionServiceImpl implements SectionService {
         if (request.getStatus() != null) {
             SectionStatusRequest statusRequest = new SectionStatusRequest();
             statusRequest.setStatus(request.getStatus());
+            statusRequest.setUsername(request.getUsername());
             section = authModuleClient.updateSectionStatus(code, statusRequest);
         }
 
@@ -157,9 +159,10 @@ public class SectionServiceImpl implements SectionService {
     }
 
     @Override
-    public MessageResponseDTO<SectionDto> updateSectionStatus(String code, SectionStatus status) {
+    public MessageResponseDTO<SectionDto> updateSectionStatus(String code, SectionStatus status, String username) {
         SectionStatusRequest statusRequest = new SectionStatusRequest();
         statusRequest.setStatus(status);
+        statusRequest.setUsername(username);
         SectionDto section = authModuleClient.updateSectionStatus(code, statusRequest);
         return MessageResponseDTO.<SectionDto>builder()
                 .success(true)

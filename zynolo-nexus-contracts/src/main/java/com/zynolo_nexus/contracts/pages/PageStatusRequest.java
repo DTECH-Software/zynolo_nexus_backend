@@ -6,4 +6,5 @@ import lombok.Data;
 public class PageStatusRequest {
 
     private PageStatus status;
+    private String username;
 }

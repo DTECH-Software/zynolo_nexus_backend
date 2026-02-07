@@ -1,6 +1,7 @@
 package com.zynolo_nexus.auth_service.controller.internal;
 
 import com.zynolo_nexus.auth_service.service.SectionManagementService;
+import com.zynolo_nexus.auth_service.config.AuditUserContext;
 import com.zynolo_nexus.contracts.pages.SectionDto;
 import com.zynolo_nexus.contracts.pages.SectionRequest;
 import com.zynolo_nexus.contracts.pages.SectionStatusRequest;
@@ -26,12 +27,14 @@ public class SectionInternalController {
 
     @PostMapping
     public SectionDto createSection(@RequestBody SectionRequest request) {
-        return sectionManagementService.createSection(request);
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> sectionManagementService.createSection(request));
     }
 
     @PostMapping("/{code}/update")
     public SectionDto updateSection(@PathVariable String code, @RequestBody SectionRequest request) {
-        return sectionManagementService.updateSection(code, request);
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> sectionManagementService.updateSection(code, request));
     }
 
     @PostMapping("/list")
@@ -46,7 +49,8 @@ public class SectionInternalController {
 
     @PostMapping("/{code}/status")
     public SectionDto updateStatus(@PathVariable String code, @RequestBody SectionStatusRequest request) {
-        return sectionManagementService.updateSectionStatus(code, request != null ? request.getStatus() : null);
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> sectionManagementService.updateSectionStatus(code, request != null ? request.getStatus() : null));
     }
 
     @PostMapping("/{code}/deactivate")

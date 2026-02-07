@@ -6,4 +6,5 @@ import lombok.Data;
 public class SectionStatusRequest {
 
     private SectionStatus status;
+    private String username;
 }

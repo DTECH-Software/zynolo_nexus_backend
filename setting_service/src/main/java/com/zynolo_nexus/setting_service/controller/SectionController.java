@@ -56,7 +56,11 @@ public class SectionController {
     @PostMapping("/status")
     public MessageResponseDTO<SectionDto> updateStatus(@RequestBody SectionStatusUpdateRequest request) {
         String code = request != null ? request.getCode() : null;
-        return sectionService.updateSectionStatus(code, request != null ? request.getStatus() : null);
+        return sectionService.updateSectionStatus(
+                code,
+                request != null ? request.getStatus() : null,
+                request != null ? request.getUsername() : null
+        );
     }
 
     @PostMapping("/list")

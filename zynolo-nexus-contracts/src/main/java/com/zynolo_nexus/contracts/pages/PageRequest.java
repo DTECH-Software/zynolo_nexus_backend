@@ -11,4 +11,5 @@ public class PageRequest {
     private String description;
     private String url;
     private Integer sortOrder;
+    private String username;
 }

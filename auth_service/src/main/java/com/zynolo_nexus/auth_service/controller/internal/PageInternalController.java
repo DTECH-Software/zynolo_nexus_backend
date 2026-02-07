@@ -1,6 +1,7 @@
 package com.zynolo_nexus.auth_service.controller.internal;
 
 import com.zynolo_nexus.auth_service.service.PageManagementService;
+import com.zynolo_nexus.auth_service.config.AuditUserContext;
 import com.zynolo_nexus.contracts.pages.PageDto;
 import com.zynolo_nexus.contracts.pages.PageRequest;
 import com.zynolo_nexus.contracts.pages.PageStatusRequest;
@@ -23,12 +24,14 @@ public class PageInternalController {
 
     @PostMapping
     public PageDto createPage(@RequestBody PageRequest request) {
-        return pageManagementService.createPage(request);
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> pageManagementService.createPage(request));
     }
 
     @PostMapping("/{code}/update")
     public PageDto updatePage(@PathVariable String code, @RequestBody PageRequest request) {
-        return pageManagementService.updatePage(code, request);
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> pageManagementService.updatePage(code, request));
     }
 
     @PostMapping("/{code}/get")
@@ -48,7 +51,8 @@ public class PageInternalController {
 
     @PostMapping("/{code}/status")
     public PageDto updateStatus(@PathVariable String code, @RequestBody PageStatusRequest request) {
-        return pageManagementService.updatePageStatus(code, request != null ? request.getStatus() : null);
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> pageManagementService.updatePageStatus(code, request != null ? request.getStatus() : null));
     }
 
     @PostMapping("/{code}/deactivate")

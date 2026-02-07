@@ -21,7 +21,7 @@ public interface PageService {
 
     MessageResponseDTO<PageDto> getPage(Long id);
 
-    MessageResponseDTO<PageDto> updatePageStatus(String code, com.zynolo_nexus.contracts.pages.PageStatus status);
+    MessageResponseDTO<PageDto> updatePageStatus(String code, com.zynolo_nexus.contracts.pages.PageStatus status, String username);
 
     MessageResponseDTO<PageReferenceDataDto> getReferenceData(PageReferenceDataRequest request);
 

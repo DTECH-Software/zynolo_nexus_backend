@@ -80,6 +80,7 @@ public class PageServiceImpl implements PageService {
             update.setSectionCode(StringUtils.hasText(request.getSectionCode())
                     ? request.getSectionCode()
                     : current.getSectionCode());
+            update.setUsername(request.getUsername());
             update.setName(StringUtils.hasText(request.getName()) ? request.getName() : current.getName());
             update.setDescription(StringUtils.hasText(request.getDescription())
                     ? request.getDescription()
@@ -94,6 +95,7 @@ public class PageServiceImpl implements PageService {
         if (request.getStatus() != null) {
             PageStatusRequest statusRequest = new PageStatusRequest();
             statusRequest.setStatus(request.getStatus());
+            statusRequest.setUsername(request.getUsername());
             page = authModuleClient.updatePageStatus(code, statusRequest);
         }
 
@@ -144,9 +146,10 @@ public class PageServiceImpl implements PageService {
     }
 
     @Override
-    public MessageResponseDTO<PageDto> updatePageStatus(String code, PageStatus status) {
+    public MessageResponseDTO<PageDto> updatePageStatus(String code, PageStatus status, String username) {
         PageStatusRequest statusRequest = new PageStatusRequest();
         statusRequest.setStatus(status);
+        statusRequest.setUsername(username);
         PageDto page = authModuleClient.updatePageStatus(code, statusRequest);
         return MessageResponseDTO.<PageDto>builder()
                 .success(true)
