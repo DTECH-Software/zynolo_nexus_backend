@@ -22,7 +22,7 @@ public interface SectionService {
 
     MessageResponseDTO<SectionDto> getSection(Long id);
 
-    MessageResponseDTO<SectionDto> updateSectionStatus(String code, SectionStatus status, String username);
+    MessageResponseDTO<SectionDto> updateSectionStatus(Long id, SectionStatus status, String username);
 
     MessageResponseDTO<List<SectionDto>> getAllSections();
 

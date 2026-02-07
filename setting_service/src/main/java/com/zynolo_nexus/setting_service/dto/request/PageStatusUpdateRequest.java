@@ -11,6 +11,6 @@ public class PageStatusUpdateRequest {
     private String message;
     private String userAgent;
     private String username;
-    private String code;
+    private Long id;
     private PageStatus status;
 }

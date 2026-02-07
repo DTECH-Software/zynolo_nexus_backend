@@ -11,6 +11,6 @@ public class SectionStatusUpdateRequest {
     private String message;
     private String userAgent;
     private String username;
-    private String code;
+    private Long id;
     private SectionStatus status;
 }

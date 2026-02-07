@@ -146,11 +146,22 @@ public class PageServiceImpl implements PageService {
     }
 
     @Override
-    public MessageResponseDTO<PageDto> updatePageStatus(String code, PageStatus status, String username) {
+    public MessageResponseDTO<PageDto> updatePageStatus(Long id, PageStatus status, String username) {
+        if (id == null) {
+            return MessageResponseDTO.<PageDto>builder()
+                    .success(false)
+                    .message("Invalid status request")
+                    .data(null)
+                    .errors(null)
+                    .errorCode(400)
+                    .responseTime(LocalDateTime.now())
+                    .build();
+        }
+        PageDto current = findPageById(id);
         PageStatusRequest statusRequest = new PageStatusRequest();
         statusRequest.setStatus(status);
         statusRequest.setUsername(username);
-        PageDto page = authModuleClient.updatePageStatus(code, statusRequest);
+        PageDto page = authModuleClient.updatePageStatus(current.getCode(), statusRequest);
         return MessageResponseDTO.<PageDto>builder()
                 .success(true)
                 .message("Page status updated successfully")

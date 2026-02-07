@@ -51,11 +51,11 @@ public class PageController {
         return pageService.getPage(id);
     }
 
-    @PostMapping("/{code}/status")
-    public MessageResponseDTO<PageDto> updateStatus(@PathVariable String code,
+    @PostMapping("/{id}/status")
+    public MessageResponseDTO<PageDto> updateStatus(@PathVariable Long id,
                                                     @RequestBody PageStatusRequest request) {
         return pageService.updatePageStatus(
-                code,
+                id,
                 request != null ? request.getStatus() : null,
                 request != null ? request.getUsername() : null
         );
@@ -63,9 +63,9 @@ public class PageController {
 
     @PostMapping("/status")
     public MessageResponseDTO<PageDto> updateStatus(@RequestBody PageStatusUpdateRequest request) {
-        String code = request != null ? request.getCode() : null;
+        Long id = request != null ? request.getId() : null;
         return pageService.updatePageStatus(
-                code,
+                id,
                 request != null ? request.getStatus() : null,
                 request != null ? request.getUsername() : null
         );

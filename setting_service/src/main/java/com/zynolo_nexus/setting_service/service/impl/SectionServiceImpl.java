@@ -159,11 +159,22 @@ public class SectionServiceImpl implements SectionService {
     }
 
     @Override
-    public MessageResponseDTO<SectionDto> updateSectionStatus(String code, SectionStatus status, String username) {
+    public MessageResponseDTO<SectionDto> updateSectionStatus(Long id, SectionStatus status, String username) {
+        if (id == null) {
+            return MessageResponseDTO.<SectionDto>builder()
+                    .success(false)
+                    .message("Invalid status request")
+                    .data(null)
+                    .errors(null)
+                    .errorCode(400)
+                    .responseTime(LocalDateTime.now())
+                    .build();
+        }
+        SectionDto current = findSectionById(id);
         SectionStatusRequest statusRequest = new SectionStatusRequest();
         statusRequest.setStatus(status);
         statusRequest.setUsername(username);
-        SectionDto section = authModuleClient.updateSectionStatus(code, statusRequest);
+        SectionDto section = authModuleClient.updateSectionStatus(current.getCode(), statusRequest);
         return MessageResponseDTO.<SectionDto>builder()
                 .success(true)
                 .message("Section status updated successfully")

@@ -2,6 +2,7 @@ package com.zynolo_nexus.setting_service.controller;
 
 import com.zynolo_nexus.contracts.pages.SectionDto;
 import com.zynolo_nexus.contracts.pages.SectionRequest;
+import com.zynolo_nexus.contracts.pages.SectionStatusRequest;
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.setting_service.dto.request.SectionFilterRequest;
 import com.zynolo_nexus.setting_service.dto.request.SectionReferenceDataRequest;
@@ -55,9 +56,19 @@ public class SectionController {
 
     @PostMapping("/status")
     public MessageResponseDTO<SectionDto> updateStatus(@RequestBody SectionStatusUpdateRequest request) {
-        String code = request != null ? request.getCode() : null;
+        Long id = request != null ? request.getId() : null;
         return sectionService.updateSectionStatus(
-                code,
+                id,
+                request != null ? request.getStatus() : null,
+                request != null ? request.getUsername() : null
+        );
+    }
+
+    @PostMapping("/{id}/status")
+    public MessageResponseDTO<SectionDto> updateStatus(@PathVariable Long id,
+                                                       @RequestBody SectionStatusRequest request) {
+        return sectionService.updateSectionStatus(
+                id,
                 request != null ? request.getStatus() : null,
                 request != null ? request.getUsername() : null
         );
