@@ -4,6 +4,7 @@ import com.zynolo_nexus.auth_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.auth_service.service.SectionManagementService;
 import com.zynolo_nexus.contracts.pages.SectionDto;
 import com.zynolo_nexus.contracts.pages.SectionRequest;
+import com.zynolo_nexus.contracts.pages.SectionStatusRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,6 +49,26 @@ public class SectionAdminController {
                 .errorCode(0)
                 .responseTime(LocalDateTime.now())
                 .build();
+    }
+
+    @PostMapping("/list-all")
+    public MessageResponseDTO<List<SectionDto>> getAllSectionsAll() {
+        List<SectionDto> sections = sectionManagementService.getAllSectionsAll();
+        return MessageResponseDTO.<List<SectionDto>>builder()
+                .success(true)
+                .message("section.fetch.success")
+                .data(sections)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
+    @PostMapping("/{code}/status")
+    public MessageResponseDTO<SectionDto> updateStatus(@PathVariable String code,
+                                                       @RequestBody SectionStatusRequest request) {
+        SectionDto section = sectionManagementService.updateSectionStatus(code, request != null ? request.getStatus() : null);
+        return wrap(section, "section.status.updated");
     }
 
     @PostMapping("/{code}/deactivate")

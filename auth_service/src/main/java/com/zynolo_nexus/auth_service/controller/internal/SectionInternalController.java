@@ -3,6 +3,7 @@ package com.zynolo_nexus.auth_service.controller.internal;
 import com.zynolo_nexus.auth_service.service.SectionManagementService;
 import com.zynolo_nexus.contracts.pages.SectionDto;
 import com.zynolo_nexus.contracts.pages.SectionRequest;
+import com.zynolo_nexus.contracts.pages.SectionStatusRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +37,16 @@ public class SectionInternalController {
     @PostMapping("/list")
     public List<SectionDto> getAllSections(@RequestParam(required = false) String moduleCode) {
         return sectionManagementService.getAllSections(moduleCode);
+    }
+
+    @PostMapping("/list-all")
+    public List<SectionDto> getAllSectionsAll() {
+        return sectionManagementService.getAllSectionsAll();
+    }
+
+    @PostMapping("/{code}/status")
+    public SectionDto updateStatus(@PathVariable String code, @RequestBody SectionStatusRequest request) {
+        return sectionManagementService.updateSectionStatus(code, request != null ? request.getStatus() : null);
     }
 
     @PostMapping("/{code}/deactivate")

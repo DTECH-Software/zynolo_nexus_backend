@@ -14,4 +14,6 @@ public interface SectionRepository extends JpaRepository<Section, Long> {
     List<Section> findAllByActiveTrueOrderBySortOrderAsc();
 
     List<Section> findAllByModuleAndActiveTrueOrderBySortOrderAsc(Module module);
+
+    List<Section> findAllByOrderBySortOrderAsc();
 }

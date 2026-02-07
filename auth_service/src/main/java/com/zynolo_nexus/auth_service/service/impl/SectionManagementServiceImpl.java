@@ -9,6 +9,7 @@ import com.zynolo_nexus.auth_service.repository.SectionRepository;
 import com.zynolo_nexus.auth_service.service.SectionManagementService;
 import com.zynolo_nexus.contracts.pages.SectionDto;
 import com.zynolo_nexus.contracts.pages.SectionRequest;
+import com.zynolo_nexus.contracts.pages.SectionStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,6 +85,26 @@ public class SectionManagementServiceImpl implements SectionManagementService {
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SectionDto> getAllSectionsAll() {
+        return sectionRepository.findAllByOrderBySortOrderAsc()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public SectionDto updateSectionStatus(String code, SectionStatus status) {
+        if (status == null) {
+            throw new BadRequestException("section.status.invalid");
+        }
+        Section section = sectionRepository.findByCode(code)
+                .orElseThrow(() -> new NotFoundException("section.notfound"));
+        section.setActive(status == SectionStatus.ACTIVE);
+        Section saved = sectionRepository.save(section);
+        return toDto(saved);
     }
 
     @Override

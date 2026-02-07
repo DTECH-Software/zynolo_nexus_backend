@@ -13,6 +13,7 @@ import com.zynolo_nexus.contracts.pages.RolePageTaskAccessDto;
 import com.zynolo_nexus.contracts.pages.RolePageTaskAccessUpdateRequest;
 import com.zynolo_nexus.contracts.pages.SectionDto;
 import com.zynolo_nexus.contracts.pages.SectionRequest;
+import com.zynolo_nexus.contracts.pages.SectionStatusRequest;
 import com.zynolo_nexus.contracts.pages.TaskDto;
 import com.zynolo_nexus.contracts.pages.TaskRequest;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -60,6 +61,12 @@ public interface AuthModuleClient {
 
     @PostMapping("/internal/sections/list")
     List<SectionDto> getAllSections();
+
+    @PostMapping("/internal/sections/list-all")
+    List<SectionDto> getAllSectionsAll();
+
+    @PostMapping("/internal/sections/{code}/status")
+    SectionDto updateSectionStatus(@PathVariable("code") String code, @RequestBody SectionStatusRequest request);
 
     @PostMapping("/internal/sections/{code}/deactivate")
     void deactivateSection(@PathVariable("code") String code);
