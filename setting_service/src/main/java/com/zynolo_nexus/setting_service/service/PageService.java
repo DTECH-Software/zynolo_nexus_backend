@@ -19,7 +19,7 @@ public interface PageService {
 
     MessageResponseDTO<List<PageDto>> getAllPages();
 
-    MessageResponseDTO<PageDto> getPage(String code);
+    MessageResponseDTO<PageDto> getPage(Long id);
 
     MessageResponseDTO<PageDto> updatePageStatus(String code, com.zynolo_nexus.contracts.pages.PageStatus status);
 

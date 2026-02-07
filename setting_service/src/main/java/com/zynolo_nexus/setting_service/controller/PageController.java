@@ -47,8 +47,8 @@ public class PageController {
 
     @PostMapping("/view")
     public MessageResponseDTO<PageDto> viewPage(@RequestBody PageViewRequest request) {
-        String code = request != null ? request.getCode() : null;
-        return pageService.getPage(code);
+        Long id = request != null ? request.getId() : null;
+        return pageService.getPage(id);
     }
 
     @PostMapping("/{code}/status")

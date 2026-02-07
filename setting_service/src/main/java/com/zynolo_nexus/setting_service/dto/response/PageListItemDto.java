@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PageListItemDto {
 
+    private Long id;
     private String code;
     private String description;
     private String status;
+    private String statusDescription;
 }

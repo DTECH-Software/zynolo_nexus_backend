@@ -121,8 +121,18 @@ public class PageServiceImpl implements PageService {
     }
 
     @Override
-    public MessageResponseDTO<PageDto> getPage(String code) {
-        PageDto page = authModuleClient.getPage(code);
+    public MessageResponseDTO<PageDto> getPage(Long id) {
+        if (id == null) {
+            return MessageResponseDTO.<PageDto>builder()
+                    .success(false)
+                    .message("Invalid view request")
+                    .data(null)
+                    .errors(null)
+                    .errorCode(400)
+                    .responseTime(LocalDateTime.now())
+                    .build();
+        }
+        PageDto page = findPageById(id);
         return MessageResponseDTO.<PageDto>builder()
                 .success(true)
                 .message("Page details retrieved successfully")
@@ -183,9 +193,11 @@ public class PageServiceImpl implements PageService {
                 .filter(page -> matches(description, page.getDescription()))
                 .filter(page -> matchesStatus(status, page.isActive()))
                 .map(page -> PageListItemDto.builder()
+                        .id(page.getId())
                         .code(page.getCode())
                         .description(StringUtils.hasText(page.getDescription()) ? page.getDescription() : page.getName())
                         .status(page.isActive() ? "ACTIVE" : "INACTIVE")
+                        .statusDescription(page.isActive() ? "Active" : "Inactive")
                         .build())
                 .toList();
 
@@ -273,6 +285,14 @@ public class PageServiceImpl implements PageService {
             return comparator.reversed();
         }
         return comparator;
+    }
+
+    private PageDto findPageById(Long id) {
+        List<PageDto> pages = authModuleClient.getAllPagesAll();
+        return pages.stream()
+                .filter(page -> page.getId() != null && page.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new com.zynolo_nexus.setting_service.exception.NotFoundException("page.notfound"));
     }
 
     private PagePrivilegesDto resolvePrivileges(PageReferenceDataRequest request) {
