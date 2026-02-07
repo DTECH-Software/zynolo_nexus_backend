@@ -1,5 +1,6 @@
 package com.zynolo_nexus.setting_service.service.impl;
 
+import com.zynolo_nexus.contracts.modules.ModuleDto;
 import com.zynolo_nexus.contracts.pages.SectionDto;
 import com.zynolo_nexus.contracts.pages.SectionRequest;
 import com.zynolo_nexus.contracts.pages.SectionStatus;
@@ -11,6 +12,7 @@ import com.zynolo_nexus.setting_service.dto.request.SectionFilterSearch;
 import com.zynolo_nexus.setting_service.dto.request.SectionReferenceDataRequest;
 import com.zynolo_nexus.setting_service.dto.request.SectionUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.response.ReferenceStatusDto;
+import com.zynolo_nexus.setting_service.dto.response.ReferenceModuleDto;
 import com.zynolo_nexus.setting_service.dto.response.SectionFilterResultDto;
 import com.zynolo_nexus.setting_service.dto.response.SectionListItemDto;
 import com.zynolo_nexus.setting_service.dto.response.SectionPrivilegesDto;
@@ -188,11 +190,20 @@ public class SectionServiceImpl implements SectionService {
     @Override
     public MessageResponseDTO<SectionReferenceDataDto> getReferenceData(SectionReferenceDataRequest request) {
         SectionPrivilegesDto privileges = resolvePrivileges(request);
+        List<ReferenceModuleDto> modules = authModuleClient.getAllModules().stream()
+                .map(module -> ReferenceModuleDto.builder()
+                        .code(module.getCode())
+                        .description(StringUtils.hasText(module.getDescription())
+                                ? module.getDescription()
+                                : module.getName())
+                        .build())
+                .toList();
         SectionReferenceDataDto data = SectionReferenceDataDto.builder()
                 .defaultStatus(List.of(
                         ReferenceStatusDto.builder().code("ACTIVE").description("Active").build(),
                         ReferenceStatusDto.builder().code("INACTIVE").description("Inactive").build()
                 ))
+                .modules(modules)
                 .privileges(privileges)
                 .build();
 

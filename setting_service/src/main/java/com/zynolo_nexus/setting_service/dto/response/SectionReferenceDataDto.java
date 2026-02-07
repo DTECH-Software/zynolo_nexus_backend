@@ -13,5 +13,6 @@ import lombok.NoArgsConstructor;
 public class SectionReferenceDataDto {
 
     private List<ReferenceStatusDto> defaultStatus;
+    private List<ReferenceModuleDto> modules;
     private SectionPrivilegesDto privileges;
 }

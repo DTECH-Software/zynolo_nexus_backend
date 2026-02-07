@@ -14,6 +14,7 @@ import com.zynolo_nexus.setting_service.dto.response.PageFilterResultDto;
 import com.zynolo_nexus.setting_service.dto.response.PageListItemDto;
 import com.zynolo_nexus.setting_service.dto.response.PagePrivilegesDto;
 import com.zynolo_nexus.setting_service.dto.response.PageReferenceDataDto;
+import com.zynolo_nexus.setting_service.dto.response.ReferenceSectionDto;
 import com.zynolo_nexus.setting_service.dto.response.ReferenceStatusDto;
 import com.zynolo_nexus.setting_service.model.User;
 import com.zynolo_nexus.setting_service.repository.UserRepository;
@@ -175,11 +176,20 @@ public class PageServiceImpl implements PageService {
     @Override
     public MessageResponseDTO<PageReferenceDataDto> getReferenceData(PageReferenceDataRequest request) {
         PagePrivilegesDto privileges = resolvePrivileges(request);
+        List<ReferenceSectionDto> sections = authModuleClient.getAllSections().stream()
+                .map(section -> ReferenceSectionDto.builder()
+                        .code(section.getCode())
+                        .description(StringUtils.hasText(section.getDescription())
+                                ? section.getDescription()
+                                : section.getName())
+                        .build())
+                .toList();
         PageReferenceDataDto data = PageReferenceDataDto.builder()
                 .defaultStatus(List.of(
                         ReferenceStatusDto.builder().code("ACTIVE").description("Active").build(),
                         ReferenceStatusDto.builder().code("INACTIVE").description("Inactive").build()
                 ))
+                .sections(sections)
                 .privileges(privileges)
                 .build();
 

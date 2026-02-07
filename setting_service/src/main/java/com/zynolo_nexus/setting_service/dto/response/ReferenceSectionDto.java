@@ -1,6 +1,5 @@
 package com.zynolo_nexus.setting_service.dto.response;
 
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,9 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PageReferenceDataDto {
+public class ReferenceSectionDto {
 
-    private List<ReferenceStatusDto> defaultStatus;
-    private List<ReferenceSectionDto> sections;
-    private PagePrivilegesDto privileges;
+    private String code;
+    private String description;
 }
