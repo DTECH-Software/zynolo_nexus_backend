@@ -150,6 +150,10 @@ public class PageManagementServiceImpl implements PageManagementService {
                 .url(page.getUrl())
                 .active(Boolean.TRUE.equals(page.getActive()))
                 .sortOrder(page.getSortOrder())
+                .createdDate(page.getCreatedDate())
+                .lastModifiedDate(page.getLastModifiedDate())
+                .createdBy(page.getCreatedBy())
+                .lastModifiedBy(page.getLastModifiedBy())
                 .build();
     }
 }

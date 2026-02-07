@@ -134,6 +134,10 @@ public class SectionManagementServiceImpl implements SectionManagementService {
                 .url(section.getUrl())
                 .active(Boolean.TRUE.equals(section.getActive()))
                 .sortOrder(section.getSortOrder())
+                .createdDate(section.getCreatedDate())
+                .lastModifiedDate(section.getLastModifiedDate())
+                .createdBy(section.getCreatedBy())
+                .lastModifiedBy(section.getLastModifiedBy())
                 .build();
     }
 }
