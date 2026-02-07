@@ -27,6 +27,9 @@ public class AuditLogFilter extends OncePerRequestFilter {
             Map.entry("/api/v1/setting/modules", "MODULE_CREATE"),
             Map.entry("/api/v1/setting/sections", "SECTION_CREATE"),
             Map.entry("/api/v1/setting/pages", "PAGE_CREATE"),
+            Map.entry("/api/v1/setting/pages/filter-list", "PAGE_FILTER_LIST"),
+            Map.entry("/api/v1/setting/pages/reference-data", "PAGE_REFERENCE_DATA"),
+            Map.entry("/api/v1/setting/tasks", "TASK_CREATE"),
             Map.entry("/api/v1/setting/page-tasks", "PAGE_TASK_CREATE"),
             Map.entry("/api/v1/setting/role-modules", "ROLE_MODULE_ACCESS_UPDATE"),
             Map.entry("/api/v1/setting/role-page-tasks", "ROLE_PAGE_TASK_ACCESS_UPDATE")

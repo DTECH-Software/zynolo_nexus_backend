@@ -10,12 +10,14 @@ import com.zynolo_nexus.auth_service.model.PageTask;
 import com.zynolo_nexus.auth_service.model.Role;
 import com.zynolo_nexus.auth_service.model.RolePageTaskAccess;
 import com.zynolo_nexus.auth_service.model.Section;
+import com.zynolo_nexus.auth_service.model.Task;
 import com.zynolo_nexus.auth_service.repository.ModuleRepository;
 import com.zynolo_nexus.auth_service.repository.PageRepository;
 import com.zynolo_nexus.auth_service.repository.PageTaskRepository;
 import com.zynolo_nexus.auth_service.repository.RolePageTaskAccessRepository;
 import com.zynolo_nexus.auth_service.repository.RoleRepository;
 import com.zynolo_nexus.auth_service.repository.SectionRepository;
+import com.zynolo_nexus.auth_service.repository.TaskRepository;
 import com.zynolo_nexus.auth_service.service.RolePageTaskAccessManagementService;
 import com.zynolo_nexus.contracts.pages.RolePageTaskAccessDto;
 import com.zynolo_nexus.contracts.pages.RolePageTaskAccessUpdateRequest;
@@ -39,6 +41,7 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
     private final SectionRepository sectionRepository;
     private final PageRepository pageRepository;
     private final PageTaskRepository pageTaskRepository;
+    private final TaskRepository taskRepository;
     private final RolePageTaskAccessRepository rolePageTaskAccessRepository;
 
     @Override
@@ -81,8 +84,8 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
                     List<PageTask> pageTasks = tasksByPage.getOrDefault(page.getId(), List.of());
                     List<RolePageTaskAccessDto.TaskPermissionItem> taskItems = pageTasks.stream()
                             .map(task -> RolePageTaskAccessDto.TaskPermissionItem.builder()
-                                    .taskCode(task.getCode())
-                                    .taskName(task.getName())
+                                    .taskCode(task.getTask().getCode())
+                                    .taskName(task.getTask().getName())
                                     .canAccess(accessMap.getOrDefault(task.getId(), Boolean.FALSE))
                                     .build())
                             .toList();
@@ -126,7 +129,10 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
                 Page page = pageRepository.findByCode(perm.getPageCode())
                         .orElseThrow(() -> new NotFoundException("page.notfound"));
 
-                PageTask task = pageTaskRepository.findByPageAndCode(page, perm.getTaskCode())
+                Task taskEntity = taskRepository.findByCode(perm.getTaskCode())
+                        .orElseThrow(() -> new NotFoundException("task.notfound"));
+
+                PageTask task = pageTaskRepository.findByPageAndTask(page, taskEntity)
                         .orElseThrow(() -> new NotFoundException("page.task.notfound"));
 
                 RolePageTaskAccess access = RolePageTaskAccess.builder()

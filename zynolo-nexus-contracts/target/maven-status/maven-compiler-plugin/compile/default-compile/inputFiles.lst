@@ -5,9 +5,13 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contra
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\modules\RoleModuleAccessUpdateRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\pages\PageDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\pages\PageRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\pages\PageStatus.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\pages\PageStatusRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\pages\PageTaskDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\pages\PageTaskRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\pages\RolePageTaskAccessDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\pages\RolePageTaskAccessUpdateRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\pages\SectionDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\pages\SectionRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\pages\TaskDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\zynolo-nexus-contracts\src\main\java\com\zynolo_nexus\contracts\pages\TaskRequest.java

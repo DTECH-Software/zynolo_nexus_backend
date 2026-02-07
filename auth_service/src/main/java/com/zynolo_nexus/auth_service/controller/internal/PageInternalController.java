@@ -3,12 +3,10 @@ package com.zynolo_nexus.auth_service.controller.internal;
 import com.zynolo_nexus.auth_service.service.PageManagementService;
 import com.zynolo_nexus.contracts.pages.PageDto;
 import com.zynolo_nexus.contracts.pages.PageRequest;
+import com.zynolo_nexus.contracts.pages.PageStatusRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,9 +31,24 @@ public class PageInternalController {
         return pageManagementService.updatePage(code, request);
     }
 
+    @PostMapping("/{code}/get")
+    public PageDto getPage(@PathVariable String code) {
+        return pageManagementService.getPage(code);
+    }
+
     @PostMapping("/list")
     public List<PageDto> getAllPages(@RequestParam(required = false) String sectionCode) {
         return pageManagementService.getAllPages(sectionCode);
+    }
+
+    @PostMapping("/list-all")
+    public List<PageDto> getAllPagesIncludingInactive(@RequestParam(required = false) String sectionCode) {
+        return pageManagementService.getAllPagesIncludingInactive(sectionCode);
+    }
+
+    @PostMapping("/{code}/status")
+    public PageDto updateStatus(@PathVariable String code, @RequestBody PageStatusRequest request) {
+        return pageManagementService.updatePageStatus(code, request != null ? request.getStatus() : null);
     }
 
     @PostMapping("/{code}/deactivate")

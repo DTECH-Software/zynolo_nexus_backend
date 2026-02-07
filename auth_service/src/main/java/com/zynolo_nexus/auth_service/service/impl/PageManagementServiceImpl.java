@@ -9,6 +9,7 @@ import com.zynolo_nexus.auth_service.repository.SectionRepository;
 import com.zynolo_nexus.auth_service.service.PageManagementService;
 import com.zynolo_nexus.contracts.pages.PageDto;
 import com.zynolo_nexus.contracts.pages.PageRequest;
+import com.zynolo_nexus.contracts.pages.PageStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,6 +85,42 @@ public class PageManagementServiceImpl implements PageManagementService {
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PageDto> getAllPagesIncludingInactive(String sectionCode) {
+        if (StringUtils.hasText(sectionCode)) {
+            Section section = sectionRepository.findByCode(sectionCode)
+                    .orElseThrow(() -> new NotFoundException("section.notfound"));
+            return pageRepository.findAllBySectionOrderBySortOrderAsc(section)
+                    .stream()
+                    .map(this::toDto)
+                    .collect(Collectors.toList());
+        }
+
+        return pageRepository.findAllByOrderBySortOrderAsc()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public PageDto getPage(String code) {
+        Page page = pageRepository.findByCode(code)
+                .orElseThrow(() -> new NotFoundException("page.notfound"));
+        return toDto(page);
+    }
+
+    @Override
+    public PageDto updatePageStatus(String code, PageStatus status) {
+        if (status == null) {
+            throw new BadRequestException("page.invalid");
+        }
+        Page page = pageRepository.findByCode(code)
+                .orElseThrow(() -> new NotFoundException("page.notfound"));
+        page.setActive(PageStatus.ACTIVE == status);
+        Page saved = pageRepository.save(page);
+        return toDto(saved);
     }
 
     @Override

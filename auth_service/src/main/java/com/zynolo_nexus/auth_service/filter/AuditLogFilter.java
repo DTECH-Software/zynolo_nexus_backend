@@ -37,7 +37,8 @@ public class AuditLogFilter extends OncePerRequestFilter {
             Map.entry("/internal/modules", "INTERNAL_MODULE_CREATE"),
             Map.entry("/internal/sections", "INTERNAL_SECTION_CREATE"),
             Map.entry("/internal/pages", "INTERNAL_PAGE_CREATE"),
-            Map.entry("/internal/page-tasks", "INTERNAL_PAGE_TASK_CREATE")
+            Map.entry("/internal/page-tasks", "INTERNAL_PAGE_TASK_CREATE"),
+            Map.entry("/internal/tasks", "INTERNAL_TASK_CREATE")
     );
 
     private final AuditLogRepository auditLogRepository;

@@ -6,12 +6,15 @@ import com.zynolo_nexus.contracts.modules.RoleModuleAccessDto;
 import com.zynolo_nexus.contracts.modules.RoleModuleAccessUpdateRequest;
 import com.zynolo_nexus.contracts.pages.PageDto;
 import com.zynolo_nexus.contracts.pages.PageRequest;
+import com.zynolo_nexus.contracts.pages.PageStatusRequest;
 import com.zynolo_nexus.contracts.pages.PageTaskDto;
 import com.zynolo_nexus.contracts.pages.PageTaskRequest;
 import com.zynolo_nexus.contracts.pages.RolePageTaskAccessDto;
 import com.zynolo_nexus.contracts.pages.RolePageTaskAccessUpdateRequest;
 import com.zynolo_nexus.contracts.pages.SectionDto;
 import com.zynolo_nexus.contracts.pages.SectionRequest;
+import com.zynolo_nexus.contracts.pages.TaskDto;
+import com.zynolo_nexus.contracts.pages.TaskRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import com.zynolo_nexus.setting_service.config.FeignInternalAuthConfig;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -67,11 +70,35 @@ public interface AuthModuleClient {
     @PostMapping("/internal/pages/{code}/update")
     PageDto updatePage(@PathVariable("code") String code, @RequestBody PageRequest request);
 
+    @PostMapping("/internal/pages/{code}/get")
+    PageDto getPage(@PathVariable("code") String code);
+
     @PostMapping("/internal/pages/list")
     List<PageDto> getAllPages();
 
+    @PostMapping("/internal/pages/list-all")
+    List<PageDto> getAllPagesAll();
+
+    @PostMapping("/internal/pages/{code}/status")
+    PageDto updatePageStatus(@PathVariable("code") String code, @RequestBody PageStatusRequest request);
+
     @PostMapping("/internal/pages/{code}/deactivate")
     void deactivatePage(@PathVariable("code") String code);
+
+    @PostMapping("/internal/tasks")
+    TaskDto createTask(@RequestBody TaskRequest request);
+
+    @PostMapping("/internal/tasks/{code}/update")
+    TaskDto updateTask(@PathVariable("code") String code, @RequestBody TaskRequest request);
+
+    @PostMapping("/internal/tasks/{code}/get")
+    TaskDto getTask(@PathVariable("code") String code);
+
+    @PostMapping("/internal/tasks/list")
+    List<TaskDto> getAllTasksCatalog();
+
+    @PostMapping("/internal/tasks/{code}/deactivate")
+    void deactivateTask(@PathVariable("code") String code);
 
     @PostMapping("/internal/page-tasks")
     PageTaskDto createTask(@RequestBody PageTaskRequest request);

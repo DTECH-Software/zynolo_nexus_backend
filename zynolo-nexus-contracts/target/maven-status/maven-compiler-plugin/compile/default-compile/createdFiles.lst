@@ -2,6 +2,8 @@ com\zynolo_nexus\contracts\pages\RolePageTaskAccessDto$TaskPermissionItem$TaskPe
 com\zynolo_nexus\contracts\modules\RoleModuleAccessDto$RoleModuleAccessDtoBuilder.class
 com\zynolo_nexus\contracts\pages\PageRequest.class
 com\zynolo_nexus\contracts\pages\RolePageTaskAccessUpdateRequest.class
+com\zynolo_nexus\contracts\pages\TaskDto.class
+com\zynolo_nexus\contracts\pages\PageStatus.class
 com\zynolo_nexus\contracts\pages\SectionDto.class
 com\zynolo_nexus\contracts\pages\PageTaskDto$PageTaskDtoBuilder.class
 com\zynolo_nexus\contracts\pages\PageTaskRequest.class
@@ -14,12 +16,15 @@ com\zynolo_nexus\contracts\modules\RoleModuleAccessDto$RoleModulePermissionItem$
 com\zynolo_nexus\contracts\pages\RolePageTaskAccessDto$PagePermissionItem.class
 com\zynolo_nexus\contracts\modules\RoleModuleAccessDto$RoleModulePermissionItem.class
 com\zynolo_nexus\contracts\pages\RolePageTaskAccessDto.class
+com\zynolo_nexus\contracts\pages\TaskRequest.class
 com\zynolo_nexus\contracts\modules\ModuleStatus.class
 com\zynolo_nexus\contracts\pages\PageDto.class
 com\zynolo_nexus\contracts\pages\RolePageTaskAccessDto$RolePageTaskAccessDtoBuilder.class
 com\zynolo_nexus\contracts\pages\RolePageTaskAccessUpdateRequest$PageTaskPermission.class
 com\zynolo_nexus\contracts\pages\RolePageTaskAccessDto$TaskPermissionItem.class
+com\zynolo_nexus\contracts\pages\TaskDto$TaskDtoBuilder.class
 com\zynolo_nexus\contracts\modules\RoleModuleAccessDto.class
+com\zynolo_nexus\contracts\pages\PageStatusRequest.class
 com\zynolo_nexus\contracts\pages\SectionRequest.class
 com\zynolo_nexus\contracts\pages\PageTaskDto.class
 com\zynolo_nexus\contracts\modules\RoleModuleAccessUpdateRequest$ModulePermission.class
