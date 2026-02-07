@@ -14,9 +14,7 @@ public interface PageTaskRepository extends JpaRepository<PageTask, Long> {
 
     Optional<PageTask> findByPageAndTask_Code(Page page, String code);
 
-    List<PageTask> findAllByActiveTrueOrderBySortOrderAsc();
+    List<PageTask> findAllByOrderByIdAsc();
 
-    List<PageTask> findAllByPageAndActiveTrueOrderBySortOrderAsc(Page page);
-
-    List<PageTask> findAllByPageOrderBySortOrderAsc(Page page);
+    List<PageTask> findAllByPageOrderByIdAsc(Page page);
 }

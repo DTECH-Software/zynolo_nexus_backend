@@ -41,11 +41,4 @@ public class PageTask {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean active = true;
-
-    @Column(name = "sort_order")
-    private Integer sortOrder;
 }

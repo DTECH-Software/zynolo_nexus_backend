@@ -51,7 +51,7 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
         List<Module> modules = moduleRepository.findAllActiveOrderBySortOrderAsc(ModuleStatus.ACTIVE);
         List<Section> sections = sectionRepository.findAllByActiveTrueOrderBySortOrderAsc();
         List<Page> pages = pageRepository.findAllByActiveTrueOrderBySortOrderAsc();
-        List<PageTask> tasks = pageTaskRepository.findAllByActiveTrueOrderBySortOrderAsc();
+        List<PageTask> tasks = pageTaskRepository.findAllByOrderByIdAsc();
 
         Map<Long, List<Section>> sectionsByModule = new HashMap<>();
         for (Section section : sections) {
