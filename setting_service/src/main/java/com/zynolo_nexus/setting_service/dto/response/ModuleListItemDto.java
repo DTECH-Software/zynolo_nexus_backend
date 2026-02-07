@@ -1,4 +1,4 @@
-package com.zynolo_nexus.contracts.modules;
+package com.zynolo_nexus.setting_service.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,14 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ModuleDto {
+public class ModuleListItemDto {
 
     private Long id;
     private String code;
-    private String name;
     private String description;
-    private String url;
-    private ModuleStatus status;
+    private String status;
     private String statusDescription;
-    private Integer sortOrder;
 }

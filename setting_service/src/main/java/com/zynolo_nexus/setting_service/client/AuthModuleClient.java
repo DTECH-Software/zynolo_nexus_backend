@@ -44,6 +44,9 @@ public interface AuthModuleClient {
     @PostMapping("/internal/modules/list")
     List<ModuleDto> getAllModules();
 
+    @PostMapping("/internal/modules/list-all")
+    List<ModuleDto> getAllModulesAll();
+
     @PostMapping("/internal/modules/{code}/deactivate")
     void deactivateModule(@PathVariable("code") String code);
 

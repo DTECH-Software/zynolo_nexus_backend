@@ -34,6 +34,11 @@ public class ModuleInternalController {
         return moduleManagementService.getAllModules();
     }
 
+    @PostMapping("/list-all")
+    public List<ModuleDto> getAllModulesAll() {
+        return moduleManagementService.getAllModulesAll();
+    }
+
     @PostMapping("/{code}/deactivate")
     public void deactivateModule(@PathVariable String code) {
         moduleManagementService.deactivateModule(code);

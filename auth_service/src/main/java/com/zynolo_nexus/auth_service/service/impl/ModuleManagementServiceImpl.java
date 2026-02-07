@@ -77,6 +77,14 @@ public class ModuleManagementServiceImpl implements ModuleManagementService {
     }
 
     @Override
+    public List<ModuleDto> getAllModulesAll() {
+        return moduleRepository.findAllByOrderBySortOrderAsc()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void deactivateModule(String code) {
         Module module = moduleRepository.findByCode(code)
                 .orElseThrow(() -> new NotFoundException("module.notfound"));
@@ -114,6 +122,7 @@ public class ModuleManagementServiceImpl implements ModuleManagementService {
                 .description(module.getDescription())
                 .url(module.getUrl())
                 .status(toContractStatus(module.getStatus()))
+                .statusDescription(module.getStatus() == ModuleStatus.ACTIVE ? "Active" : "Deactive")
                 .sortOrder(module.getSortOrder())
                 .build();
     }

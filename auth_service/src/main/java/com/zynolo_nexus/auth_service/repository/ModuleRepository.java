@@ -18,4 +18,6 @@ public interface ModuleRepository extends JpaRepository<Module, Long> {
             order by m.sortOrder asc
             """)
     List<Module> findAllActiveOrderBySortOrderAsc(@Param("status") com.zynolo_nexus.auth_service.enums.ModuleStatus status);
+
+    List<Module> findAllByOrderBySortOrderAsc();
 }
