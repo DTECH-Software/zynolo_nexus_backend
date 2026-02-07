@@ -5,6 +5,7 @@ import com.zynolo_nexus.contracts.pages.PageRequest;
 import com.zynolo_nexus.contracts.pages.PageStatusRequest;
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.setting_service.dto.request.PageFilterRequest;
+import com.zynolo_nexus.setting_service.dto.request.PageReferenceDataRequest;
 import com.zynolo_nexus.setting_service.dto.request.PageStatusUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.request.PageUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.request.PageViewRequest;
@@ -68,8 +69,8 @@ public class PageController {
     }
 
     @PostMapping("/reference-data")
-    public MessageResponseDTO<PageReferenceDataDto> referenceData() {
-        return pageService.getReferenceData();
+    public MessageResponseDTO<PageReferenceDataDto> referenceData(@RequestBody(required = false) PageReferenceDataRequest request) {
+        return pageService.getReferenceData(request);
     }
 
     @PostMapping("/filter-list")

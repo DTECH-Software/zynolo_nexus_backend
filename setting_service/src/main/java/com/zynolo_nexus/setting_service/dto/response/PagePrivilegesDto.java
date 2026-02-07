@@ -16,6 +16,4 @@ public class PagePrivilegesDto {
     private boolean view;
     private boolean search;
     private boolean delete;
-    private boolean userRolePrivilegeAssign;
-    private boolean passwordReset;
 }

@@ -8,27 +8,37 @@ import com.zynolo_nexus.setting_service.client.AuthModuleClient;
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.setting_service.dto.request.PageFilterRequest;
 import com.zynolo_nexus.setting_service.dto.request.PageFilterSearch;
+import com.zynolo_nexus.setting_service.dto.request.PageReferenceDataRequest;
 import com.zynolo_nexus.setting_service.dto.request.PageUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.response.PageFilterResultDto;
 import com.zynolo_nexus.setting_service.dto.response.PageListItemDto;
 import com.zynolo_nexus.setting_service.dto.response.PagePrivilegesDto;
 import com.zynolo_nexus.setting_service.dto.response.PageReferenceDataDto;
 import com.zynolo_nexus.setting_service.dto.response.ReferenceStatusDto;
+import com.zynolo_nexus.setting_service.model.User;
+import com.zynolo_nexus.setting_service.repository.UserRepository;
 import com.zynolo_nexus.setting_service.service.PageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class PageServiceImpl implements PageService {
 
+    private static final String PAGE_MANAGEMENT_CODE = "PAGM";
+
     private final AuthModuleClient authModuleClient;
+    private final UserRepository userRepository;
 
     @Override
     public MessageResponseDTO<PageDto> createPage(PageRequest request) {
@@ -139,21 +149,14 @@ public class PageServiceImpl implements PageService {
     }
 
     @Override
-    public MessageResponseDTO<PageReferenceDataDto> getReferenceData() {
+    public MessageResponseDTO<PageReferenceDataDto> getReferenceData(PageReferenceDataRequest request) {
+        PagePrivilegesDto privileges = resolvePrivileges(request);
         PageReferenceDataDto data = PageReferenceDataDto.builder()
                 .defaultStatus(List.of(
                         ReferenceStatusDto.builder().code("ACTIVE").description("Active").build(),
                         ReferenceStatusDto.builder().code("INACTIVE").description("Inactive").build()
                 ))
-                .privileges(PagePrivilegesDto.builder()
-                        .add(false)
-                        .update(true)
-                        .view(true)
-                        .search(true)
-                        .delete(false)
-                        .userRolePrivilegeAssign(false)
-                        .passwordReset(false)
-                        .build())
+                .privileges(privileges)
                 .build();
 
         return MessageResponseDTO.<PageReferenceDataDto>builder()
@@ -270,5 +273,123 @@ public class PageServiceImpl implements PageService {
             return comparator.reversed();
         }
         return comparator;
+    }
+
+    private PagePrivilegesDto resolvePrivileges(PageReferenceDataRequest request) {
+        String username = request != null ? request.getUsername() : null;
+        if (!StringUtils.hasText(username)) {
+            username = getAuthenticatedUsername();
+        }
+
+        if (!StringUtils.hasText(username)) {
+            return PagePrivilegesDto.builder()
+                    .add(false)
+                    .update(false)
+                    .view(false)
+                    .search(false)
+                    .delete(false)
+                    .build();
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new com.zynolo_nexus.setting_service.exception.NotFoundException("user.fetch.notfound"));
+
+        String roleCode = user.getRole() != null && user.getRole().getCode() != null
+                ? user.getRole().getCode().name()
+                : null;
+
+        if (!StringUtils.hasText(roleCode)) {
+            return PagePrivilegesDto.builder()
+                    .add(false)
+                    .update(false)
+                    .view(false)
+                    .search(false)
+                    .delete(false)
+                    .build();
+        }
+
+        var access = authModuleClient.getRolePageTaskAccess(roleCode);
+        if (access == null || access.getPages() == null) {
+            return PagePrivilegesDto.builder()
+                    .add(false)
+                    .update(false)
+                    .view(false)
+                    .search(false)
+                    .delete(false)
+                    .build();
+        }
+
+        Map<String, Boolean> taskAccess = new HashMap<>();
+        access.getPages().stream()
+                .filter(page -> PAGE_MANAGEMENT_CODE.equalsIgnoreCase(page.getPageCode()))
+                .findFirst()
+                .ifPresent(page -> {
+                    if (page.getTasks() != null) {
+                        page.getTasks().forEach(task -> {
+                            String codeKey = normalizeTaskKey(task.getTaskCode());
+                            if (StringUtils.hasText(codeKey)) {
+                                taskAccess.put(codeKey, task.isCanAccess());
+                            }
+                            String nameKey = normalizeTaskKey(task.getTaskName());
+                            if (StringUtils.hasText(nameKey)) {
+                                taskAccess.putIfAbsent(nameKey, task.isCanAccess());
+                            }
+                        });
+                    }
+                });
+
+        boolean add = hasTask(taskAccess, "ADD", "CREATE", "NEW");
+        boolean update = hasTask(taskAccess, "UPDATE", "EDIT");
+        boolean view = hasTask(taskAccess, "VIEW", "READ");
+        boolean search = hasTask(taskAccess, "SEARCH", "FILTER", "LIST");
+        boolean delete = hasTask(taskAccess, "DELETE", "REMOVE", "DEACTIVATE");
+
+        return PagePrivilegesDto.builder()
+                .add(add)
+                .update(update)
+                .view(view)
+                .search(search)
+                .delete(delete)
+                .build();
+    }
+
+    private String normalizeTaskKey(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        return value.replaceAll("[^A-Za-z0-9]", "").toUpperCase(Locale.ROOT);
+    }
+
+    private boolean hasTask(Map<String, Boolean> taskAccess, String... tokens) {
+        if (taskAccess == null || taskAccess.isEmpty() || tokens == null) {
+            return false;
+        }
+        for (Map.Entry<String, Boolean> entry : taskAccess.entrySet()) {
+            if (!Boolean.TRUE.equals(entry.getValue())) {
+                continue;
+            }
+            String key = entry.getKey();
+            if (!StringUtils.hasText(key)) {
+                continue;
+            }
+            for (String token : tokens) {
+                if (StringUtils.hasText(token) && key.contains(token)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private String getAuthenticatedUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal == null || "anonymousUser".equals(principal)) {
+            return null;
+        }
+        return authentication.getName();
     }
 }
