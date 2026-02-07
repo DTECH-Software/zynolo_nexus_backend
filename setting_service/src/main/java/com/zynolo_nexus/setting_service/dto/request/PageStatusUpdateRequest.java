@@ -4,13 +4,13 @@ import com.zynolo_nexus.contracts.pages.PageStatus;
 import lombok.Data;
 
 @Data
-public class PageUpdateRequest {
+public class PageStatusUpdateRequest {
 
+    private String channel;
+    private String ip;
+    private String message;
+    private String userAgent;
+    private String username;
     private String code;
-    private String sectionCode;
-    private String name;
-    private String description;
-    private String url;
-    private Integer sortOrder;
     private PageStatus status;
 }

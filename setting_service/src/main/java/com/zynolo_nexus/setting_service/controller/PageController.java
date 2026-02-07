@@ -5,7 +5,9 @@ import com.zynolo_nexus.contracts.pages.PageRequest;
 import com.zynolo_nexus.contracts.pages.PageStatusRequest;
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.setting_service.dto.request.PageFilterRequest;
+import com.zynolo_nexus.setting_service.dto.request.PageStatusUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.request.PageUpdateRequest;
+import com.zynolo_nexus.setting_service.dto.request.PageViewRequest;
 import com.zynolo_nexus.setting_service.dto.response.PageFilterResultDto;
 import com.zynolo_nexus.setting_service.dto.response.PageReferenceDataDto;
 import com.zynolo_nexus.setting_service.service.PageService;
@@ -36,14 +38,27 @@ public class PageController {
         return pageService.updatePage(code, request);
     }
 
-    @PostMapping("/{code}/get")
-    public MessageResponseDTO<PageDto> getPage(@PathVariable String code) {
+    @PostMapping("/update")
+    public MessageResponseDTO<PageDto> updatePage(@RequestBody PageUpdateRequest request) {
+        String code = request != null ? request.getCode() : null;
+        return pageService.updatePage(code, request);
+    }
+
+    @PostMapping("/view")
+    public MessageResponseDTO<PageDto> viewPage(@RequestBody PageViewRequest request) {
+        String code = request != null ? request.getCode() : null;
         return pageService.getPage(code);
     }
 
     @PostMapping("/{code}/status")
     public MessageResponseDTO<PageDto> updateStatus(@PathVariable String code,
                                                     @RequestBody PageStatusRequest request) {
+        return pageService.updatePageStatus(code, request != null ? request.getStatus() : null);
+    }
+
+    @PostMapping("/status")
+    public MessageResponseDTO<PageDto> updateStatus(@RequestBody PageStatusUpdateRequest request) {
+        String code = request != null ? request.getCode() : null;
         return pageService.updatePageStatus(code, request != null ? request.getStatus() : null);
     }
 
