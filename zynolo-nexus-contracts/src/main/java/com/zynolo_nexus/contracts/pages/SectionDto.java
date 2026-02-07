@@ -20,6 +20,8 @@ public class SectionDto {
     private String description;
     private String url;
     private boolean active;
+    private String status;
+    private String statusDescription;
     private Integer sortOrder;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;

@@ -133,6 +133,8 @@ public class SectionManagementServiceImpl implements SectionManagementService {
                 .description(section.getDescription())
                 .url(section.getUrl())
                 .active(Boolean.TRUE.equals(section.getActive()))
+                .status(Boolean.TRUE.equals(section.getActive()) ? "ACTIVE" : "INACTIVE")
+                .statusDescription(Boolean.TRUE.equals(section.getActive()) ? "Active" : "Inactive")
                 .sortOrder(section.getSortOrder())
                 .createdDate(section.getCreatedDate())
                 .lastModifiedDate(section.getLastModifiedDate())

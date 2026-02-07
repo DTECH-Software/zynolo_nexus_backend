@@ -149,6 +149,8 @@ public class PageManagementServiceImpl implements PageManagementService {
                 .description(page.getDescription())
                 .url(page.getUrl())
                 .active(Boolean.TRUE.equals(page.getActive()))
+                .status(Boolean.TRUE.equals(page.getActive()) ? "ACTIVE" : "INACTIVE")
+                .statusDescription(Boolean.TRUE.equals(page.getActive()) ? "Active" : "Inactive")
                 .sortOrder(page.getSortOrder())
                 .createdDate(page.getCreatedDate())
                 .lastModifiedDate(page.getLastModifiedDate())
