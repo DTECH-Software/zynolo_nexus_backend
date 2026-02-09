@@ -11,4 +11,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     Optional<Task> findByCode(String code);
 
     List<Task> findAllByActiveTrueOrderBySortOrderAsc();
+
+    List<Task> findAllByOrderBySortOrderAsc();
 }

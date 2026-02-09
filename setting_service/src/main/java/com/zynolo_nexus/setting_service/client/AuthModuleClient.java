@@ -107,6 +107,9 @@ public interface AuthModuleClient {
     @PostMapping("/internal/tasks/list")
     List<TaskDto> getAllTasksCatalog();
 
+    @PostMapping("/internal/tasks/list-all")
+    List<TaskDto> getAllTasksCatalogAll();
+
     @PostMapping("/internal/tasks/{code}/deactivate")
     void deactivateTask(@PathVariable("code") String code);
 

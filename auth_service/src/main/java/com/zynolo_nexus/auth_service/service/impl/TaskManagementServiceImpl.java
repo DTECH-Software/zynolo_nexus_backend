@@ -84,6 +84,14 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     }
 
     @Override
+    public List<TaskDto> getAllTasksAll() {
+        return taskRepository.findAllByOrderBySortOrderAsc()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void deactivateTask(String code) {
         Task task = taskRepository.findByCode(code)
                 .orElseThrow(() -> new NotFoundException("task.notfound"));
@@ -113,7 +121,13 @@ public class TaskManagementServiceImpl implements TaskManagementService {
                 .name(task.getName())
                 .description(task.getDescription())
                 .active(Boolean.TRUE.equals(task.getActive()))
+                .status(Boolean.TRUE.equals(task.getActive()) ? "ACTIVE" : "INACTIVE")
+                .statusDescription(Boolean.TRUE.equals(task.getActive()) ? "Active" : "Inactive")
                 .sortOrder(task.getSortOrder())
+                .createdDate(task.getCreatedDate())
+                .lastModifiedDate(task.getLastModifiedDate())
+                .createdBy(task.getCreatedBy())
+                .lastModifiedBy(task.getLastModifiedBy())
                 .build();
     }
 }

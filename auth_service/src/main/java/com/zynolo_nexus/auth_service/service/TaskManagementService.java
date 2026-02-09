@@ -15,5 +15,7 @@ public interface TaskManagementService {
 
     List<TaskDto> getAllTasks();
 
+    List<TaskDto> getAllTasksAll();
+
     void deactivateTask(String code);
 }

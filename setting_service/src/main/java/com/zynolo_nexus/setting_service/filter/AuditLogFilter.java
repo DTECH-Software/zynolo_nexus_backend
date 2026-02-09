@@ -52,6 +52,11 @@ public class AuditLogFilter extends OncePerRequestFilter {
             Map.entry("/api/v1/setting/username-policy/update", "USERNAME_POLICY_UPDATE"),
             Map.entry("/api/v1/setting/username-policy/reset", "USERNAME_POLICY_RESET"),
             Map.entry("/api/v1/setting/tasks", "TASK_CREATE"),
+            Map.entry("/api/v1/setting/tasks/update", "TASK_UPDATE"),
+            Map.entry("/api/v1/setting/tasks/view", "TASK_VIEW"),
+            Map.entry("/api/v1/setting/tasks/status", "TASK_STATUS_UPDATE"),
+            Map.entry("/api/v1/setting/tasks/filter-list", "TASK_FILTER_LIST"),
+            Map.entry("/api/v1/setting/tasks/reference-data", "TASK_REFERENCE_DATA"),
             Map.entry("/api/v1/setting/page-tasks", "PAGE_TASK_CREATE"),
             Map.entry("/api/v1/setting/role-modules", "ROLE_MODULE_ACCESS_UPDATE"),
             Map.entry("/api/v1/setting/role-page-tasks", "ROLE_PAGE_TASK_ACCESS_UPDATE")

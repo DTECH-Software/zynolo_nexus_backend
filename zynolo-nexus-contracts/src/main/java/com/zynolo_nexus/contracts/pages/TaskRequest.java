@@ -10,4 +10,5 @@ public class TaskRequest {
     private String description;
     private Integer sortOrder;
     private PageStatus status;
+    private String username;
 }

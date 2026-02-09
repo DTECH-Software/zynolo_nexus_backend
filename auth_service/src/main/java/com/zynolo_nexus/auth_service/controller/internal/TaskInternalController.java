@@ -1,5 +1,6 @@
 package com.zynolo_nexus.auth_service.controller.internal;
 
+import com.zynolo_nexus.auth_service.config.AuditUserContext;
 import com.zynolo_nexus.auth_service.service.TaskManagementService;
 import com.zynolo_nexus.contracts.pages.TaskDto;
 import com.zynolo_nexus.contracts.pages.TaskRequest;
@@ -21,12 +22,14 @@ public class TaskInternalController {
 
     @PostMapping
     public TaskDto createTask(@RequestBody TaskRequest request) {
-        return taskManagementService.createTask(request);
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> taskManagementService.createTask(request));
     }
 
     @PostMapping("/{code}/update")
     public TaskDto updateTask(@PathVariable String code, @RequestBody TaskRequest request) {
-        return taskManagementService.updateTask(code, request);
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> taskManagementService.updateTask(code, request));
     }
 
     @PostMapping("/{code}/get")
@@ -37,6 +40,11 @@ public class TaskInternalController {
     @PostMapping("/list")
     public List<TaskDto> getAllTasks() {
         return taskManagementService.getAllTasks();
+    }
+
+    @PostMapping("/list-all")
+    public List<TaskDto> getAllTasksAll() {
+        return taskManagementService.getAllTasksAll();
     }
 
     @PostMapping("/{code}/deactivate")
