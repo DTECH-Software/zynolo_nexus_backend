@@ -339,7 +339,7 @@ public class PageServiceImpl implements PageService {
                 .orElseThrow(() -> new com.zynolo_nexus.setting_service.exception.NotFoundException("user.fetch.notfound"));
 
         String roleCode = user.getRole() != null && user.getRole().getCode() != null
-                ? user.getRole().getCode().name()
+                ? user.getRole().getCode()
                 : null;
 
         if (!StringUtils.hasText(roleCode)) {

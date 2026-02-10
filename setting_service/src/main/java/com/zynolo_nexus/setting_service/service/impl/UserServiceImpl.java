@@ -21,7 +21,7 @@ import com.zynolo_nexus.setting_service.dto.response.ReferenceRoleDto;
 import com.zynolo_nexus.setting_service.dto.response.UserReferenceDataDto;
 import com.zynolo_nexus.setting_service.enums.CompanyStatus;
 import com.zynolo_nexus.setting_service.enums.LoginStatus;
-import com.zynolo_nexus.setting_service.enums.RoleCode;
+import com.zynolo_nexus.setting_service.enums.RoleStatus;
 import com.zynolo_nexus.setting_service.enums.UserStatus;
 import com.zynolo_nexus.setting_service.exception.BadRequestException;
 import com.zynolo_nexus.setting_service.exception.NotFoundException;
@@ -182,8 +182,9 @@ public class UserServiceImpl implements UserService {
                 .toList();
 
         var roles = roleRepository.findAll().stream()
+                .filter(role -> role.getStatus() == null || role.getStatus() == RoleStatus.ACTIVE)
                 .map(r -> ReferenceRoleDto.builder()
-                        .code(r.getCode().name())
+                        .code(r.getCode())
                         .description(r.getDescription())
                         .build())
                 .toList();
@@ -208,14 +209,12 @@ public class UserServiceImpl implements UserService {
         if (!StringUtils.hasText(roleCodeText)) {
             throw new BadRequestException("user.create.role.notfound");
         }
-        RoleCode roleCode;
-        try {
-            roleCode = RoleCode.valueOf(roleCodeText);
-        } catch (IllegalArgumentException ex) {
+        Role role = roleRepository.findByCodeIgnoreCase(roleCodeText)
+                .orElseThrow(() -> new BadRequestException("user.create.role.notfound"));
+        if (role.getStatus() != null && role.getStatus() != RoleStatus.ACTIVE) {
             throw new BadRequestException("user.create.role.notfound");
         }
-        return roleRepository.findByCode(roleCode)
-                .orElseThrow(() -> new BadRequestException("user.create.role.notfound"));
+        return role;
     }
 
     private MessageResponseDTO<ProfileDetails> buildProfileResponse(ProfileDetails profile, String messageKey) {

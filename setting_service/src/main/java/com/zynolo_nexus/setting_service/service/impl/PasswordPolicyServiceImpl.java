@@ -236,7 +236,7 @@ public class PasswordPolicyServiceImpl implements PasswordPolicyService {
                 .orElseThrow(() -> new NotFoundException("user.fetch.notfound"));
 
         String roleCode = user.getRole() != null && user.getRole().getCode() != null
-                ? user.getRole().getCode().name()
+                ? user.getRole().getCode()
                 : null;
 
         if (!StringUtils.hasText(roleCode)) {

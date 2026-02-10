@@ -12,7 +12,7 @@ public class UserEntityToDtoMapper {
     public ProfileDetails toProfileDetails(User user) {
         UserRoleDto roleDto = new UserRoleDto(
                 user.getRole().getId(),
-                user.getRole().getCode().name(),
+                user.getRole().getCode(),
                 user.getRole().getDescription()
         );
 
