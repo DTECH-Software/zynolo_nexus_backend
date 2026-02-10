@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.zynolo_nexus.auth_service.filter.JwtAuthenticationFilter;
 import com.zynolo_nexus.auth_service.filter.InternalApiAuthFilter;
 import com.zynolo_nexus.auth_service.filter.AuditLogFilter;
+import com.zynolo_nexus.auth_service.filter.CompanyContextFilter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,6 +27,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final InternalApiAuthFilter internalApiAuthFilter;
     private final AuditLogFilter auditLogFilter;
+    private final CompanyContextFilter companyContextFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -45,6 +47,7 @@ public class SecurityConfig {
                                 "/actuator/**").permitAll()
                         .anyRequest().authenticated()
                 )
+                .addFilterBefore(companyContextFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(auditLogFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(internalApiAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

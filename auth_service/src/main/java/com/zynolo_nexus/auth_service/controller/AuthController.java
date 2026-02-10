@@ -17,6 +17,7 @@ import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
 import com.zynolo_nexus.auth_service.dto.request.MainDashboardRequest;
 import com.zynolo_nexus.auth_service.dto.request.ModuleDashboardRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
+import com.zynolo_nexus.auth_service.dto.request.SwitchCompanyRequest;
 import com.zynolo_nexus.auth_service.dto.request.VerifyResetOtpRequest;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
 import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardSectionDto;
@@ -90,5 +91,13 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid username");
         }
         return authService.getModuleDashboard(username, request != null ? request.getModuleCode() : null);
+    }
+
+    @PostMapping("/switch-company")
+    public MessageResponseDTO<LoginData> switchCompany(
+            Authentication authentication,
+            @RequestBody SwitchCompanyRequest request) {
+        String username = authentication.getName();
+        return authService.switchCompany(username, request);
     }
 }

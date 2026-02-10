@@ -4,8 +4,8 @@ import com.zynolo_nexus.auth_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
 import com.zynolo_nexus.auth_service.dto.response.ProfileDetails;
 import com.zynolo_nexus.auth_service.dto.response.TokenDetails;
+import com.zynolo_nexus.auth_service.dto.response.CompanySummaryDto;
 import com.zynolo_nexus.auth_service.enums.LoginStatus;
-import com.zynolo_nexus.auth_service.enums.RoleCode;
 import com.zynolo_nexus.auth_service.enums.UserStatus;
 import com.zynolo_nexus.auth_service.exception.BadRequestException;
 import com.zynolo_nexus.auth_service.exception.ConflictException;
@@ -16,12 +16,15 @@ import com.zynolo_nexus.auth_service.model.RefreshToken;
 import com.zynolo_nexus.auth_service.model.Role;
 import com.zynolo_nexus.auth_service.model.User;
 import com.zynolo_nexus.auth_service.model.UserIdentity;
+import com.zynolo_nexus.auth_service.model.UserCompany;
 import com.zynolo_nexus.auth_service.repository.RefreshTokenRepository;
 import com.zynolo_nexus.auth_service.repository.RoleRepository;
 import com.zynolo_nexus.auth_service.repository.UserIdentityRepository;
 import com.zynolo_nexus.auth_service.repository.UserRepository;
+import com.zynolo_nexus.auth_service.repository.UserCompanyRepository;
 import com.zynolo_nexus.auth_service.service.GoogleSsoService;
 import com.zynolo_nexus.auth_service.util.JwtUtil;
+import com.zynolo_nexus.auth_service.context.CompanyContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -37,6 +40,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -53,6 +57,7 @@ public class GoogleSsoServiceImpl implements GoogleSsoService {
     private final UserIdentityRepository userIdentityRepository;
     private final RoleRepository roleRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final UserCompanyRepository userCompanyRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final UserEntityToDtoMapper userMapper;
@@ -60,6 +65,9 @@ public class GoogleSsoServiceImpl implements GoogleSsoService {
 
     @Value("${oauth.google.client-id}")
     private String googleClientId;
+
+    @Value("${app.default.company-id:1}")
+    private Long defaultCompanyId;
 
     @Override
     public MessageResponseDTO<LoginData> loginWithGoogle(String idToken) {
@@ -88,8 +96,9 @@ public class GoogleSsoServiceImpl implements GoogleSsoService {
 
         ProfileDetails profileDetails = userMapper.toProfileDetails(user);
 
-        String accessToken = jwtUtil.generateAccessToken(user.getUsername());
-        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+        Long companyId = resolveCompanyId();
+        String accessToken = jwtUtil.generateAccessToken(user.getUsername(), companyId);
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), companyId);
 
         refreshTokenRepository.deleteByUsername(user.getUsername());
         RefreshToken refreshTokenEntity = new RefreshToken();
@@ -104,9 +113,12 @@ public class GoogleSsoServiceImpl implements GoogleSsoService {
                 .refreshToken(refreshToken)
                 .build();
 
+        var companyInfo = resolveLoginCompany(user);
         LoginData loginData = LoginData.builder()
                 .profileDetails(profileDetails)
                 .tokenDetails(tokenDetails)
+                .defaultCompanyId(companyInfo.defaultCompanyId())
+                .companies(companyInfo.companies())
                 .build();
 
         String message = messageSource.getMessage(
@@ -177,7 +189,7 @@ public class GoogleSsoServiceImpl implements GoogleSsoService {
                     throw new ConflictException("auth.sso.link.required");
                 });
 
-        Role role = roleRepository.findByCode(RoleCode.USER)
+        Role role = roleRepository.findByCodeIgnoreCase("USER")
                 .orElseThrow(() -> new NotFoundException("user.create.role.notfound"));
 
         String username = generateUsername(email);
@@ -246,5 +258,52 @@ public class GoogleSsoServiceImpl implements GoogleSsoService {
             return parts.length > 1 ? parts[1] : null;
         }
         return null;
+    }
+
+    private Long resolveCompanyId() {
+        Long companyId = CompanyContext.getCompanyId();
+        return companyId != null ? companyId : defaultCompanyId;
+    }
+
+    private LoginCompanyInfo resolveLoginCompany(User user) {
+        if (user == null) {
+            return new LoginCompanyInfo(defaultCompanyId, List.of());
+        }
+        List<UserCompany> mappings = userCompanyRepository.findByUser(user);
+        if (mappings == null || mappings.isEmpty()) {
+            return new LoginCompanyInfo(defaultCompanyId, List.of());
+        }
+
+        mappings = mappings.stream()
+                .filter(m -> m.getStatus() == null
+                        || m.getStatus() == com.zynolo_nexus.auth_service.enums.UserCompanyStatus.ACTIVE)
+                .toList();
+        if (mappings.isEmpty()) {
+            return new LoginCompanyInfo(defaultCompanyId, List.of());
+        }
+
+        UserCompany defaultMapping = mappings.stream()
+                .filter(m -> Boolean.TRUE.equals(m.getIsDefault()))
+                .findFirst()
+                .orElse(mappings.get(0));
+
+        Long defaultId = defaultMapping.getCompany() != null
+                ? defaultMapping.getCompany().getId()
+                : defaultCompanyId;
+
+        List<CompanySummaryDto> companies = mappings.stream()
+                .filter(m -> m.getCompany() != null)
+                .map(m -> CompanySummaryDto.builder()
+                        .id(m.getCompany().getId())
+                        .code(m.getCompany().getCode())
+                        .description(m.getCompany().getDescription())
+                        .isDefault(Boolean.TRUE.equals(m.getIsDefault()))
+                        .build())
+                .toList();
+
+        return new LoginCompanyInfo(defaultId != null ? defaultId : defaultCompanyId, companies);
+    }
+
+    private record LoginCompanyInfo(Long defaultCompanyId, List<CompanySummaryDto> companies) {
     }
 }

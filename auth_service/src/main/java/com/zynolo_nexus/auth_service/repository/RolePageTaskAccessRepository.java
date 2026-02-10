@@ -11,5 +11,7 @@ public interface RolePageTaskAccessRepository extends JpaRepository<RolePageTask
 
     List<RolePageTaskAccess> findByRole(Role role);
 
+    List<RolePageTaskAccess> findByRoleAndCompanyId(Role role, Long companyId);
+
     void deleteByPageTask(PageTask pageTask);
 }

@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Component
@@ -30,6 +31,7 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
             "/api/auth/sso/google"
     );
     private static final String INTERNAL_HEADER = "x-internal-token";
+    private static final String COMPANY_HEADER = "x-company-id";
     private static final String AUTH_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
@@ -54,6 +56,8 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
             return;
         }
 
+        String companyHeaderValue = null;
+
         if (!isPublic(path)) {
             String authHeader = request.getHeader(AUTH_HEADER);
             if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
@@ -65,6 +69,10 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
             if (claims == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
+            }
+            Object companyClaim = claims.get("companyId");
+            if (companyClaim != null) {
+                companyHeaderValue = String.valueOf(companyClaim);
             }
 
             if ("POST".equalsIgnoreCase(request.getMethod())) {
@@ -81,7 +89,14 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
             }
         }
 
-        HttpServletRequest sanitized = new HeaderStripRequestWrapper(request, INTERNAL_HEADER);
+        Map<String, String> extraHeaders = companyHeaderValue != null
+                ? Map.of(COMPANY_HEADER, companyHeaderValue)
+                : Collections.emptyMap();
+        HttpServletRequest sanitized = new HeaderRewriteRequestWrapper(
+                request,
+                extraHeaders,
+                INTERNAL_HEADER
+        );
         filterChain.doFilter(sanitized, response);
     }
 
@@ -124,23 +139,41 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
         return false;
     }
 
-    private static class HeaderStripRequestWrapper extends HttpServletRequestWrapper {
+    private static class HeaderRewriteRequestWrapper extends HttpServletRequestWrapper {
 
         private final Set<String> blockedHeaders;
+        private final Map<String, String> extraHeaders;
 
-        HeaderStripRequestWrapper(HttpServletRequest request, String... headersToStrip) {
+        HeaderRewriteRequestWrapper(HttpServletRequest request,
+                                    Map<String, String> extraHeaders,
+                                    String... headersToStrip) {
             super(request);
             Set<String> headers = new HashSet<>();
             for (String header : headersToStrip) {
                 headers.add(header.toLowerCase());
             }
             this.blockedHeaders = Collections.unmodifiableSet(headers);
+            Map<String, String> extras = new java.util.HashMap<>();
+            if (extraHeaders != null) {
+                extraHeaders.forEach((key, value) -> {
+                    if (key != null && value != null) {
+                        extras.put(key.toLowerCase(), value);
+                    }
+                });
+            }
+            this.extraHeaders = Collections.unmodifiableMap(extras);
         }
 
         @Override
         public String getHeader(String name) {
             if (name != null && blockedHeaders.contains(name.toLowerCase())) {
                 return null;
+            }
+            if (name != null) {
+                String value = extraHeaders.get(name.toLowerCase());
+                if (value != null) {
+                    return value;
+                }
             }
             return super.getHeader(name);
         }
@@ -149,6 +182,12 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
         public Enumeration<String> getHeaders(String name) {
             if (name != null && blockedHeaders.contains(name.toLowerCase())) {
                 return Collections.emptyEnumeration();
+            }
+            if (name != null) {
+                String value = extraHeaders.get(name.toLowerCase());
+                if (value != null) {
+                    return Collections.enumeration(List.of(value));
+                }
             }
             return super.getHeaders(name);
         }
@@ -159,7 +198,13 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
             List<String> filtered = Collections.list(names).stream()
                     .filter(n -> !blockedHeaders.contains(n.toLowerCase()))
                     .toList();
-            return Collections.enumeration(filtered);
+            List<String> all = new java.util.ArrayList<>(filtered);
+            extraHeaders.keySet().forEach(key -> {
+                if (all.stream().noneMatch(existing -> existing.equalsIgnoreCase(key))) {
+                    all.add(key);
+                }
+            });
+            return Collections.enumeration(all);
         }
     }
 }

@@ -20,7 +20,7 @@ import lombok.Setter;
 @Table(
         name = "role_module_access",
         uniqueConstraints = {
-                @UniqueConstraint(name = "UK_role_module", columnNames = {"role_id", "module_id"})
+                @UniqueConstraint(name = "UK_role_module_company", columnNames = {"role_id", "module_id", "company_id"})
         }
 )
 @Getter
@@ -41,6 +41,9 @@ public class RoleModuleAccess {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "module_id", nullable = false)
     private Module module;
+
+    @Column(name = "company_id", nullable = false)
+    private Long companyId;
 
     @Builder.Default
     @Column(nullable = false)

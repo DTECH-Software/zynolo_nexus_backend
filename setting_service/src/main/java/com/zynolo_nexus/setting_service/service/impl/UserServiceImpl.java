@@ -22,6 +22,7 @@ import com.zynolo_nexus.setting_service.dto.response.UserReferenceDataDto;
 import com.zynolo_nexus.setting_service.enums.CompanyStatus;
 import com.zynolo_nexus.setting_service.enums.LoginStatus;
 import com.zynolo_nexus.setting_service.enums.RoleStatus;
+import com.zynolo_nexus.setting_service.enums.UserCompanyStatus;
 import com.zynolo_nexus.setting_service.enums.UserStatus;
 import com.zynolo_nexus.setting_service.exception.BadRequestException;
 import com.zynolo_nexus.setting_service.exception.NotFoundException;
@@ -29,8 +30,10 @@ import com.zynolo_nexus.setting_service.mapper.entityToDto.UserEntityToDtoMapper
 import com.zynolo_nexus.setting_service.model.Company;
 import com.zynolo_nexus.setting_service.model.Role;
 import com.zynolo_nexus.setting_service.model.User;
+import com.zynolo_nexus.setting_service.model.UserCompany;
 import com.zynolo_nexus.setting_service.repository.CompanyRepository;
 import com.zynolo_nexus.setting_service.repository.RoleRepository;
+import com.zynolo_nexus.setting_service.repository.UserCompanyRepository;
 import com.zynolo_nexus.setting_service.repository.UserRepository;
 import com.zynolo_nexus.setting_service.service.UserService;
 
@@ -43,6 +46,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final CompanyRepository companyRepository;
+    private final UserCompanyRepository userCompanyRepository;
     private final PasswordEncoder passwordEncoder;
     private final MessageSource messageSource;
     private final UserEntityToDtoMapper userMapper;
@@ -52,6 +56,7 @@ public class UserServiceImpl implements UserService {
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
                            CompanyRepository companyRepository,
+                           UserCompanyRepository userCompanyRepository,
                            PasswordEncoder passwordEncoder,
                            MessageSource messageSource,
                            UserEntityToDtoMapper userMapper,
@@ -60,6 +65,7 @@ public class UserServiceImpl implements UserService {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.companyRepository = companyRepository;
+        this.userCompanyRepository = userCompanyRepository;
         this.passwordEncoder = passwordEncoder;
         this.messageSource = messageSource;
         this.userMapper = userMapper;
@@ -79,6 +85,7 @@ public class UserServiceImpl implements UserService {
         }
 
         Role role = resolveRole(request.getRoleCode());
+        Company company = resolveCompany(request.getCompany());
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -101,6 +108,17 @@ public class UserServiceImpl implements UserService {
         user.setLastModifiedDate(LocalDateTime.now());
 
         user = userRepository.save(user);
+
+        if (company != null) {
+            UserCompany mapping = UserCompany.builder()
+                    .user(user)
+                    .company(company)
+                    .role(role)
+                    .status(UserCompanyStatus.ACTIVE)
+                    .isDefault(true)
+                    .build();
+            userCompanyRepository.save(mapping);
+        }
 
         return buildProfileResponse(userMapper.toProfileDetails(user), "user.create.success");
     }
@@ -155,6 +173,30 @@ public class UserServiceImpl implements UserService {
 
         user.setLastModifiedDate(LocalDateTime.now());
         user = userRepository.save(user);
+
+        if (StringUtils.hasText(request.getCompany()) || StringUtils.hasText(request.getRoleCode())) {
+            Company company = resolveCompany(request.getCompany());
+            UserCompany mapping = userCompanyRepository.findFirstByUserAndIsDefaultTrue(user).orElse(null);
+            if (mapping == null && company != null) {
+                mapping = UserCompany.builder()
+                        .user(user)
+                        .company(company)
+                        .role(user.getRole())
+                        .status(UserCompanyStatus.ACTIVE)
+                        .isDefault(true)
+                        .build();
+            }
+            if (mapping != null) {
+                if (company != null) {
+                    mapping.setCompany(company);
+                }
+                if (user.getRole() != null) {
+                    mapping.setRole(user.getRole());
+                }
+                mapping.setStatus(UserCompanyStatus.ACTIVE);
+                userCompanyRepository.save(mapping);
+            }
+        }
 
         return buildProfileResponse(userMapper.toProfileDetails(user), "user.update.success");
     }
@@ -215,6 +257,14 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("user.create.role.notfound");
         }
         return role;
+    }
+
+    private Company resolveCompany(String companyCode) {
+        if (!StringUtils.hasText(companyCode)) {
+            return null;
+        }
+        return companyRepository.findByCode(companyCode)
+                .orElseThrow(() -> new BadRequestException("user.create.company.notfound"));
     }
 
     private MessageResponseDTO<ProfileDetails> buildProfileResponse(ProfileDetails profile, String messageKey) {

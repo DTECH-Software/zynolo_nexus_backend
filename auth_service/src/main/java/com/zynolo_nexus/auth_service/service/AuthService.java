@@ -6,6 +6,7 @@ import com.zynolo_nexus.auth_service.dto.request.ChangePasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.LoginRequest;
 import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
+import com.zynolo_nexus.auth_service.dto.request.SwitchCompanyRequest;
 import com.zynolo_nexus.auth_service.dto.request.VerifyResetOtpRequest;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
 import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardSectionDto;
@@ -30,4 +31,6 @@ public interface AuthService {
     MessageResponseDTO<ReferenceDataDto> getReferenceData(String username);
 
     MessageResponseDTO<Map<String, ModuleDashboardSectionDto>> getModuleDashboard(String username, String moduleCode);
+
+    MessageResponseDTO<LoginData> switchCompany(String username, SwitchCompanyRequest request);
 }

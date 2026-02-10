@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -22,6 +23,7 @@ import com.zynolo_nexus.auth_service.dto.request.ChangePasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.LoginRequest;
 import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
+import com.zynolo_nexus.auth_service.dto.request.SwitchCompanyRequest;
 import com.zynolo_nexus.auth_service.dto.request.VerifyResetOtpRequest;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
 import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardPageDto;
@@ -32,6 +34,7 @@ import com.zynolo_nexus.auth_service.dto.response.CurrentUserDto;
 import com.zynolo_nexus.auth_service.dto.response.ReferenceDataDto;
 import com.zynolo_nexus.auth_service.dto.response.ResetTokenResponse;
 import com.zynolo_nexus.auth_service.dto.response.TokenDetails;
+import com.zynolo_nexus.auth_service.dto.response.CompanySummaryDto;
 import com.zynolo_nexus.auth_service.enums.ModuleStatus;
 import com.zynolo_nexus.auth_service.enums.UserStatus;
 import com.zynolo_nexus.auth_service.exception.BadRequestException;
@@ -45,6 +48,8 @@ import com.zynolo_nexus.auth_service.model.RefreshToken;
 import com.zynolo_nexus.auth_service.model.RoleModuleAccess;
 import com.zynolo_nexus.auth_service.model.Section;
 import com.zynolo_nexus.auth_service.model.User;
+import com.zynolo_nexus.auth_service.model.UserCompany;
+import com.zynolo_nexus.auth_service.model.Company;
 import com.zynolo_nexus.auth_service.repository.ModuleRepository;
 import com.zynolo_nexus.auth_service.repository.PageRepository;
 import com.zynolo_nexus.auth_service.repository.PasswordResetTokenRepository;
@@ -52,10 +57,13 @@ import com.zynolo_nexus.auth_service.repository.RoleModuleAccessRepository;
 import com.zynolo_nexus.auth_service.repository.RefreshTokenRepository;
 import com.zynolo_nexus.auth_service.repository.SectionRepository;
 import com.zynolo_nexus.auth_service.repository.UserRepository;
+import com.zynolo_nexus.auth_service.repository.UserCompanyRepository;
+import com.zynolo_nexus.auth_service.repository.CompanyRepository;
 import com.zynolo_nexus.auth_service.service.AuthService;
 import com.zynolo_nexus.auth_service.service.EmailService;
 import com.zynolo_nexus.auth_service.service.ReferenceDataCache;
 import com.zynolo_nexus.auth_service.util.JwtUtil;
+import com.zynolo_nexus.auth_service.context.CompanyContext;
 
 import lombok.RequiredArgsConstructor;
 
@@ -82,6 +90,11 @@ public class AuthServiceImpl implements AuthService {
     private final PageRepository pageRepository;
     private final RoleModuleAccessRepository roleModuleAccessRepository;
     private final ReferenceDataCache referenceDataCache;
+    private final UserCompanyRepository userCompanyRepository;
+    private final CompanyRepository companyRepository;
+
+    @Value("${app.default.company-id:1}")
+    private Long defaultCompanyId;
 
     @Override
     public MessageResponseDTO<LoginData> login(LoginRequest request) {
@@ -106,8 +119,10 @@ public class AuthServiceImpl implements AuthService {
 
         ProfileDetails profileDetails = userMapper.toProfileDetails(user);
 
-        String accessToken = jwtUtil.generateAccessToken(user.getUsername());
-        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername());
+        var companyInfo = resolveLoginCompany(user);
+        Long companyId = companyInfo.defaultCompanyId();
+        String accessToken = jwtUtil.generateAccessToken(user.getUsername(), companyId);
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), companyId);
 
         refreshTokenRepository.deleteByUsername(user.getUsername());
         RefreshToken refreshTokenEntity = new RefreshToken();
@@ -125,6 +140,8 @@ public class AuthServiceImpl implements AuthService {
         LoginData loginData = LoginData.builder()
                 .profileDetails(profileDetails)
                 .tokenDetails(tokenDetails)
+                .defaultCompanyId(companyId)
+                .companies(companyInfo.companies())
                 .build();
 
         String message = messageSource.getMessage(
@@ -308,8 +325,9 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("auth.user.notfound"));
 
-        String roleCode = user.getRole() != null ? user.getRole().getCode().name() : "UNKNOWN";
-        String cacheKey = roleCode + ":" + user.getUsername();
+        Long companyId = resolveCompanyId(null);
+        String roleCode = user.getRole() != null ? user.getRole().getCode() : "UNKNOWN";
+        String cacheKey = roleCode + ":" + user.getUsername() + ":" + companyId;
         var cached = referenceDataCache.get(cacheKey);
         if (cached.isPresent()) {
             return MessageResponseDTO.<ReferenceDataDto>builder()
@@ -327,7 +345,7 @@ public class AuthServiceImpl implements AuthService {
                     .build();
         }
 
-        var accesses = roleModuleAccessRepository.findByRole(user.getRole());
+        var accesses = roleModuleAccessRepository.findByRoleAndCompanyId(user.getRole(), companyId);
         var viewableIds = accesses.stream()
                 .filter(RoleModuleAccess::getCanView)
                 .map(a -> a.getModule().getId())
@@ -349,7 +367,7 @@ public class AuthServiceImpl implements AuthService {
                         .displayName(buildDisplayName(user))
                         .email(user.getEmail())
                         .mobile(user.getMobile())
-                        .roleCode(user.getRole() != null ? user.getRole().getCode().name() : null)
+                        .roleCode(user.getRole() != null ? user.getRole().getCode() : null)
                         .build())
                 .modules(moduleDtos)
                 .build();
@@ -389,7 +407,8 @@ public class AuthServiceImpl implements AuthService {
             throw new NotFoundException("module.notfound");
         }
 
-        boolean canView = roleModuleAccessRepository.findByRole(user.getRole()).stream()
+        Long companyId = resolveCompanyId(null);
+        boolean canView = roleModuleAccessRepository.findByRoleAndCompanyId(user.getRole(), companyId).stream()
                 .anyMatch(access -> access.getModule().getId().equals(module.getId())
                         && Boolean.TRUE.equals(access.getCanView()));
 
@@ -437,6 +456,65 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    @Override
+    public MessageResponseDTO<LoginData> switchCompany(String username, SwitchCompanyRequest request) {
+        if (!StringUtils.hasText(username) || request == null || request.getCompanyId() == null) {
+            throw new BadRequestException("auth.company.switch.invalid");
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("auth.user.notfound"));
+
+        UserCompany mapping = userCompanyRepository.findByUserAndCompany_Id(user, request.getCompanyId())
+                .orElseThrow(() -> new UnauthorizedException("auth.company.switch.invalid"));
+
+        if (mapping.getStatus() != null
+                && mapping.getStatus() != com.zynolo_nexus.auth_service.enums.UserCompanyStatus.ACTIVE) {
+            throw new UnauthorizedException("auth.company.switch.invalid");
+        }
+
+        Long companyId = mapping.getCompany() != null ? mapping.getCompany().getId() : request.getCompanyId();
+        String accessToken = jwtUtil.generateAccessToken(user.getUsername(), companyId);
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), companyId);
+
+        refreshTokenRepository.deleteByUsername(user.getUsername());
+        RefreshToken refreshTokenEntity = new RefreshToken();
+        refreshTokenEntity.setUsername(user.getUsername());
+        refreshTokenEntity.setToken(refreshToken);
+        refreshTokenEntity.setExpiresAt(
+                LocalDateTime.now().plusSeconds(jwtUtil.getRefreshTokenValidityMs() / 1000));
+        refreshTokenRepository.save(refreshTokenEntity);
+
+        TokenDetails tokenDetails = TokenDetails.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+
+        ProfileDetails profileDetails = userMapper.toProfileDetails(user);
+        var companyInfo = resolveLoginCompany(user);
+
+        LoginData loginData = LoginData.builder()
+                .profileDetails(profileDetails)
+                .tokenDetails(tokenDetails)
+                .defaultCompanyId(companyId)
+                .companies(companyInfo.companies())
+                .build();
+
+        return MessageResponseDTO.<LoginData>builder()
+                .success(true)
+                .message(messageSource.getMessage(
+                        "auth.company.switch.success",
+                        null,
+                        "Success",
+                        LocaleContextHolder.getLocale()
+                ))
+                .data(loginData)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
     private String buildDisplayName(User user) {
         if (StringUtils.hasText(user.getFirstName()) || StringUtils.hasText(user.getLastName())) {
             return String.format("%s %s",
@@ -460,6 +538,77 @@ public class AuthServiceImpl implements AuthService {
 
     private String generateOtp() {
         return String.format("%06d", ThreadLocalRandom.current().nextInt(0, 1_000_000));
+    }
+
+    private LoginCompanyInfo resolveLoginCompany(User user) {
+        if (user == null) {
+            return new LoginCompanyInfo(defaultCompanyId, List.of());
+        }
+        List<UserCompany> mappings = userCompanyRepository.findByUser(user);
+        if (mappings == null || mappings.isEmpty()) {
+            LoginCompanyInfo fallback = resolveCompanyFromUser(user);
+            return fallback != null ? fallback : new LoginCompanyInfo(defaultCompanyId, List.of());
+        }
+
+        mappings = mappings.stream()
+                .filter(m -> m.getStatus() == null
+                        || m.getStatus() == com.zynolo_nexus.auth_service.enums.UserCompanyStatus.ACTIVE)
+                .toList();
+        if (mappings.isEmpty()) {
+            return new LoginCompanyInfo(defaultCompanyId, List.of());
+        }
+
+        UserCompany defaultMapping = mappings.stream()
+                .filter(m -> Boolean.TRUE.equals(m.getIsDefault()))
+                .findFirst()
+                .orElse(mappings.get(0));
+
+        Long defaultId = defaultMapping.getCompany() != null
+                ? defaultMapping.getCompany().getId()
+                : defaultCompanyId;
+
+        List<CompanySummaryDto> companies = mappings.stream()
+                .filter(m -> m.getCompany() != null)
+                .map(m -> CompanySummaryDto.builder()
+                        .id(m.getCompany().getId())
+                        .code(m.getCompany().getCode())
+                        .description(m.getCompany().getDescription())
+                        .isDefault(Boolean.TRUE.equals(m.getIsDefault()))
+                        .build())
+                .toList();
+
+        return new LoginCompanyInfo(defaultId != null ? defaultId : defaultCompanyId, companies);
+    }
+
+    private LoginCompanyInfo resolveCompanyFromUser(User user) {
+        if (user == null || !StringUtils.hasText(user.getCompany())) {
+            return null;
+        }
+        Company company = companyRepository.findByCode(user.getCompany()).orElse(null);
+        if (company == null) {
+            return null;
+        }
+        CompanySummaryDto summary = CompanySummaryDto.builder()
+                .id(company.getId())
+                .code(company.getCode())
+                .description(company.getDescription())
+                .isDefault(true)
+                .build();
+        return new LoginCompanyInfo(company.getId(), List.of(summary));
+    }
+
+    private Long resolveCompanyId(Long fallback) {
+        Long companyId = CompanyContext.getCompanyId();
+        if (companyId != null) {
+            return companyId;
+        }
+        if (fallback != null) {
+            return fallback;
+        }
+        return defaultCompanyId;
+    }
+
+    private record LoginCompanyInfo(Long defaultCompanyId, List<CompanySummaryDto> companies) {
     }
 
 }

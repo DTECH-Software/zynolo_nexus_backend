@@ -1,7 +1,7 @@
 package com.zynolo_nexus.auth_service.controller;
 
 import com.zynolo_nexus.auth_service.dto.api.MessageResponseDTO;
-import com.zynolo_nexus.auth_service.enums.RoleCode;
+import com.zynolo_nexus.auth_service.context.CompanyContext;
 import com.zynolo_nexus.auth_service.exception.BadRequestException;
 import com.zynolo_nexus.auth_service.exception.NotFoundException;
 import com.zynolo_nexus.auth_service.model.Module;
@@ -13,6 +13,7 @@ import com.zynolo_nexus.auth_service.repository.RoleRepository;
 import com.zynolo_nexus.contracts.modules.RoleModuleAccessDto;
 import com.zynolo_nexus.contracts.modules.RoleModuleAccessUpdateRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,10 +35,14 @@ public class RoleModuleAccessAdminController {
     private final ModuleRepository moduleRepository;
     private final RoleModuleAccessRepository accessRepository;
 
+    @Value("${app.default.company-id:1}")
+    private Long defaultCompanyId;
+
     @PostMapping("/{roleCode}/get")
     public MessageResponseDTO<RoleModuleAccessDto> getAccess(@PathVariable String roleCode) {
         Role role = resolveRole(roleCode);
-        List<RoleModuleAccess> accesses = accessRepository.findByRole(role);
+        Long companyId = resolveCompanyId();
+        List<RoleModuleAccess> accesses = accessRepository.findByRoleAndCompanyId(role, companyId);
         Map<Long, Boolean> canViewMap = accesses.stream()
                 .collect(Collectors.toMap(a -> a.getModule().getId(), RoleModuleAccess::getCanView));
 
@@ -50,7 +55,7 @@ public class RoleModuleAccessAdminController {
                 .toList();
 
         RoleModuleAccessDto dto = RoleModuleAccessDto.builder()
-                .roleCode(role.getCode().name())
+                .roleCode(role.getCode())
                 .modules(modules)
                 .build();
 
@@ -71,10 +76,11 @@ public class RoleModuleAccessAdminController {
             throw new BadRequestException("role.module.invalid");
         }
         Role role = resolveRole(request.getRoleCode());
+        Long companyId = resolveCompanyId();
         List<Module> modules = moduleRepository.findAll();
         Map<String, Module> moduleByCode = modules.stream()
                 .collect(Collectors.toMap(Module::getCode, m -> m));
-        Map<Long, RoleModuleAccess> existing = accessRepository.findByRole(role).stream()
+        Map<Long, RoleModuleAccess> existing = accessRepository.findByRoleAndCompanyId(role, companyId).stream()
                 .collect(Collectors.toMap(a -> a.getModule().getId(), a -> a));
 
         for (RoleModuleAccessUpdateRequest.ModulePermission perm : request.getModules()) {
@@ -86,6 +92,7 @@ public class RoleModuleAccessAdminController {
                     RoleModuleAccess.builder()
                             .role(role)
                             .module(module)
+                            .companyId(companyId)
                             .canView(false)
                             .build());
             access.setCanView(perm.isCanView());
@@ -93,16 +100,19 @@ public class RoleModuleAccessAdminController {
             existing.put(module.getId(), access);
         }
 
-        return getAccess(role.getCode().name());
+        return getAccess(role.getCode());
     }
 
     private Role resolveRole(String code) {
-        try {
-            RoleCode roleCode = RoleCode.valueOf(code);
-            return roleRepository.findByCode(roleCode)
-                    .orElseThrow(() -> new NotFoundException("role.module.notfound"));
-        } catch (IllegalArgumentException ex) {
+        if (!org.springframework.util.StringUtils.hasText(code)) {
             throw new BadRequestException("role.module.invalid");
         }
+        return roleRepository.findByCodeIgnoreCase(code)
+                .orElseThrow(() -> new NotFoundException("role.module.notfound"));
+    }
+
+    private Long resolveCompanyId() {
+        Long companyId = CompanyContext.getCompanyId();
+        return companyId != null ? companyId : defaultCompanyId;
     }
 }

@@ -23,32 +23,61 @@ public class JwtUtil {
     }
 
     public String generateAccessToken(String username) {
-        return buildToken(username, accessTokenValidityMs, "access");
+        return buildToken(username, null, accessTokenValidityMs, "access");
+    }
+
+    public String generateAccessToken(String username, Long companyId) {
+        return buildToken(username, companyId, accessTokenValidityMs, "access");
     }
 
     public String generateRefreshToken(String username) {
-        return buildToken(username, refreshTokenValidityMs, "refresh");
+        return buildToken(username, null, refreshTokenValidityMs, "refresh");
+    }
+
+    public String generateRefreshToken(String username, Long companyId) {
+        return buildToken(username, companyId, refreshTokenValidityMs, "refresh");
     }
 
     public long getRefreshTokenValidityMs() {
         return refreshTokenValidityMs;
     }
 
-    private String buildToken(String subject, long validity, String type) {
+    private String buildToken(String subject, Long companyId, long validity, String type) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + validity);
 
-        return Jwts.builder()
+        var builder = Jwts.builder()
                 .setSubject(subject)
                 .claim("type", type)
                 .setIssuedAt(now)
-                .setExpiration(expiry)
+                .setExpiration(expiry);
+
+        if (companyId != null) {
+            builder.claim("companyId", companyId);
+        }
+
+        return builder
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     public String getUsername(String token) {
         return parseClaims(token).getSubject();
+    }
+
+    public Long getCompanyId(String token) {
+        Object value = parseClaims(token).get("companyId");
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number num) {
+            return num.longValue();
+        }
+        try {
+            return Long.parseLong(String.valueOf(value));
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 
     public boolean validateToken(String token) {

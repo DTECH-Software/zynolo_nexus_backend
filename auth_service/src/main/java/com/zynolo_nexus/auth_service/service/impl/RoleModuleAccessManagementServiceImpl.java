@@ -1,6 +1,6 @@
 package com.zynolo_nexus.auth_service.service.impl;
 
-import com.zynolo_nexus.auth_service.enums.RoleCode;
+import com.zynolo_nexus.auth_service.context.CompanyContext;
 import com.zynolo_nexus.auth_service.exception.BadRequestException;
 import com.zynolo_nexus.auth_service.exception.NotFoundException;
 import com.zynolo_nexus.auth_service.enums.ModuleStatus;
@@ -14,6 +14,7 @@ import com.zynolo_nexus.auth_service.service.RoleModuleAccessManagementService;
 import com.zynolo_nexus.contracts.modules.RoleModuleAccessDto;
 import com.zynolo_nexus.contracts.modules.RoleModuleAccessUpdateRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,12 +29,16 @@ public class RoleModuleAccessManagementServiceImpl implements RoleModuleAccessMa
     private final ModuleRepository moduleRepository;
     private final RoleModuleAccessRepository roleModuleAccessRepository;
 
+    @Value("${app.default.company-id:1}")
+    private Long defaultCompanyId;
+
     @Override
     public RoleModuleAccessDto getRoleModuleAccess(String roleCode) {
         Role role = resolveRole(roleCode);
+        Long companyId = resolveCompanyId();
 
         List<Module> modules = moduleRepository.findAllActiveOrderBySortOrderAsc(ModuleStatus.ACTIVE);
-        List<RoleModuleAccess> existing = roleModuleAccessRepository.findByRole(role);
+        List<RoleModuleAccess> existing = roleModuleAccessRepository.findByRoleAndCompanyId(role, companyId);
 
         Map<Long, RoleModuleAccess> accessMap = existing.stream()
                 .collect(Collectors.toMap(a -> a.getModule().getId(), a -> a));
@@ -62,8 +67,9 @@ public class RoleModuleAccessManagementServiceImpl implements RoleModuleAccessMa
             throw new BadRequestException("role.module.invalid");
         }
         Role role = resolveRole(request.getRoleCode());
+        Long companyId = resolveCompanyId();
 
-        List<RoleModuleAccess> existing = roleModuleAccessRepository.findByRole(role);
+        List<RoleModuleAccess> existing = roleModuleAccessRepository.findByRoleAndCompanyId(role, companyId);
         roleModuleAccessRepository.deleteAll(existing);
 
         if (request.getModules() != null) {
@@ -74,6 +80,7 @@ public class RoleModuleAccessManagementServiceImpl implements RoleModuleAccessMa
                     RoleModuleAccess access = RoleModuleAccess.builder()
                             .role(role)
                             .module(module)
+                            .companyId(companyId)
                             .canView(true)
                             .build();
                     roleModuleAccessRepository.save(access);
@@ -85,12 +92,15 @@ public class RoleModuleAccessManagementServiceImpl implements RoleModuleAccessMa
     }
 
     private Role resolveRole(String roleCode) {
-        try {
-            RoleCode rc = RoleCode.valueOf(roleCode);
-            return roleRepository.findByCode(rc)
-                    .orElseThrow(() -> new NotFoundException("role.module.notfound"));
-        } catch (IllegalArgumentException ex) {
+        if (!org.springframework.util.StringUtils.hasText(roleCode)) {
             throw new BadRequestException("role.module.invalid");
         }
+        return roleRepository.findByCodeIgnoreCase(roleCode)
+                .orElseThrow(() -> new NotFoundException("role.module.notfound"));
+    }
+
+    private Long resolveCompanyId() {
+        Long companyId = CompanyContext.getCompanyId();
+        return companyId != null ? companyId : defaultCompanyId;
     }
 }
