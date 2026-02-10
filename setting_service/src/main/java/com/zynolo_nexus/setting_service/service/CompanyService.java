@@ -1,20 +1,26 @@
 package com.zynolo_nexus.setting_service.service;
 
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
-import com.zynolo_nexus.setting_service.dto.request.CompanyRequest;
+import com.zynolo_nexus.setting_service.dto.request.CompanyCreateRequest;
+import com.zynolo_nexus.setting_service.dto.request.CompanyFilterRequest;
+import com.zynolo_nexus.setting_service.dto.request.CompanyReferenceDataRequest;
+import com.zynolo_nexus.setting_service.dto.request.CompanyStatusUpdateRequest;
+import com.zynolo_nexus.setting_service.dto.request.CompanyUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.response.CompanyDto;
-
-import java.util.List;
+import com.zynolo_nexus.setting_service.dto.response.CompanyFilterResultDto;
+import com.zynolo_nexus.setting_service.dto.response.CompanyReferenceDataDto;
 
 public interface CompanyService {
 
-    MessageResponseDTO<CompanyDto> createCompany(CompanyRequest request);
+    MessageResponseDTO<CompanyDto> createCompany(CompanyCreateRequest request);
 
-    MessageResponseDTO<CompanyDto> updateCompany(String code, CompanyRequest request);
+    MessageResponseDTO<CompanyDto> updateCompany(CompanyUpdateRequest request);
 
-    MessageResponseDTO<CompanyDto> getCompany(String code);
+    MessageResponseDTO<CompanyDto> viewCompany(Long id);
 
-    MessageResponseDTO<List<CompanyDto>> getAllCompanies();
+    MessageResponseDTO<CompanyDto> updateStatus(CompanyStatusUpdateRequest request);
 
-    MessageResponseDTO<String> deactivateCompany(String code);
+    MessageResponseDTO<CompanyFilterResultDto> filterList(CompanyFilterRequest request);
+
+    MessageResponseDTO<CompanyReferenceDataDto> getReferenceData(CompanyReferenceDataRequest request);
 }

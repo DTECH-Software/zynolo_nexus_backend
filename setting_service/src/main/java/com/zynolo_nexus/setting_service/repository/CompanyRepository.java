@@ -11,7 +11,11 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
 
     Optional<Company> findByCode(String code);
 
+    Optional<Company> findByCodeIgnoreCase(String code);
+
     boolean existsByCode(String code);
+
+    boolean existsByCodeIgnoreCase(String code);
 
     List<Company> findAllByStatusOrderByCodeAsc(CompanyStatus status);
 }

@@ -1,6 +1,5 @@
 package com.zynolo_nexus.setting_service.dto.response;
 
-import com.zynolo_nexus.setting_service.enums.CompanyStatus;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,12 +10,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CompanyDto {
+public class CompanyListItemDto {
 
     private Long id;
     private String code;
     private String description;
-    private CompanyStatus status;
+    private String status;
     private String statusDescription;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
