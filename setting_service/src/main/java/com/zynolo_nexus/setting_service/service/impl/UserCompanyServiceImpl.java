@@ -62,17 +62,16 @@ public class UserCompanyServiceImpl implements UserCompanyService {
     @Override
     @Transactional
     public MessageResponseDTO<UserCompanyDto> createUserCompany(UserCompanyCreateRequest request) {
-        if (request == null || request.getUserId() == null
-                || request.getCompanyId() == null || request.getRoleId() == null) {
+        if (request == null
+                || (request.getUserId() == null && !StringUtils.hasText(request.getUserName()))
+                || (request.getCompanyId() == null && !StringUtils.hasText(request.getCompanyCode()))
+                || (request.getRoleId() == null && !StringUtils.hasText(request.getRoleCode()))) {
             throw new BadRequestException("user.company.invalid");
         }
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new NotFoundException("user.notfound"));
-        Company company = companyRepository.findById(request.getCompanyId())
-                .orElseThrow(() -> new NotFoundException("company.notfound"));
-        Role role = roleRepository.findById(request.getRoleId())
-                .orElseThrow(() -> new NotFoundException("role.notfound"));
+        User user = resolveUser(request.getUserId(), request.getUserName());
+        Company company = resolveCompany(request.getCompanyId(), request.getCompanyCode());
+        Role role = resolveRole(request.getRoleId(), request.getRoleCode());
 
         userCompanyRepository.findByUserAndCompany_Id(user, company.getId())
                 .ifPresent(existing -> { throw new BadRequestException("user.company.exists"); });
@@ -119,17 +118,24 @@ public class UserCompanyServiceImpl implements UserCompanyService {
         UserCompany mapping = userCompanyRepository.findById(request.getId())
                 .orElseThrow(() -> new NotFoundException("user.company.notfound"));
 
-        if (request.getCompanyId() != null
-                && !request.getCompanyId().equals(mapping.getCompany().getId())) {
-            Company company = companyRepository.findById(request.getCompanyId())
+        Long companyId = request.getCompanyId();
+        if (companyId == null && StringUtils.hasText(request.getCompanyCode())) {
+            companyId = resolveCompany(null, request.getCompanyCode()).getId();
+        }
+        if (companyId != null && !companyId.equals(mapping.getCompany().getId())) {
+            Company company = companyRepository.findById(companyId)
                     .orElseThrow(() -> new NotFoundException("company.notfound"));
             userCompanyRepository.findByUserAndCompany_Id(mapping.getUser(), company.getId())
                     .ifPresent(existing -> { throw new BadRequestException("user.company.exists"); });
             mapping.setCompany(company);
         }
 
-        if (request.getRoleId() != null) {
-            Role role = roleRepository.findById(request.getRoleId())
+        Long roleId = request.getRoleId();
+        if (roleId == null && StringUtils.hasText(request.getRoleCode())) {
+            roleId = resolveRole(null, request.getRoleCode()).getId();
+        }
+        if (roleId != null) {
+            Role role = roleRepository.findById(roleId)
                     .orElseThrow(() -> new NotFoundException("role.notfound"));
             mapping.setRole(role);
         }
@@ -535,5 +541,41 @@ public class UserCompanyServiceImpl implements UserCompanyService {
             return null;
         }
         return authentication.getName();
+    }
+
+    private User resolveUser(Long userId, String username) {
+        if (userId != null) {
+            return userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException("user.notfound"));
+        }
+        if (StringUtils.hasText(username)) {
+            return userRepository.findByUsername(username)
+                    .orElseThrow(() -> new NotFoundException("user.notfound"));
+        }
+        throw new NotFoundException("user.notfound");
+    }
+
+    private Company resolveCompany(Long companyId, String companyCode) {
+        if (companyId != null) {
+            return companyRepository.findById(companyId)
+                    .orElseThrow(() -> new NotFoundException("company.notfound"));
+        }
+        if (StringUtils.hasText(companyCode)) {
+            return companyRepository.findByCode(companyCode)
+                    .orElseThrow(() -> new NotFoundException("company.notfound"));
+        }
+        throw new NotFoundException("company.notfound");
+    }
+
+    private Role resolveRole(Long roleId, String roleCode) {
+        if (roleId != null) {
+            return roleRepository.findById(roleId)
+                    .orElseThrow(() -> new NotFoundException("role.notfound"));
+        }
+        if (StringUtils.hasText(roleCode)) {
+            return roleRepository.findByCodeIgnoreCase(roleCode)
+                    .orElseThrow(() -> new NotFoundException("role.notfound"));
+        }
+        throw new NotFoundException("role.notfound");
     }
 }

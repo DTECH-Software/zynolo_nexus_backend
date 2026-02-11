@@ -312,6 +312,14 @@ public class RolePageTaskAccessServiceImpl implements RolePageTaskAccessService 
                     .orElse(List.of());
         }
 
+        if (request != null && StringUtils.hasText(request.getTaskCode())) {
+            String filterCode = request.getTaskCode().trim().toLowerCase();
+            tasks = tasks.stream()
+                    .filter(task -> task != null && StringUtils.hasText(task.getTaskCode())
+                            && task.getTaskCode().toLowerCase().equals(filterCode))
+                    .toList();
+        }
+
         RolePageTaskPrivilegePreviewDto response = RolePageTaskPrivilegePreviewDto.builder()
                 .roleId(request != null ? request.getRoleId() : null)
                 .roleCode(roleCode)

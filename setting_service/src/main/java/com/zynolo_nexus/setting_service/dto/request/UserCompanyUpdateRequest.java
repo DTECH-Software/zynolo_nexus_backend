@@ -13,7 +13,9 @@ public class UserCompanyUpdateRequest {
     private String username;
     private Long id;
     private Long companyId;
+    private String companyCode;
     private Long roleId;
+    private String roleCode;
     private UserCompanyStatus status;
     private Boolean isDefault;
 }

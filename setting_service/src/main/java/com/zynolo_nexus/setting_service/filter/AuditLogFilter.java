@@ -24,6 +24,11 @@ public class AuditLogFilter extends OncePerRequestFilter {
 
     private static final Map<String, String> POST_EVENTS = Map.ofEntries(
             Map.entry("/api/v1/setting/users", "USER_CREATE"),
+            Map.entry("/api/v1/setting/users/view", "USER_VIEW"),
+            Map.entry("/api/v1/setting/users/update", "USER_UPDATE"),
+            Map.entry("/api/v1/setting/users/status", "USER_STATUS_UPDATE"),
+            Map.entry("/api/v1/setting/users/filter-list", "USER_FILTER_LIST"),
+            Map.entry("/api/v1/setting/users/reference-data", "USER_REFERENCE_DATA"),
             Map.entry("/api/v1/setting/companies", "COMPANY_CREATE"),
             Map.entry("/api/v1/setting/companies/update", "COMPANY_UPDATE"),
             Map.entry("/api/v1/setting/companies/view", "COMPANY_VIEW"),
