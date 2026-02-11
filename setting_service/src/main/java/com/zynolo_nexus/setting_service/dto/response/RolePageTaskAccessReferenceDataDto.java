@@ -13,6 +13,8 @@ import lombok.NoArgsConstructor;
 public class RolePageTaskAccessReferenceDataDto {
 
     private List<RolePageTaskAccessReferenceRoleDto> roles;
+    private List<RolePageTaskAccessReferenceModuleDto> modules;
+    private List<RolePageTaskAccessReferenceSectionDto> sections;
     private List<RolePageTaskAccessReferencePageDto> pages;
     private List<RolePageTaskAccessReferenceTaskDto> tasks;
     private RolePageTaskAccessPrivilegesDto privileges;

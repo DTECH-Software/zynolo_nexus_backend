@@ -10,15 +10,20 @@ import com.zynolo_nexus.contracts.pages.TaskDto;
 import com.zynolo_nexus.setting_service.client.AuthModuleClient;
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessCheckRequest;
+import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessPreviewRequest;
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessReferenceDataRequest;
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessUpdateByIdRequest;
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessViewRequest;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceModuleDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessPrivilegesDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceDataDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferencePageDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceRoleDto;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceSectionDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceTaskDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskPrivilegeCheckDto;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskPrivilegePreviewDto;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskPrivilegePreviewTaskDto;
 import com.zynolo_nexus.setting_service.exception.NotFoundException;
 import com.zynolo_nexus.setting_service.model.Role;
 import com.zynolo_nexus.setting_service.model.User;
@@ -232,8 +237,37 @@ public class RolePageTaskAccessServiceImpl implements RolePageTaskAccessService 
                         .build())
                 .toList();
 
+        List<RolePageTaskAccessReferenceModuleDto> moduleRefs = modules.stream()
+                .map(module -> RolePageTaskAccessReferenceModuleDto.builder()
+                        .id(module.getId())
+                        .code(module.getCode())
+                        .name(module.getName())
+                        .description(module.getDescription())
+                        .build())
+                .toList();
+
+        List<RolePageTaskAccessReferenceSectionDto> sectionRefs = sections.stream()
+                .map(section -> {
+                    ModuleDto module = section.getModuleCode() != null
+                            ? moduleByCode.get(section.getModuleCode().toLowerCase())
+                            : null;
+                    return RolePageTaskAccessReferenceSectionDto.builder()
+                            .id(section.getId())
+                            .code(section.getCode())
+                            .name(StringUtils.hasText(section.getName()) ? section.getName() : section.getDescription())
+                            .moduleId(module != null ? module.getId() : null)
+                            .moduleCode(section.getModuleCode())
+                            .moduleName(module != null
+                                    ? (StringUtils.hasText(module.getName()) ? module.getName() : module.getDescription())
+                                    : null)
+                            .build();
+                })
+                .toList();
+
         RolePageTaskAccessReferenceDataDto data = RolePageTaskAccessReferenceDataDto.builder()
                 .roles(roles)
+                .modules(moduleRefs)
+                .sections(sectionRefs)
                 .pages(pages)
                 .tasks(tasks)
                 .privileges(privileges)
@@ -243,6 +277,53 @@ public class RolePageTaskAccessServiceImpl implements RolePageTaskAccessService 
                 .success(true)
                 .message("Reference data YRTM retrieved successfully")
                 .data(data)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
+    @Override
+    public MessageResponseDTO<RolePageTaskPrivilegePreviewDto> previewPageTasks(RolePageTaskAccessPreviewRequest request) {
+        String roleCode = resolveRoleCode(request != null ? request.getRoleId() : null,
+                request != null ? request.getRoleCode() : null);
+
+        Map<Long, String> pageIdMap = loadPageCodeMap();
+        Map<String, Long> taskIdMap = loadTaskIdMap();
+        String pageCode = resolvePageCode(request, pageIdMap);
+
+        RolePageTaskAccessDto dto = authModuleClient.getRolePageTaskAccess(roleCode);
+        List<RolePageTaskPrivilegePreviewTaskDto> tasks = List.of();
+        if (dto != null && dto.getPages() != null) {
+            tasks = dto.getPages().stream()
+                    .filter(page -> page != null && StringUtils.hasText(page.getPageCode()))
+                    .filter(page -> page.getPageCode().equalsIgnoreCase(pageCode))
+                    .findFirst()
+                    .map(page -> page.getTasks() != null ? page.getTasks().stream()
+                            .map(task -> RolePageTaskPrivilegePreviewTaskDto.builder()
+                                    .taskId(task != null && StringUtils.hasText(task.getTaskCode())
+                                            ? taskIdMap.get(task.getTaskCode().toLowerCase())
+                                            : null)
+                                    .taskCode(task != null ? task.getTaskCode() : null)
+                                    .taskName(task != null ? task.getTaskName() : null)
+                                    .canAccess(task != null && task.isCanAccess())
+                                    .build())
+                            .toList() : List.<RolePageTaskPrivilegePreviewTaskDto>of())
+                    .orElse(List.of());
+        }
+
+        RolePageTaskPrivilegePreviewDto response = RolePageTaskPrivilegePreviewDto.builder()
+                .roleId(request != null ? request.getRoleId() : null)
+                .roleCode(roleCode)
+                .pageId(request != null ? request.getPageId() : null)
+                .pageCode(pageCode)
+                .tasks(tasks)
+                .build();
+
+        return MessageResponseDTO.<RolePageTaskPrivilegePreviewDto>builder()
+                .success(true)
+                .message("Role page task privileges loaded successfully")
+                .data(response)
                 .errors(null)
                 .errorCode(0)
                 .responseTime(LocalDateTime.now())
@@ -287,6 +368,19 @@ public class RolePageTaskAccessServiceImpl implements RolePageTaskAccessService 
         return map;
     }
 
+    private Map<String, Long> loadTaskIdMap() {
+        List<TaskDto> tasks = authModuleClient.getAllTasksCatalogAll();
+        Map<String, Long> map = new HashMap<>();
+        if (tasks != null) {
+            for (TaskDto task : tasks) {
+                if (task != null && task.getId() != null && StringUtils.hasText(task.getCode())) {
+                    map.put(task.getCode().toLowerCase(), task.getId());
+                }
+            }
+        }
+        return map;
+    }
+
     private String resolvePageCode(RolePageTaskAccessUpdateByIdRequest.PageTaskPermission task,
                                    Map<Long, String> pageIdMap) {
         if (task != null) {
@@ -322,6 +416,20 @@ public class RolePageTaskAccessServiceImpl implements RolePageTaskAccessService 
     }
 
     private String resolvePageCode(RolePageTaskAccessCheckRequest request, Map<Long, String> pageIdMap) {
+        if (request != null && request.getPageId() != null) {
+            String code = pageIdMap.get(request.getPageId());
+            if (!StringUtils.hasText(code)) {
+                throw new NotFoundException("page.notfound");
+            }
+            return code;
+        }
+        if (request != null && StringUtils.hasText(request.getPageCode())) {
+            return request.getPageCode();
+        }
+        throw new NotFoundException("page.notfound");
+    }
+
+    private String resolvePageCode(RolePageTaskAccessPreviewRequest request, Map<Long, String> pageIdMap) {
         if (request != null && request.getPageId() != null) {
             String code = pageIdMap.get(request.getPageId());
             if (!StringUtils.hasText(code)) {
