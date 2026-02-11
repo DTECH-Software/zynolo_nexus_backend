@@ -36,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -47,6 +48,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserCompanyServiceImpl implements UserCompanyService {
 
     private static final String USER_COMPANY_MANAGEMENT_CODE = "UCOM";
@@ -58,6 +60,7 @@ public class UserCompanyServiceImpl implements UserCompanyService {
     private final AuthModuleClient authModuleClient;
 
     @Override
+    @Transactional
     public MessageResponseDTO<UserCompanyDto> createUserCompany(UserCompanyCreateRequest request) {
         if (request == null || request.getUserId() == null
                 || request.getCompanyId() == null || request.getRoleId() == null) {
@@ -100,6 +103,7 @@ public class UserCompanyServiceImpl implements UserCompanyService {
     }
 
     @Override
+    @Transactional
     public MessageResponseDTO<UserCompanyDto> updateUserCompany(UserCompanyUpdateRequest request) {
         if (request == null || request.getId() == null) {
             return MessageResponseDTO.<UserCompanyDto>builder()
@@ -181,6 +185,7 @@ public class UserCompanyServiceImpl implements UserCompanyService {
     }
 
     @Override
+    @Transactional
     public MessageResponseDTO<UserCompanyDto> updateStatus(UserCompanyStatusUpdateRequest request) {
         if (request == null || request.getId() == null) {
             return MessageResponseDTO.<UserCompanyDto>builder()
