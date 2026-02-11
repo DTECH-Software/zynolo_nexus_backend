@@ -139,7 +139,10 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
                         .orElseThrow(() -> new NotFoundException("task.notfound"));
 
                 PageTask task = pageTaskRepository.findByPageAndTask(page, taskEntity)
-                        .orElseThrow(() -> new NotFoundException("page.task.notfound"));
+                        .orElseGet(() -> pageTaskRepository.save(PageTask.builder()
+                                .page(page)
+                                .task(taskEntity)
+                                .build()));
 
                 RolePageTaskAccess access = RolePageTaskAccess.builder()
                         .role(role)
