@@ -123,12 +123,9 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
         Role role = resolveRole(request.getRoleCode());
         Long companyId = resolveCompanyId();
 
-        List<RolePageTaskAccess> existing = rolePageTaskAccessRepository.findByRoleAndCompanyId(role, companyId);
-        rolePageTaskAccessRepository.deleteAll(existing);
-
         if (request.getTasks() != null) {
             for (RolePageTaskAccessUpdateRequest.PageTaskPermission perm : request.getTasks()) {
-                if (!perm.isCanAccess()) {
+                if (perm == null) {
                     continue;
                 }
 
@@ -144,13 +141,26 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
                                 .task(taskEntity)
                                 .build()));
 
-                RolePageTaskAccess access = RolePageTaskAccess.builder()
-                        .role(role)
-                        .pageTask(task)
-                        .companyId(companyId)
-                        .canAccess(true)
-                        .build();
-                rolePageTaskAccessRepository.save(access);
+                RolePageTaskAccess existing = rolePageTaskAccessRepository
+                        .findByRoleAndPageTaskAndCompanyId(role, task, companyId)
+                        .orElse(null);
+
+                if (perm.isCanAccess()) {
+                    if (existing == null) {
+                        RolePageTaskAccess access = RolePageTaskAccess.builder()
+                                .role(role)
+                                .pageTask(task)
+                                .companyId(companyId)
+                                .canAccess(true)
+                                .build();
+                        rolePageTaskAccessRepository.save(access);
+                    } else if (!Boolean.TRUE.equals(existing.getCanAccess())) {
+                        existing.setCanAccess(true);
+                        rolePageTaskAccessRepository.save(existing);
+                    }
+                } else if (existing != null) {
+                    rolePageTaskAccessRepository.deleteByRoleAndPageTaskAndCompanyId(role, task, companyId);
+                }
             }
         }
 

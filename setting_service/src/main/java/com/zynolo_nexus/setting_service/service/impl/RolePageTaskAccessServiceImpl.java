@@ -43,7 +43,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RolePageTaskAccessServiceImpl implements RolePageTaskAccessService {
 
-    private static final String ROLE_PAGE_TASK_MANAGEMENT_CODE = "YRTM";
+    private static final String ROLE_PAGE_TASK_MANAGEMENT_CODE = "URTM";
 
     private final AuthModuleClient authModuleClient;
     private final RoleRepository roleRepository;
@@ -275,7 +275,7 @@ public class RolePageTaskAccessServiceImpl implements RolePageTaskAccessService 
 
         return MessageResponseDTO.<RolePageTaskAccessReferenceDataDto>builder()
                 .success(true)
-                .message("Reference data YRTM retrieved successfully")
+                .message("Reference data URTM retrieved successfully")
                 .data(data)
                 .errors(null)
                 .errorCode(0)
