@@ -1,18 +1,29 @@
 package com.zynolo_nexus.setting_service.service.impl;
 
+import com.zynolo_nexus.contracts.modules.ModuleDto;
+import com.zynolo_nexus.contracts.modules.ModuleStatus;
 import com.zynolo_nexus.contracts.pages.PageDto;
 import com.zynolo_nexus.contracts.pages.RolePageTaskAccessDto;
 import com.zynolo_nexus.contracts.pages.RolePageTaskAccessUpdateRequest;
+import com.zynolo_nexus.contracts.pages.SectionDto;
 import com.zynolo_nexus.contracts.pages.TaskDto;
 import com.zynolo_nexus.setting_service.client.AuthModuleClient;
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessCheckRequest;
+import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessReferenceDataRequest;
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessUpdateByIdRequest;
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessViewRequest;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessPrivilegesDto;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceDataDto;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferencePageDto;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceRoleDto;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceTaskDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskPrivilegeCheckDto;
 import com.zynolo_nexus.setting_service.exception.NotFoundException;
 import com.zynolo_nexus.setting_service.model.Role;
+import com.zynolo_nexus.setting_service.model.User;
 import com.zynolo_nexus.setting_service.repository.RoleRepository;
+import com.zynolo_nexus.setting_service.repository.UserRepository;
 import com.zynolo_nexus.setting_service.service.RolePageTaskAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,8 +38,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RolePageTaskAccessServiceImpl implements RolePageTaskAccessService {
 
+    private static final String ROLE_PAGE_TASK_MANAGEMENT_CODE = "YRTM";
+
     private final AuthModuleClient authModuleClient;
     private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
 
     @Override
     public MessageResponseDTO<RolePageTaskAccessDto> getRolePageTaskAccess(String roleCode) {
@@ -152,6 +166,89 @@ public class RolePageTaskAccessServiceImpl implements RolePageTaskAccessService 
                 .build();
     }
 
+    @Override
+    public MessageResponseDTO<RolePageTaskAccessReferenceDataDto> getReferenceData(RolePageTaskAccessReferenceDataRequest request) {
+        RolePageTaskAccessPrivilegesDto privileges = resolvePrivileges(request);
+
+        List<RolePageTaskAccessReferenceRoleDto> roles = roleRepository.findAll().stream()
+                .filter(role -> role.getStatus() == null || role.getStatus().name().equalsIgnoreCase("ACTIVE"))
+                .map(role -> RolePageTaskAccessReferenceRoleDto.builder()
+                        .id(role.getId())
+                        .code(role.getCode())
+                        .description(role.getDescription())
+                        .build())
+                .toList();
+
+        List<SectionDto> sections = authModuleClient.getAllSectionsAll().stream()
+                .filter(section -> section != null && section.isActive())
+                .toList();
+        Map<String, SectionDto> sectionByCode = new HashMap<>();
+        for (SectionDto section : sections) {
+            if (section != null && StringUtils.hasText(section.getCode())) {
+                sectionByCode.put(section.getCode().toLowerCase(), section);
+            }
+        }
+
+        List<ModuleDto> modules = authModuleClient.getAllModulesAll().stream()
+                .filter(module -> module != null && (module.getStatus() == null || module.getStatus() == ModuleStatus.ACTIVE))
+                .toList();
+        Map<String, ModuleDto> moduleByCode = new HashMap<>();
+        for (ModuleDto module : modules) {
+            if (module != null && StringUtils.hasText(module.getCode())) {
+                moduleByCode.put(module.getCode().toLowerCase(), module);
+            }
+        }
+
+        List<RolePageTaskAccessReferencePageDto> pages = authModuleClient.getAllPagesAll().stream()
+                .filter(page -> page != null && page.isActive())
+                .map(page -> {
+                    String sectionKey = page.getSectionCode() != null ? page.getSectionCode().toLowerCase() : null;
+                    SectionDto section = sectionKey != null ? sectionByCode.get(sectionKey) : null;
+                    String moduleKey = section != null ? section.getModuleCode() : null;
+                    ModuleDto module = moduleKey != null ? moduleByCode.get(moduleKey.toLowerCase()) : null;
+                    return RolePageTaskAccessReferencePageDto.builder()
+                            .id(page.getId())
+                            .code(page.getCode())
+                            .name(StringUtils.hasText(page.getName()) ? page.getName() : page.getDescription())
+                            .sectionId(section != null ? section.getId() : null)
+                            .sectionCode(section != null ? section.getCode() : page.getSectionCode())
+                            .sectionName(section != null
+                                    ? (StringUtils.hasText(section.getName()) ? section.getName() : section.getDescription())
+                                    : null)
+                            .moduleCode(section != null ? section.getModuleCode() : null)
+                            .moduleName(module != null
+                                    ? (StringUtils.hasText(module.getName()) ? module.getName() : module.getDescription())
+                                    : null)
+                            .build();
+                })
+                .toList();
+
+        List<RolePageTaskAccessReferenceTaskDto> tasks = authModuleClient.getAllTasksCatalogAll().stream()
+                .filter(task -> task != null && task.isActive())
+                .map(task -> RolePageTaskAccessReferenceTaskDto.builder()
+                        .id(task.getId())
+                        .code(task.getCode())
+                        .description(StringUtils.hasText(task.getDescription()) ? task.getDescription() : task.getName())
+                        .build())
+                .toList();
+
+        RolePageTaskAccessReferenceDataDto data = RolePageTaskAccessReferenceDataDto.builder()
+                .roles(roles)
+                .pages(pages)
+                .tasks(tasks)
+                .privileges(privileges)
+                .build();
+
+        return MessageResponseDTO.<RolePageTaskAccessReferenceDataDto>builder()
+                .success(true)
+                .message("Reference data YRTM retrieved successfully")
+                .data(data)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
     private String resolveRoleCode(Long roleId, String roleCode) {
         if (roleId != null) {
             Role role = roleRepository.findById(roleId)
@@ -250,5 +347,123 @@ public class RolePageTaskAccessServiceImpl implements RolePageTaskAccessService 
             return request.getTaskCode();
         }
         throw new NotFoundException("task.notfound");
+    }
+
+    private RolePageTaskAccessPrivilegesDto resolvePrivileges(RolePageTaskAccessReferenceDataRequest request) {
+        String username = request != null ? request.getUsername() : null;
+        if (!StringUtils.hasText(username)) {
+            username = getAuthenticatedUsername();
+        }
+
+        if (!StringUtils.hasText(username)) {
+            return RolePageTaskAccessPrivilegesDto.builder()
+                    .add(false)
+                    .update(false)
+                    .view(false)
+                    .search(false)
+                    .delete(false)
+                    .build();
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new NotFoundException("user.fetch.notfound"));
+
+        String roleCode = user.getRole() != null && user.getRole().getCode() != null
+                ? user.getRole().getCode()
+                : null;
+
+        if (!StringUtils.hasText(roleCode)) {
+            return RolePageTaskAccessPrivilegesDto.builder()
+                    .add(false)
+                    .update(false)
+                    .view(false)
+                    .search(false)
+                    .delete(false)
+                    .build();
+        }
+
+        RolePageTaskAccessDto access = authModuleClient.getRolePageTaskAccess(roleCode);
+        if (access == null || access.getPages() == null) {
+            return RolePageTaskAccessPrivilegesDto.builder()
+                    .add(false)
+                    .update(false)
+                    .view(false)
+                    .search(false)
+                    .delete(false)
+                    .build();
+        }
+
+        Map<String, Boolean> taskAccess = new HashMap<>();
+        access.getPages().stream()
+                .filter(page -> ROLE_PAGE_TASK_MANAGEMENT_CODE.equalsIgnoreCase(page.getPageCode()))
+                .findFirst()
+                .ifPresent(page -> {
+                    if (page.getTasks() != null) {
+                        page.getTasks().forEach(task -> {
+                            String codeKey = normalizeTaskKey(task.getTaskCode());
+                            if (StringUtils.hasText(codeKey)) {
+                                taskAccess.put(codeKey, task.isCanAccess());
+                            }
+                            String nameKey = normalizeTaskKey(task.getTaskName());
+                            if (StringUtils.hasText(nameKey)) {
+                                taskAccess.putIfAbsent(nameKey, task.isCanAccess());
+                            }
+                        });
+                    }
+                });
+
+        boolean add = hasTask(taskAccess, "ADD", "CREATE", "NEW");
+        boolean update = hasTask(taskAccess, "UPDATE", "EDIT");
+        boolean view = hasTask(taskAccess, "VIEW", "READ");
+        boolean search = hasTask(taskAccess, "SEARCH", "FILTER", "LIST");
+        boolean delete = hasTask(taskAccess, "DELETE", "REMOVE", "DEACTIVATE");
+
+        return RolePageTaskAccessPrivilegesDto.builder()
+                .add(add)
+                .update(update)
+                .view(view)
+                .search(search)
+                .delete(delete)
+                .build();
+    }
+
+    private String normalizeTaskKey(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        return value.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
+    }
+
+    private boolean hasTask(Map<String, Boolean> taskAccess, String... tokens) {
+        if (taskAccess == null || taskAccess.isEmpty() || tokens == null) {
+            return false;
+        }
+        for (Map.Entry<String, Boolean> entry : taskAccess.entrySet()) {
+            if (!Boolean.TRUE.equals(entry.getValue())) {
+                continue;
+            }
+            String key = entry.getKey();
+            if (!StringUtils.hasText(key)) {
+                continue;
+            }
+            for (String token : tokens) {
+                if (StringUtils.hasText(token) && key.contains(token)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private String getAuthenticatedUsername() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal == null || "anonymousUser".equals(principal)) {
+            return null;
+        }
+        return authentication.getName();
     }
 }

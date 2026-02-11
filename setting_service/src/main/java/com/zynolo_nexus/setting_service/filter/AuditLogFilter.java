@@ -84,7 +84,8 @@ public class AuditLogFilter extends OncePerRequestFilter {
             Map.entry("/api/v1/setting/role-page-tasks/update", "ROLE_PAGE_TASK_ACCESS_UPDATE"),
             Map.entry("/api/v1/setting/role-page-tasks/update-by-id", "ROLE_PAGE_TASK_ACCESS_UPDATE"),
             Map.entry("/api/v1/setting/role-page-tasks/view", "ROLE_PAGE_TASK_ACCESS_VIEW"),
-            Map.entry("/api/v1/setting/role-page-tasks/check", "ROLE_PAGE_TASK_ACCESS_CHECK")
+            Map.entry("/api/v1/setting/role-page-tasks/check", "ROLE_PAGE_TASK_ACCESS_CHECK"),
+            Map.entry("/api/v1/setting/role-page-tasks/reference-data", "ROLE_PAGE_TASK_ACCESS_REFERENCE_DATA")
     );
 
     private final AuditLogRepository auditLogRepository;

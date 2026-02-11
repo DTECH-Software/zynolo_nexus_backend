@@ -4,8 +4,10 @@ import com.zynolo_nexus.contracts.pages.RolePageTaskAccessDto;
 import com.zynolo_nexus.contracts.pages.RolePageTaskAccessUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessCheckRequest;
+import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessReferenceDataRequest;
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessUpdateByIdRequest;
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessViewRequest;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceDataDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskPrivilegeCheckDto;
 
 public interface RolePageTaskAccessService {
@@ -19,4 +21,6 @@ public interface RolePageTaskAccessService {
     MessageResponseDTO<RolePageTaskAccessDto> updateRolePageTaskAccess(RolePageTaskAccessUpdateByIdRequest request);
 
     MessageResponseDTO<RolePageTaskPrivilegeCheckDto> checkRolePageTaskAccess(RolePageTaskAccessCheckRequest request);
+
+    MessageResponseDTO<RolePageTaskAccessReferenceDataDto> getReferenceData(RolePageTaskAccessReferenceDataRequest request);
 }
