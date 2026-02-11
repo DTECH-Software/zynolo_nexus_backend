@@ -3,6 +3,10 @@ package com.zynolo_nexus.setting_service.controller;
 import com.zynolo_nexus.contracts.pages.RolePageTaskAccessDto;
 import com.zynolo_nexus.contracts.pages.RolePageTaskAccessUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
+import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessCheckRequest;
+import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessUpdateByIdRequest;
+import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessViewRequest;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskPrivilegeCheckDto;
 import com.zynolo_nexus.setting_service.service.RolePageTaskAccessService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,9 +27,26 @@ public class RolePageTaskAccessController {
         return rolePageTaskAccessService.getRolePageTaskAccess(roleCode);
     }
 
+    @PostMapping("/view")
+    public MessageResponseDTO<RolePageTaskAccessDto> getRolePageTaskAccess(@RequestBody RolePageTaskAccessViewRequest request) {
+        return rolePageTaskAccessService.getRolePageTaskAccess(request);
+    }
+
     @PostMapping("/update")
     public MessageResponseDTO<RolePageTaskAccessDto> updateRolePageTaskAccess(
             @RequestBody RolePageTaskAccessUpdateRequest request) {
         return rolePageTaskAccessService.updateRolePageTaskAccess(request);
+    }
+
+    @PostMapping("/update-by-id")
+    public MessageResponseDTO<RolePageTaskAccessDto> updateRolePageTaskAccessById(
+            @RequestBody RolePageTaskAccessUpdateByIdRequest request) {
+        return rolePageTaskAccessService.updateRolePageTaskAccess(request);
+    }
+
+    @PostMapping("/check")
+    public MessageResponseDTO<RolePageTaskPrivilegeCheckDto> checkRolePageTaskAccess(
+            @RequestBody RolePageTaskAccessCheckRequest request) {
+        return rolePageTaskAccessService.checkRolePageTaskAccess(request);
     }
 }

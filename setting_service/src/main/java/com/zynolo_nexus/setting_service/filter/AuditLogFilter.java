@@ -76,8 +76,15 @@ public class AuditLogFilter extends OncePerRequestFilter {
             Map.entry("/api/v1/setting/tasks/filter-list", "TASK_FILTER_LIST"),
             Map.entry("/api/v1/setting/tasks/reference-data", "TASK_REFERENCE_DATA"),
             Map.entry("/api/v1/setting/page-tasks", "PAGE_TASK_CREATE"),
-            Map.entry("/api/v1/setting/role-modules", "ROLE_MODULE_ACCESS_UPDATE"),
-            Map.entry("/api/v1/setting/role-page-tasks", "ROLE_PAGE_TASK_ACCESS_UPDATE")
+            Map.entry("/api/v1/setting/role-modules/update", "ROLE_MODULE_ACCESS_UPDATE"),
+            Map.entry("/api/v1/setting/role-modules/update-by-id", "ROLE_MODULE_ACCESS_UPDATE"),
+            Map.entry("/api/v1/setting/role-modules/view", "ROLE_MODULE_ACCESS_VIEW"),
+            Map.entry("/api/v1/setting/role-modules/check", "ROLE_MODULE_ACCESS_CHECK"),
+            Map.entry("/api/v1/setting/role-modules/reference-data", "ROLE_MODULE_ACCESS_REFERENCE_DATA"),
+            Map.entry("/api/v1/setting/role-page-tasks/update", "ROLE_PAGE_TASK_ACCESS_UPDATE"),
+            Map.entry("/api/v1/setting/role-page-tasks/update-by-id", "ROLE_PAGE_TASK_ACCESS_UPDATE"),
+            Map.entry("/api/v1/setting/role-page-tasks/view", "ROLE_PAGE_TASK_ACCESS_VIEW"),
+            Map.entry("/api/v1/setting/role-page-tasks/check", "ROLE_PAGE_TASK_ACCESS_CHECK")
     );
 
     private final AuditLogRepository auditLogRepository;
