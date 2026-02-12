@@ -17,8 +17,10 @@ public class UserCompanyDto {
     private String username;
     private Long companyId;
     private String companyCode;
+    private String companyDescription;
     private Long roleId;
     private String roleCode;
+    private String roleDescription;
     private String status;
     private String statusDescription;
     private boolean isDefault;
