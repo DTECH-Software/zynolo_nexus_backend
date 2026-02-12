@@ -196,12 +196,12 @@ public class RoleModuleAccessServiceImpl implements RoleModuleAccessService {
     }
 
     private String resolveRoleCode(Long roleId, String roleCode) {
-        if (roleId != null) {
-            Role role = roleRepository.findById(roleId)
-                    .orElseThrow(() -> new NotFoundException("role.notfound"));
-            return role.getCode();
-        }
         if (!StringUtils.hasText(roleCode)) {
+            if (roleId != null) {
+                Role role = roleRepository.findById(roleId)
+                        .orElseThrow(() -> new NotFoundException("role.notfound"));
+                return role.getCode();
+            }
             throw new NotFoundException("role.notfound");
         }
         return roleCode;
