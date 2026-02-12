@@ -14,13 +14,12 @@ import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessPreviewReq
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessReferenceDataRequest;
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessUpdateByIdRequest;
 import com.zynolo_nexus.setting_service.dto.request.RolePageTaskAccessViewRequest;
-import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceModuleDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessPrivilegesDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceDataDto;
-import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferencePageDto;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceModuleTreeDto;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferencePageTreeDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceRoleDto;
-import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceSectionDto;
-import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceTaskDto;
+import com.zynolo_nexus.setting_service.dto.response.RolePageTaskAccessReferenceSectionTreeDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskPrivilegeCheckDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskPrivilegePreviewDto;
 import com.zynolo_nexus.setting_service.dto.response.RolePageTaskPrivilegePreviewTaskDto;
@@ -184,16 +183,6 @@ public class RolePageTaskAccessServiceImpl implements RolePageTaskAccessService 
                         .build())
                 .toList();
 
-        List<SectionDto> sections = authModuleClient.getAllSectionsAll().stream()
-                .filter(section -> section != null && section.isActive())
-                .toList();
-        Map<String, SectionDto> sectionByCode = new HashMap<>();
-        for (SectionDto section : sections) {
-            if (section != null && StringUtils.hasText(section.getCode())) {
-                sectionByCode.put(section.getCode().toLowerCase(), section);
-            }
-        }
-
         List<ModuleDto> modules = authModuleClient.getAllModulesAll().stream()
                 .filter(module -> module != null && (module.getStatus() == null || module.getStatus() == ModuleStatus.ACTIVE))
                 .toList();
@@ -204,72 +193,72 @@ public class RolePageTaskAccessServiceImpl implements RolePageTaskAccessService 
             }
         }
 
-        List<RolePageTaskAccessReferencePageDto> pages = authModuleClient.getAllPagesAll().stream()
+        List<SectionDto> sections = authModuleClient.getAllSectionsAll().stream()
+                .filter(section -> section != null && section.isActive())
+                .toList();
+        Map<String, List<SectionDto>> sectionsByModule = new HashMap<>();
+        for (SectionDto section : sections) {
+            if (section != null && StringUtils.hasText(section.getModuleCode())) {
+                String moduleKey = section.getModuleCode().toLowerCase();
+                if (moduleByCode.containsKey(moduleKey)) {
+                    sectionsByModule.computeIfAbsent(moduleKey, key -> new java.util.ArrayList<>()).add(section);
+                }
+            }
+        }
+
+        List<PageDto> pages = authModuleClient.getAllPagesAll().stream()
                 .filter(page -> page != null && page.isActive())
-                .map(page -> {
-                    String sectionKey = page.getSectionCode() != null ? page.getSectionCode().toLowerCase() : null;
-                    SectionDto section = sectionKey != null ? sectionByCode.get(sectionKey) : null;
-                    String moduleKey = section != null ? section.getModuleCode() : null;
-                    ModuleDto module = moduleKey != null ? moduleByCode.get(moduleKey.toLowerCase()) : null;
-                    return RolePageTaskAccessReferencePageDto.builder()
-                            .id(page.getId())
-                            .code(page.getCode())
-                            .name(StringUtils.hasText(page.getName()) ? page.getName() : page.getDescription())
-                            .sectionId(section != null ? section.getId() : null)
-                            .sectionCode(section != null ? section.getCode() : page.getSectionCode())
-                            .sectionName(section != null
-                                    ? (StringUtils.hasText(section.getName()) ? section.getName() : section.getDescription())
-                                    : null)
-                            .moduleCode(section != null ? section.getModuleCode() : null)
-                            .moduleName(module != null
-                                    ? (StringUtils.hasText(module.getName()) ? module.getName() : module.getDescription())
-                                    : null)
-                            .build();
-                })
                 .toList();
+        Map<String, List<PageDto>> pagesBySection = new HashMap<>();
+        for (PageDto page : pages) {
+            if (page != null && StringUtils.hasText(page.getSectionCode())) {
+                String sectionKey = page.getSectionCode().toLowerCase();
+                pagesBySection.computeIfAbsent(sectionKey, key -> new java.util.ArrayList<>()).add(page);
+            }
+        }
 
-        List<RolePageTaskAccessReferenceTaskDto> tasks = authModuleClient.getAllTasksCatalogAll().stream()
-                .filter(task -> task != null && task.isActive())
-                .map(task -> RolePageTaskAccessReferenceTaskDto.builder()
-                        .id(task.getId())
-                        .code(task.getCode())
-                        .description(StringUtils.hasText(task.getDescription()) ? task.getDescription() : task.getName())
-                        .build())
-                .toList();
-
-        List<RolePageTaskAccessReferenceModuleDto> moduleRefs = modules.stream()
-                .map(module -> RolePageTaskAccessReferenceModuleDto.builder()
-                        .id(module.getId())
-                        .code(module.getCode())
-                        .name(module.getName())
-                        .description(module.getDescription())
-                        .build())
-                .toList();
-
-        List<RolePageTaskAccessReferenceSectionDto> sectionRefs = sections.stream()
-                .map(section -> {
-                    ModuleDto module = section.getModuleCode() != null
-                            ? moduleByCode.get(section.getModuleCode().toLowerCase())
-                            : null;
-                    return RolePageTaskAccessReferenceSectionDto.builder()
-                            .id(section.getId())
-                            .code(section.getCode())
-                            .name(StringUtils.hasText(section.getName()) ? section.getName() : section.getDescription())
-                            .moduleId(module != null ? module.getId() : null)
-                            .moduleCode(section.getModuleCode())
-                            .moduleName(module != null
-                                    ? (StringUtils.hasText(module.getName()) ? module.getName() : module.getDescription())
-                                    : null)
+        List<RolePageTaskAccessReferenceModuleTreeDto> moduleTrees = modules.stream()
+                .map(module -> {
+                    String moduleKey = module.getCode() != null ? module.getCode().toLowerCase() : null;
+                    List<SectionDto> moduleSections = moduleKey != null
+                            ? sectionsByModule.getOrDefault(moduleKey, List.of())
+                            : List.of();
+                    List<RolePageTaskAccessReferenceSectionTreeDto> sectionTrees = moduleSections.stream()
+                            .map(section -> {
+                                String sectionKey = section.getCode() != null ? section.getCode().toLowerCase() : null;
+                                List<PageDto> sectionPages = sectionKey != null
+                                        ? pagesBySection.getOrDefault(sectionKey, List.of())
+                                        : List.of();
+                                List<RolePageTaskAccessReferencePageTreeDto> pageTrees = sectionPages.stream()
+                                        .map(page -> RolePageTaskAccessReferencePageTreeDto.builder()
+                                                .code(page.getCode())
+                                                .description(StringUtils.hasText(page.getDescription())
+                                                        ? page.getDescription()
+                                                        : page.getName())
+                                                .build())
+                                        .toList();
+                                return RolePageTaskAccessReferenceSectionTreeDto.builder()
+                                        .code(section.getCode())
+                                        .description(StringUtils.hasText(section.getDescription())
+                                                ? section.getDescription()
+                                                : section.getName())
+                                        .pages(pageTrees)
+                                        .build();
+                            })
+                            .toList();
+                    return RolePageTaskAccessReferenceModuleTreeDto.builder()
+                            .code(module.getCode())
+                            .description(StringUtils.hasText(module.getDescription())
+                                    ? module.getDescription()
+                                    : module.getName())
+                            .sections(sectionTrees)
                             .build();
                 })
                 .toList();
 
         RolePageTaskAccessReferenceDataDto data = RolePageTaskAccessReferenceDataDto.builder()
-                .roles(roles)
-                .modules(moduleRefs)
-                .sections(sectionRefs)
-                .pages(pages)
-                .tasks(tasks)
+                .userRole(roles)
+                .modules(moduleTrees)
                 .privileges(privileges)
                 .build();
 

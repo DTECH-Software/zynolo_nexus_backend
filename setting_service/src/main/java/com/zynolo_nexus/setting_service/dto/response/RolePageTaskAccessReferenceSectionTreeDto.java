@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RolePageTaskAccessReferenceDataDto {
+public class RolePageTaskAccessReferenceSectionTreeDto {
 
-    private List<RolePageTaskAccessReferenceModuleTreeDto> modules;
-    private List<RolePageTaskAccessReferenceRoleDto> userRole;
-    private RolePageTaskAccessPrivilegesDto privileges;
+    private String code;
+    private String description;
+    private List<RolePageTaskAccessReferencePageTreeDto> pages;
 }
