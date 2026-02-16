@@ -16,5 +16,7 @@ public class UserReferenceDataDto {
     private List<ReferenceRoleDto> roles;
     private List<ReferenceStatusDto> userStatus;
     private List<ReferenceStatusDto> loginStatus;
+    private UsernamePolicyDto usernamePolicy;
+    private PasswordPolicyDto passwordPolicy;
     private UserPrivilegesDto privileges;
 }

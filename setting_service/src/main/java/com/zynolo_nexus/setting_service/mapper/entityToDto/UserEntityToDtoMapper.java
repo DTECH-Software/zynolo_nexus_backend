@@ -36,7 +36,7 @@ public class UserEntityToDtoMapper {
                 .createdBy(user.getCreatedBy())
                 .lastModifiedBy(user.getLastModifiedBy())
                 .id(user.getId())
-                .username(user.getUsername())
+                .newUsername(user.getUsername())
                 .email(user.getEmail())
                 .mobile(user.getMobile())
                 .status(user.getStatus() != null ? user.getStatus().name() : null)

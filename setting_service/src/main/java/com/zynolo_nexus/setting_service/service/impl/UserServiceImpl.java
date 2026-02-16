@@ -25,6 +25,7 @@ import com.zynolo_nexus.setting_service.dto.request.UserUpdateByIdRequest;
 import com.zynolo_nexus.setting_service.dto.request.validator.CreateUserRequestValidator;
 import com.zynolo_nexus.setting_service.dto.request.validator.UpdateUserRequestValidator;
 import com.zynolo_nexus.setting_service.dto.response.ProfileDetails;
+import com.zynolo_nexus.setting_service.dto.response.PasswordPolicyDto;
 import com.zynolo_nexus.setting_service.dto.response.ReferenceCompanyDto;
 import com.zynolo_nexus.setting_service.dto.response.ReferenceRoleDto;
 import com.zynolo_nexus.setting_service.dto.response.ReferenceStatusDto;
@@ -32,6 +33,7 @@ import com.zynolo_nexus.setting_service.dto.response.UserFilterResultDto;
 import com.zynolo_nexus.setting_service.dto.response.UserListItemDto;
 import com.zynolo_nexus.setting_service.dto.response.UserPrivilegesDto;
 import com.zynolo_nexus.setting_service.dto.response.UserReferenceDataDto;
+import com.zynolo_nexus.setting_service.dto.response.UsernamePolicyDto;
 import com.zynolo_nexus.setting_service.enums.CompanyStatus;
 import com.zynolo_nexus.setting_service.enums.LoginStatus;
 import com.zynolo_nexus.setting_service.enums.RoleStatus;
@@ -86,6 +88,12 @@ public class UserServiceImpl implements UserService {
     private int defaultPasswordMinLength;
     @Value("${password.policy.default.maxLength:10}")
     private int defaultPasswordMaxLength;
+    @Value("${password.policy.default.passwordHistory:3}")
+    private int defaultPasswordHistory;
+    @Value("${password.policy.default.attemptExceedCount:1}")
+    private int defaultPasswordAttemptExceedCount;
+    @Value("${password.policy.default.otpExceedCount:1}")
+    private int defaultPasswordOtpExceedCount;
 
     @Value("${username.policy.default.minUpperCase:1}")
     private int defaultUsernameMinUpperCase;
@@ -278,6 +286,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public MessageResponseDTO<UserReferenceDataDto> getReferenceData(UserReferenceDataRequest request) {
+        UsernamePolicy usernamePolicy = usernamePolicyRepository.findTopByOrderByIdAsc().orElse(null);
+        PasswordPolicy passwordPolicy = passwordPolicyRepository.findTopByOrderByIdAsc().orElse(null);
+
         var companies = companyRepository.findAllByStatusOrderByCodeAsc(CompanyStatus.ACTIVE).stream()
                 .map(c -> ReferenceCompanyDto.builder()
                         .code(c.getCode())
@@ -306,6 +317,8 @@ public class UserServiceImpl implements UserService {
                         ReferenceStatusDto.builder().code("DISABLED").description("Disabled").build(),
                         ReferenceStatusDto.builder().code("PASSWORD_EXPIRED").description("Password Expired").build()
                 ))
+                .usernamePolicy(toUsernamePolicyDto(usernamePolicy))
+                .passwordPolicy(toPasswordPolicyDto(passwordPolicy))
                 .privileges(resolvePrivileges(request))
                 .build();
 
@@ -580,6 +593,37 @@ public class UserServiceImpl implements UserService {
 
     private int valueOrDefault(Integer value, int fallback) {
         return value != null ? Math.max(0, value) : Math.max(0, fallback);
+    }
+
+    private UsernamePolicyDto toUsernamePolicyDto(UsernamePolicy policy) {
+        return UsernamePolicyDto.builder()
+                .id(policy != null ? policy.getId() : null)
+                .minUpperCase(valueOrDefault(policy != null ? policy.getMinUpperCase() : null, defaultUsernameMinUpperCase))
+                .minLowerCase(valueOrDefault(policy != null ? policy.getMinLowerCase() : null, defaultUsernameMinLowerCase))
+                .minNumbers(valueOrDefault(policy != null ? policy.getMinNumbers() : null, defaultUsernameMinNumbers))
+                .minSpecialCharacters(valueOrDefault(policy != null ? policy.getMinSpecialCharacters() : null,
+                        defaultUsernameMinSpecialCharacters))
+                .minLength(valueOrDefault(policy != null ? policy.getMinLength() : null, defaultUsernameMinLength))
+                .maxLength(valueOrDefault(policy != null ? policy.getMaxLength() : null, defaultUsernameMaxLength))
+                .build();
+    }
+
+    private PasswordPolicyDto toPasswordPolicyDto(PasswordPolicy policy) {
+        return PasswordPolicyDto.builder()
+                .id(policy != null ? policy.getId() : null)
+                .minUpperCase(valueOrDefault(policy != null ? policy.getMinUpperCase() : null, defaultPasswordMinUpperCase))
+                .minLowerCase(valueOrDefault(policy != null ? policy.getMinLowerCase() : null, defaultPasswordMinLowerCase))
+                .minNumbers(valueOrDefault(policy != null ? policy.getMinNumbers() : null, defaultPasswordMinNumbers))
+                .minSpecialCharacters(valueOrDefault(policy != null ? policy.getMinSpecialCharacters() : null,
+                        defaultPasswordMinSpecialCharacters))
+                .minLength(valueOrDefault(policy != null ? policy.getMinLength() : null, defaultPasswordMinLength))
+                .maxLength(valueOrDefault(policy != null ? policy.getMaxLength() : null, defaultPasswordMaxLength))
+                .passwordHistory(valueOrDefault(policy != null ? policy.getPasswordHistory() : null, defaultPasswordHistory))
+                .attemptExceedCount(valueOrDefault(policy != null ? policy.getAttemptExceedCount() : null,
+                        defaultPasswordAttemptExceedCount))
+                .otpExceedCount(valueOrDefault(policy != null ? policy.getOtpExceedCount() : null,
+                        defaultPasswordOtpExceedCount))
+                .build();
     }
 
     private boolean matchesPolicy(String value,

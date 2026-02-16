@@ -25,7 +25,6 @@ public class ProfileDetails {
     private String lastModifiedBy;
 
     private Long id;
-    private String username;
     private String newUsername;
 
     private String email;
