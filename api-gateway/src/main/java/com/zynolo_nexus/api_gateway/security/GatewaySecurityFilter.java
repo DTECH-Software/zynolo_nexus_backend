@@ -77,9 +77,13 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
 
             if ("POST".equalsIgnoreCase(request.getMethod())) {
                 CachedBodyHttpServletRequest cached = new CachedBodyHttpServletRequest(request);
-                String payloadUsername = extractUsername(cached.getCachedBody());
+                PayloadInfo payloadInfo = extractPayloadInfo(cached.getCachedBody());
+                String payloadUsername = payloadInfo.username();
                 String tokenUsername = claims.getSubject();
-                if (payloadUsername != null && tokenUsername != null && !payloadUsername.equals(tokenUsername)) {
+                if (payloadInfo.validateAgainstToken()
+                        && payloadUsername != null
+                        && tokenUsername != null
+                        && !payloadUsername.equals(tokenUsername)) {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     response.setContentType("application/json");
                     response.getWriter().write("{\"success\":false,\"message\":\"Invalid username\",\"errorCode\":403}");
@@ -100,19 +104,24 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
         filterChain.doFilter(sanitized, response);
     }
 
-    private String extractUsername(byte[] body) {
+    private PayloadInfo extractPayloadInfo(byte[] body) {
         if (body == null || body.length == 0) {
-            return null;
+            return new PayloadInfo(null, false);
         }
         try {
             JsonNode node = objectMapper.readTree(body);
-            if (node != null && node.hasNonNull("username")) {
-                return node.get("username").asText();
+            if (node != null && node.isObject()) {
+                String username = node.hasNonNull("username") ? node.get("username").asText() : null;
+                boolean hasAuditFields = node.has("channel")
+                        || node.has("ip")
+                        || node.has("message")
+                        || node.has("userAgent");
+                return new PayloadInfo(username, hasAuditFields);
             }
         } catch (IOException ex) {
-            return null;
+            return new PayloadInfo(null, false);
         }
-        return null;
+        return new PayloadInfo(null, false);
     }
 
     private boolean isBlocked(String path) {
@@ -207,4 +216,6 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
             return Collections.enumeration(all);
         }
     }
+
+    private record PayloadInfo(String username, boolean validateAgainstToken) { }
 }
