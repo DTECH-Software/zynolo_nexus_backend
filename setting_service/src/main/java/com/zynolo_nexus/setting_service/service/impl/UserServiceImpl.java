@@ -326,7 +326,7 @@ public class UserServiceImpl implements UserService {
         List<User> users = userRepository.findAll();
 
         UserFilterSearch search = request != null ? request.getSearch() : null;
-        String username = search != null ? normalize(search.getUsername()) : null;
+        String username = search != null ? normalize(search.getSearchUsername()) : null;
         String role = search != null ? normalize(search.getRole()) : null;
         String nic = search != null ? normalize(search.getNic()) : null;
         String email = search != null ? normalize(search.getEmail()) : null;
