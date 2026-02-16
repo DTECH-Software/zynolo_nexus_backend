@@ -129,10 +129,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public MessageResponseDTO<ProfileDetails> createUser(CreateUserRequest request) {
         createValidator.validate(request);
-        validateUsernameAgainstPolicy(request.getUsername());
+        String targetUsername = request.getTargetUsername();
+        validateUsernameAgainstPolicy(targetUsername);
         validatePasswordAgainstPolicy(request.getPassword());
 
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsername(targetUsername)) {
             throw new BadRequestException("user.create.username.exists");
         }
         if (StringUtils.hasText(request.getEmail()) && userRepository.existsByEmail(request.getEmail())) {
@@ -143,7 +144,7 @@ public class UserServiceImpl implements UserService {
         Company company = resolveCompany(request.getCompany());
 
         User user = User.builder()
-                .username(request.getUsername())
+                .username(targetUsername)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
                 .mobile(request.getMobile())

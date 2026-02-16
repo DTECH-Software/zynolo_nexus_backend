@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ import com.zynolo_nexus.auth_service.dto.response.ReferenceDataDto;
 import com.zynolo_nexus.auth_service.dto.response.ResetTokenResponse;
 import com.zynolo_nexus.auth_service.dto.response.TokenDetails;
 import com.zynolo_nexus.auth_service.dto.response.CompanySummaryDto;
+import com.zynolo_nexus.auth_service.enums.CompanyModuleSubscriptionStatus;
 import com.zynolo_nexus.auth_service.enums.ModuleStatus;
 import com.zynolo_nexus.auth_service.enums.UserStatus;
 import com.zynolo_nexus.auth_service.exception.BadRequestException;
@@ -56,6 +58,7 @@ import com.zynolo_nexus.auth_service.repository.PasswordResetTokenRepository;
 import com.zynolo_nexus.auth_service.repository.RoleModuleAccessRepository;
 import com.zynolo_nexus.auth_service.repository.RefreshTokenRepository;
 import com.zynolo_nexus.auth_service.repository.SectionRepository;
+import com.zynolo_nexus.auth_service.repository.CompanyModuleSubscriptionRepository;
 import com.zynolo_nexus.auth_service.repository.UserRepository;
 import com.zynolo_nexus.auth_service.repository.UserCompanyRepository;
 import com.zynolo_nexus.auth_service.repository.CompanyRepository;
@@ -92,6 +95,7 @@ public class AuthServiceImpl implements AuthService {
     private final ReferenceDataCache referenceDataCache;
     private final UserCompanyRepository userCompanyRepository;
     private final CompanyRepository companyRepository;
+    private final CompanyModuleSubscriptionRepository companyModuleSubscriptionRepository;
 
     @Value("${app.default.company-id:1}")
     private Long defaultCompanyId;
@@ -352,8 +356,10 @@ public class AuthServiceImpl implements AuthService {
                 .collect(java.util.stream.Collectors.toSet());
 
         var modules = moduleRepository.findAllActiveOrderBySortOrderAsc(ModuleStatus.ACTIVE);
+        SubscriptionScope subscriptionScope = loadSubscriptionScope(companyId);
 
         var moduleDtos = modules.stream()
+                .filter(module -> isModuleSubscribed(subscriptionScope, module.getCode()))
                 .map(m -> ModulePermissionDto.builder()
                         .code(m.getCode())
                         .name(m.getName())
@@ -408,9 +414,13 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Long companyId = resolveCompanyId(null);
+        SubscriptionScope subscriptionScope = loadSubscriptionScope(companyId);
         boolean canView = roleModuleAccessRepository.findByRoleAndCompanyId(user.getRole(), companyId).stream()
                 .anyMatch(access -> access.getModule().getId().equals(module.getId())
                         && Boolean.TRUE.equals(access.getCanView()));
+        if (!isModuleSubscribed(subscriptionScope, module.getCode())) {
+            canView = false;
+        }
 
         Map<String, ModuleDashboardSectionDto> data = Map.of();
         if (canView) {
@@ -608,7 +618,38 @@ public class AuthServiceImpl implements AuthService {
         return defaultCompanyId;
     }
 
+    private SubscriptionScope loadSubscriptionScope(Long companyId) {
+        if (companyId == null) {
+            return new SubscriptionScope(false, Set.of());
+        }
+        List<com.zynolo_nexus.auth_service.model.CompanyModuleSubscription> subscriptions =
+                companyModuleSubscriptionRepository.findByCompany_Id(companyId);
+        if (subscriptions == null || subscriptions.isEmpty()) {
+            return new SubscriptionScope(false, Set.of());
+        }
+        Set<String> activeModuleCodes = subscriptions.stream()
+                .filter(subscription -> subscription.getStatus() == CompanyModuleSubscriptionStatus.ACTIVE)
+                .map(com.zynolo_nexus.auth_service.model.CompanyModuleSubscription::getModuleCode)
+                .filter(StringUtils::hasText)
+                .map(code -> code.trim().toLowerCase())
+                .collect(java.util.stream.Collectors.toSet());
+        return new SubscriptionScope(true, activeModuleCodes);
+    }
+
+    private boolean isModuleSubscribed(SubscriptionScope subscriptionScope, String moduleCode) {
+        if (subscriptionScope == null || !subscriptionScope.enforced()) {
+            return true;
+        }
+        if (!StringUtils.hasText(moduleCode)) {
+            return false;
+        }
+        return subscriptionScope.activeModuleCodes().contains(moduleCode.trim().toLowerCase());
+    }
+
     private record LoginCompanyInfo(Long defaultCompanyId, List<CompanySummaryDto> companies) {
+    }
+
+    private record SubscriptionScope(boolean enforced, Set<String> activeModuleCodes) {
     }
 
 }
