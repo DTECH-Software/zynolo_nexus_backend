@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,10 +43,14 @@ import com.zynolo_nexus.setting_service.model.Company;
 import com.zynolo_nexus.setting_service.model.Role;
 import com.zynolo_nexus.setting_service.model.User;
 import com.zynolo_nexus.setting_service.model.UserCompany;
+import com.zynolo_nexus.setting_service.model.PasswordPolicy;
+import com.zynolo_nexus.setting_service.model.UsernamePolicy;
 import com.zynolo_nexus.setting_service.repository.CompanyRepository;
+import com.zynolo_nexus.setting_service.repository.PasswordPolicyRepository;
 import com.zynolo_nexus.setting_service.repository.RoleRepository;
 import com.zynolo_nexus.setting_service.repository.UserCompanyRepository;
 import com.zynolo_nexus.setting_service.repository.UserRepository;
+import com.zynolo_nexus.setting_service.repository.UsernamePolicyRepository;
 import com.zynolo_nexus.setting_service.service.UserService;
 
 @Service
@@ -59,6 +64,8 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final CompanyRepository companyRepository;
     private final UserCompanyRepository userCompanyRepository;
+    private final PasswordPolicyRepository passwordPolicyRepository;
+    private final UsernamePolicyRepository usernamePolicyRepository;
     private final AuthModuleClient authModuleClient;
     private final PasswordEncoder passwordEncoder;
     private final MessageSource messageSource;
@@ -66,10 +73,38 @@ public class UserServiceImpl implements UserService {
     private final CreateUserRequestValidator createValidator;
     private final UpdateUserRequestValidator updateValidator;
 
+    @Value("${password.policy.default.minUpperCase:1}")
+    private int defaultPasswordMinUpperCase;
+    @Value("${password.policy.default.minLowerCase:1}")
+    private int defaultPasswordMinLowerCase;
+    @Value("${password.policy.default.minNumbers:1}")
+    private int defaultPasswordMinNumbers;
+    @Value("${password.policy.default.minSpecialCharacters:1}")
+    private int defaultPasswordMinSpecialCharacters;
+    @Value("${password.policy.default.minLength:3}")
+    private int defaultPasswordMinLength;
+    @Value("${password.policy.default.maxLength:10}")
+    private int defaultPasswordMaxLength;
+
+    @Value("${username.policy.default.minUpperCase:1}")
+    private int defaultUsernameMinUpperCase;
+    @Value("${username.policy.default.minLowerCase:4}")
+    private int defaultUsernameMinLowerCase;
+    @Value("${username.policy.default.minNumbers:1}")
+    private int defaultUsernameMinNumbers;
+    @Value("${username.policy.default.minSpecialCharacters:1}")
+    private int defaultUsernameMinSpecialCharacters;
+    @Value("${username.policy.default.minLength:1}")
+    private int defaultUsernameMinLength;
+    @Value("${username.policy.default.maxLength:15}")
+    private int defaultUsernameMaxLength;
+
     public UserServiceImpl(UserRepository userRepository,
                            RoleRepository roleRepository,
                            CompanyRepository companyRepository,
                            UserCompanyRepository userCompanyRepository,
+                           PasswordPolicyRepository passwordPolicyRepository,
+                           UsernamePolicyRepository usernamePolicyRepository,
                            AuthModuleClient authModuleClient,
                            PasswordEncoder passwordEncoder,
                            MessageSource messageSource,
@@ -80,6 +115,8 @@ public class UserServiceImpl implements UserService {
         this.roleRepository = roleRepository;
         this.companyRepository = companyRepository;
         this.userCompanyRepository = userCompanyRepository;
+        this.passwordPolicyRepository = passwordPolicyRepository;
+        this.usernamePolicyRepository = usernamePolicyRepository;
         this.authModuleClient = authModuleClient;
         this.passwordEncoder = passwordEncoder;
         this.messageSource = messageSource;
@@ -91,6 +128,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public MessageResponseDTO<ProfileDetails> createUser(CreateUserRequest request) {
         createValidator.validate(request);
+        validateUsernameAgainstPolicy(request.getUsername());
+        validatePasswordAgainstPolicy(request.getPassword());
 
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new BadRequestException("user.create.username.exists");
@@ -476,6 +515,87 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestException("user.create.role.notfound");
         }
         return role;
+    }
+
+    private void validateUsernameAgainstPolicy(String username) {
+        if (!StringUtils.hasText(username)) {
+            return;
+        }
+
+        UsernamePolicy policy = usernamePolicyRepository.findTopByOrderByIdAsc().orElse(null);
+        int minUpperCase = valueOrDefault(policy != null ? policy.getMinUpperCase() : null, defaultUsernameMinUpperCase);
+        int minLowerCase = valueOrDefault(policy != null ? policy.getMinLowerCase() : null, defaultUsernameMinLowerCase);
+        int minNumbers = valueOrDefault(policy != null ? policy.getMinNumbers() : null, defaultUsernameMinNumbers);
+        int minSpecialCharacters = valueOrDefault(policy != null ? policy.getMinSpecialCharacters() : null, defaultUsernameMinSpecialCharacters);
+        int minLength = valueOrDefault(policy != null ? policy.getMinLength() : null, defaultUsernameMinLength);
+        int maxLength = valueOrDefault(policy != null ? policy.getMaxLength() : null, defaultUsernameMaxLength);
+
+        if (!matchesPolicy(username, minUpperCase, minLowerCase, minNumbers, minSpecialCharacters, minLength, maxLength)) {
+            throw new BadRequestException("user.create.username.policy.invalid");
+        }
+    }
+
+    private void validatePasswordAgainstPolicy(String password) {
+        if (!StringUtils.hasText(password)) {
+            return;
+        }
+
+        PasswordPolicy policy = passwordPolicyRepository.findTopByOrderByIdAsc().orElse(null);
+        int minUpperCase = valueOrDefault(policy != null ? policy.getMinUpperCase() : null, defaultPasswordMinUpperCase);
+        int minLowerCase = valueOrDefault(policy != null ? policy.getMinLowerCase() : null, defaultPasswordMinLowerCase);
+        int minNumbers = valueOrDefault(policy != null ? policy.getMinNumbers() : null, defaultPasswordMinNumbers);
+        int minSpecialCharacters = valueOrDefault(policy != null ? policy.getMinSpecialCharacters() : null, defaultPasswordMinSpecialCharacters);
+        int minLength = valueOrDefault(policy != null ? policy.getMinLength() : null, defaultPasswordMinLength);
+        int maxLength = valueOrDefault(policy != null ? policy.getMaxLength() : null, defaultPasswordMaxLength);
+
+        if (!matchesPolicy(password, minUpperCase, minLowerCase, minNumbers, minSpecialCharacters, minLength, maxLength)) {
+            throw new BadRequestException("user.create.password.policy.invalid");
+        }
+    }
+
+    private int valueOrDefault(Integer value, int fallback) {
+        return value != null ? Math.max(0, value) : Math.max(0, fallback);
+    }
+
+    private boolean matchesPolicy(String value,
+                                  int minUpperCase,
+                                  int minLowerCase,
+                                  int minNumbers,
+                                  int minSpecialCharacters,
+                                  int minLength,
+                                  int maxLength) {
+        if (!StringUtils.hasText(value)) {
+            return false;
+        }
+
+        if (value.length() < minLength) {
+            return false;
+        }
+        if (maxLength > 0 && value.length() > maxLength) {
+            return false;
+        }
+
+        int upperCount = 0;
+        int lowerCount = 0;
+        int numberCount = 0;
+        int specialCount = 0;
+
+        for (char ch : value.toCharArray()) {
+            if (Character.isUpperCase(ch)) {
+                upperCount++;
+            } else if (Character.isLowerCase(ch)) {
+                lowerCount++;
+            } else if (Character.isDigit(ch)) {
+                numberCount++;
+            } else if (!Character.isWhitespace(ch)) {
+                specialCount++;
+            }
+        }
+
+        return upperCount >= minUpperCase
+                && lowerCount >= minLowerCase
+                && numberCount >= minNumbers
+                && specialCount >= minSpecialCharacters;
     }
 
     private Company resolveCompany(String companyCode) {
