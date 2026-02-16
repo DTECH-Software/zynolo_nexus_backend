@@ -40,9 +40,9 @@ public class UserEntityToDtoMapper {
                 .email(user.getEmail())
                 .mobile(user.getMobile())
                 .status(user.getStatus() != null ? user.getStatus().name() : null)
-                .statusDescription("Active") // TODO map properly
+                .statusDescription(statusDescription(user))
                 .loginStatus(user.getLoginStatus() != null ? user.getLoginStatus().name() : null)
-                .loginStatusDescription("Active") // TODO map properly
+                .loginStatusDescription(loginStatusDescription(user))
                 .userRole(roleDto)
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
@@ -54,5 +54,27 @@ public class UserEntityToDtoMapper {
                 .profileImg(profileImage)
                 .reset(user.getReset())
                 .build();
+    }
+
+    private String statusDescription(User user) {
+        if (user == null || user.getStatus() == null) {
+            return null;
+        }
+        return switch (user.getStatus()) {
+            case ACTIVE -> "Active";
+            case INACTIVE -> "Inactive";
+            case LOCKED -> "Locked";
+        };
+    }
+
+    private String loginStatusDescription(User user) {
+        if (user == null || user.getLoginStatus() == null) {
+            return null;
+        }
+        return switch (user.getLoginStatus()) {
+            case ACTIVE -> "Active";
+            case DISABLED -> "Disabled";
+            case PASSWORD_EXPIRED -> "Password Expired";
+        };
     }
 }
