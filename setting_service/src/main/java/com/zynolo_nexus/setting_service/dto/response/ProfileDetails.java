@@ -52,7 +52,6 @@ public class ProfileDetails {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate passwordExpiredDate;
 
-    private String proImg;
     private ProfileImageDto profileImg;
     private Boolean reset;
 }

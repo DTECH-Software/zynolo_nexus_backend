@@ -51,7 +51,6 @@ public class UserEntityToDtoMapper {
                 .lastLoggedDate(user.getLastLoggedDate())
                 .expectingFirstTimeLogging(user.getExpectingFirstTimeLogging())
                 .passwordExpiredDate(user.getPasswordExpiredDate())
-                .proImg(user.getProfileImgDoc())
                 .profileImg(profileImage)
                 .reset(user.getReset())
                 .build();
