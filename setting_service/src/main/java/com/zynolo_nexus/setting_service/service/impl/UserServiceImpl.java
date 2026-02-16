@@ -713,7 +713,7 @@ public class UserServiceImpl implements UserService {
             comparator = java.util.Comparator.comparing(UserListItemDto::getLastModifiedDate,
                     java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()));
         } else {
-            comparator = java.util.Comparator.comparing(UserListItemDto::getUsername,
+            comparator = java.util.Comparator.comparing(UserListItemDto::getNewUsername,
                     java.util.Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         }
 
@@ -734,7 +734,7 @@ public class UserServiceImpl implements UserService {
                 .createdBy(user.getCreatedBy())
                 .lastModifiedBy(user.getLastModifiedBy())
                 .id(user.getId())
-                .username(user.getUsername())
+                .newUsername(user.getUsername())
                 .roleCode(user.getRole() != null ? user.getRole().getCode() : null)
                 .roleDescription(user.getRole() != null ? user.getRole().getDescription() : null)
                 .nic(user.getNic())

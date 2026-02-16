@@ -17,7 +17,7 @@ public class UserListItemDto {
     private String createdBy;
     private String lastModifiedBy;
     private Long id;
-    private String username;
+    private String newUsername;
     private String roleCode;
     private String roleDescription;
     private String nic;

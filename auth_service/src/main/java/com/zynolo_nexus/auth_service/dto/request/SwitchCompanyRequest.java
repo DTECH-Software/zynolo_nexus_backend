@@ -6,4 +6,5 @@ import lombok.Data;
 public class SwitchCompanyRequest {
 
     private Long companyId;
+    private String companyCode;
 }

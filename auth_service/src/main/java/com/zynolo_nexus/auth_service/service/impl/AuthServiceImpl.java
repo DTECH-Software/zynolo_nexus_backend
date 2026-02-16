@@ -468,14 +468,16 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public MessageResponseDTO<LoginData> switchCompany(String username, SwitchCompanyRequest request) {
-        if (!StringUtils.hasText(username) || request == null || request.getCompanyId() == null) {
+        if (!StringUtils.hasText(username) || request == null
+                || (request.getCompanyId() == null && !StringUtils.hasText(request.getCompanyCode()))) {
             throw new BadRequestException("auth.company.switch.invalid");
         }
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new NotFoundException("auth.user.notfound"));
 
-        UserCompany mapping = userCompanyRepository.findByUserAndCompany_Id(user, request.getCompanyId())
+        Company company = resolveSwitchCompany(request);
+        UserCompany mapping = userCompanyRepository.findByUserAndCompany_Id(user, company.getId())
                 .orElseThrow(() -> new UnauthorizedException("auth.company.switch.invalid"));
 
         if (mapping.getStatus() != null
@@ -483,7 +485,7 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("auth.company.switch.invalid");
         }
 
-        Long companyId = mapping.getCompany() != null ? mapping.getCompany().getId() : request.getCompanyId();
+        Long companyId = mapping.getCompany() != null ? mapping.getCompany().getId() : company.getId();
         String accessToken = jwtUtil.generateAccessToken(user.getUsername(), companyId);
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), companyId);
 
@@ -502,12 +504,20 @@ public class AuthServiceImpl implements AuthService {
 
         ProfileDetails profileDetails = userMapper.toProfileDetails(user);
         var companyInfo = resolveLoginCompany(user);
+        List<CompanySummaryDto> companies = companyInfo.companies().stream()
+                .map(item -> CompanySummaryDto.builder()
+                        .id(item.getId())
+                        .code(item.getCode())
+                        .description(item.getDescription())
+                        .isDefault(item.getId() != null && item.getId().equals(companyId))
+                        .build())
+                .toList();
 
         LoginData loginData = LoginData.builder()
                 .profileDetails(profileDetails)
                 .tokenDetails(tokenDetails)
                 .defaultCompanyId(companyId)
-                .companies(companyInfo.companies())
+                .companies(companies)
                 .build();
 
         return MessageResponseDTO.<LoginData>builder()
@@ -523,6 +533,21 @@ public class AuthServiceImpl implements AuthService {
                 .errorCode(0)
                 .responseTime(LocalDateTime.now())
                 .build();
+    }
+
+    private Company resolveSwitchCompany(SwitchCompanyRequest request) {
+        if (request == null) {
+            throw new BadRequestException("auth.company.switch.invalid");
+        }
+        if (request.getCompanyId() != null) {
+            return companyRepository.findById(request.getCompanyId())
+                    .orElseThrow(() -> new BadRequestException("auth.company.switch.invalid"));
+        }
+        if (StringUtils.hasText(request.getCompanyCode())) {
+            return companyRepository.findByCode(request.getCompanyCode().trim())
+                    .orElseThrow(() -> new BadRequestException("auth.company.switch.invalid"));
+        }
+        throw new BadRequestException("auth.company.switch.invalid");
     }
 
     private String buildDisplayName(User user) {
