@@ -3,6 +3,7 @@ package com.zynolo_nexus.setting_service.service;
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.setting_service.dto.request.CreateUserRequest;
 import com.zynolo_nexus.setting_service.dto.request.UpdateUserRequest;
+import com.zynolo_nexus.setting_service.dto.request.ProfileImageUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.request.UserFilterRequest;
 import com.zynolo_nexus.setting_service.dto.request.UserReferenceDataRequest;
 import com.zynolo_nexus.setting_service.dto.request.UserStatusUpdateRequest;
@@ -32,4 +33,6 @@ public interface UserService {
     MessageResponseDTO<ProfileDetails> updateUser(UserUpdateByIdRequest request);
 
     MessageResponseDTO<ProfileDetails> updateStatus(UserStatusUpdateRequest request);
+
+    MessageResponseDTO<ProfileDetails> updateProfileImage(ProfileImageUpdateRequest request);
 }

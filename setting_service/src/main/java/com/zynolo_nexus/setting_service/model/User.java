@@ -15,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -62,6 +63,14 @@ public class User extends BaseAuditableEntity {
 
     private Boolean expectingFirstTimeLogging;
     private Boolean reset;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String profileImgDoc;
+
+    private String profileImgFileName;
+    private String profileImgFileType;
+    private String profileImgType;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")

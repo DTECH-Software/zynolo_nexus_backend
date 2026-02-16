@@ -16,6 +16,7 @@ import com.zynolo_nexus.setting_service.client.AuthModuleClient;
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.setting_service.dto.request.CreateUserRequest;
 import com.zynolo_nexus.setting_service.dto.request.UpdateUserRequest;
+import com.zynolo_nexus.setting_service.dto.request.ProfileImageUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.request.UserFilterRequest;
 import com.zynolo_nexus.setting_service.dto.request.UserFilterSearch;
 import com.zynolo_nexus.setting_service.dto.request.UserReferenceDataRequest;
@@ -503,6 +504,29 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         return buildProfileResponse(userMapper.toProfileDetails(user), "user.update.success");
+    }
+
+    @Override
+    public MessageResponseDTO<ProfileDetails> updateProfileImage(ProfileImageUpdateRequest request) {
+        if (request == null
+                || !StringUtils.hasText(request.getUsername())
+                || !StringUtils.hasText(request.getFile())
+                || !StringUtils.hasText(request.getFileName())
+                || !StringUtils.hasText(request.getFileType())) {
+            throw new BadRequestException("user.profile.image.invalid");
+        }
+
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new NotFoundException("user.fetch.notfound"));
+
+        user.setProfileImgDoc(request.getFile());
+        user.setProfileImgFileName(request.getFileName());
+        user.setProfileImgFileType(request.getFileType());
+        user.setProfileImgType(request.getType());
+        user.setLastModifiedDate(LocalDateTime.now());
+        user = userRepository.save(user);
+
+        return buildProfileResponse(userMapper.toProfileDetails(user), "user.profile.image.update.success");
     }
 
     private Role resolveRole(String roleCodeText) {

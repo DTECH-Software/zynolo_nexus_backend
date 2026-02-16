@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.setting_service.dto.request.CreateUserRequest;
+import com.zynolo_nexus.setting_service.dto.request.ProfileImageUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.request.UserFilterRequest;
 import com.zynolo_nexus.setting_service.dto.request.UserReferenceDataRequest;
 import com.zynolo_nexus.setting_service.dto.request.UserStatusUpdateRequest;
@@ -74,5 +75,10 @@ public class UserController {
     public MessageResponseDTO<UserReferenceDataDto> referenceData(
             @RequestBody(required = false) UserReferenceDataRequest request) {
         return userService.getReferenceData(request);
+    }
+
+    @PostMapping("/profile-image/update")
+    public MessageResponseDTO<ProfileDetails> updateProfileImage(@RequestBody ProfileImageUpdateRequest request) {
+        return userService.updateProfileImage(request);
     }
 }

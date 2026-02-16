@@ -3,8 +3,10 @@ package com.zynolo_nexus.setting_service.mapper.entityToDto;
 import org.springframework.stereotype.Component;
 
 import com.zynolo_nexus.setting_service.dto.response.ProfileDetails;
+import com.zynolo_nexus.setting_service.dto.response.ProfileImageDto;
 import com.zynolo_nexus.setting_service.dto.response.UserRoleDto;
 import com.zynolo_nexus.setting_service.model.User;
+import org.springframework.util.StringUtils;
 
 @Component
 public class UserEntityToDtoMapper {
@@ -15,6 +17,18 @@ public class UserEntityToDtoMapper {
                 user.getRole().getCode(),
                 user.getRole().getDescription()
         );
+
+        ProfileImageDto profileImage = null;
+        if (StringUtils.hasText(user.getProfileImgDoc())
+                || StringUtils.hasText(user.getProfileImgFileName())
+                || StringUtils.hasText(user.getProfileImgFileType())) {
+            profileImage = ProfileImageDto.builder()
+                    .type(user.getProfileImgFileType())
+                    .fileName(user.getProfileImgFileName())
+                    .fileType(user.getProfileImgFileType())
+                    .doc(user.getProfileImgDoc())
+                    .build();
+        }
 
         return ProfileDetails.builder()
                 .createdDate(user.getCreatedDate() != null ? user.getCreatedDate().toLocalDate() : null)
@@ -37,7 +51,8 @@ public class UserEntityToDtoMapper {
                 .lastLoggedDate(user.getLastLoggedDate())
                 .expectingFirstTimeLogging(user.getExpectingFirstTimeLogging())
                 .passwordExpiredDate(user.getPasswordExpiredDate())
-                .proImg(null)
+                .proImg(user.getProfileImgDoc())
+                .profileImg(profileImage)
                 .reset(user.getReset())
                 .build();
     }

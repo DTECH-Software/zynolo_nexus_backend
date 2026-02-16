@@ -53,5 +53,6 @@ public class ProfileDetails {
     private LocalDate passwordExpiredDate;
 
     private String proImg;
+    private ProfileImageDto profileImg;
     private Boolean reset;
 }
