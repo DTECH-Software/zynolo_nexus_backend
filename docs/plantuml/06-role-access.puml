@@ -1,0 +1,50 @@
+@startuml
+title 06 - Role Access Management (Overview)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+database "Setting DB" as SDB
+
+group URMM - Role Module Management
+  FE -> GW: POST /api/v1/setting/role-modules/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load active roles/modules + privileges
+  SET --> FE: reference-data
+  FE -> GW: POST /api/v1/setting/role-modules/view
+  GW -> SET: Forward
+  SET --> FE: role module access view
+  FE -> GW: POST /api/v1/setting/role-modules/update-by-id
+  GW -> SET: Forward
+  SET --> FE: update result
+  FE -> GW: POST /api/v1/setting/role-modules/check
+  GW -> SET: Forward
+  SET --> FE: check result
+end
+
+group YRTM - Role Page Task Management
+  FE -> GW: POST /api/v1/setting/role-page-tasks/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load modules -> sections -> pages,\nroles, tasks, privileges
+  SET --> FE: reference-data
+  FE -> GW: POST /api/v1/setting/role-page-tasks/preview
+  GW -> SET: Forward
+  SET --> FE: preview result
+  FE -> GW: POST /api/v1/setting/role-page-tasks/update-by-id
+  GW -> SET: Forward
+  SET --> FE: update result
+  FE -> GW: POST /api/v1/setting/role-page-tasks/check
+  GW -> SET: Forward
+  SET --> FE: check result
+end
+
+note bottom
+Detailed split diagrams:
+- 06a-role-modules-part1.puml
+- 06b-role-modules-part2.puml
+- 06c-role-page-tasks-part1.puml
+- 06d-role-page-tasks-part2.puml
+end note
+
+@enduml

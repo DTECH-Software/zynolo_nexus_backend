@@ -1,0 +1,36 @@
+@startuml
+title Role Page Task Management (YRTM) - Part 1
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Auth Internal API :8091" as IAUTH
+database "Setting DB" as SDB
+database "Auth DB" as ADB
+
+group Reference Data
+  FE -> GW: POST /api/v1/setting/role-page-tasks/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load active modules
+  SET -> SDB: Load sections by module
+  SET -> SDB: Load pages by section
+  SET -> SDB: Load roles + tasks + privileges
+  SET --> GW: reference-data
+  GW --> FE: Response
+end
+
+group Preview
+  FE -> GW: POST /api/v1/setting/role-page-tasks/preview\n{roleCode,pageCode,moduleCode}
+  GW -> SET: Forward
+  SET -> IAUTH: POST /internal/role-page-tasks/{roleCode}/get
+  IAUTH -> ADB: Read role_page_task_access by role + company
+  ADB --> IAUTH: page task access list
+  IAUTH --> SET: access list
+  SET -> SET: Filter by requested module/page
+  SET --> GW: preview response
+  GW --> FE: Response
+end
+
+@enduml
+

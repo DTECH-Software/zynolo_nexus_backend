@@ -1,0 +1,57 @@
+@startuml
+title 07b - Module Management (MODM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Auth Internal API :8091" as IAUTH
+database "Setting DB" as SDB
+database "Auth DB" as ADB
+
+group Reference Data
+  FE -> GW: POST /api/v1/setting/modules/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load status options + privileges
+  SET --> FE: reference-data
+end
+
+group Add
+  FE -> GW: POST /api/v1/setting/modules
+  GW -> SET: Forward
+  SET -> IAUTH: Create module in auth master
+  IAUTH -> ADB: Insert module
+  SET -> SDB: Save local/module view data
+  SET --> FE: created module
+end
+
+group View / Update / Status
+  FE -> GW: POST /api/v1/setting/modules/view
+  GW -> SET: Forward
+  SET -> SDB: Find by id
+  SET --> FE: module details
+
+  FE -> GW: POST /api/v1/setting/modules/update
+  GW -> SET: Forward
+  SET -> IAUTH: Update module
+  IAUTH -> ADB: Update module
+  SET -> SDB: Update local module data
+  SET --> FE: updated module
+
+  FE -> GW: POST /api/v1/setting/modules/status
+  GW -> SET: Forward
+  SET -> IAUTH: Update module status
+  IAUTH -> ADB: Status update
+  SET -> SDB: Status update
+  SET --> FE: updated module
+end
+
+group Filter List
+  FE -> GW: POST /api/v1/setting/modules/filter-list
+  GW -> SET: Forward
+  SET -> SDB: Filter + sort + paginate
+  SET --> FE: content[] + totalRecords
+end
+
+@enduml
+

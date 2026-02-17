@@ -1,0 +1,48 @@
+@startuml
+title 02 - Auth (Overview)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Auth Service :8091" as AUTH
+database "Auth DB" as ADB
+collections "SMTP" as SMTP
+
+group Auth Summary
+  FE -> GW: 1) Login (/api/v1/auth/login)
+  GW -> AUTH: Forward
+  AUTH -> ADB: Validate credentials + issue tokens
+  AUTH --> FE: LoginData
+
+  FE -> GW: 2) Forgot password (/api/v1/auth/forgot-password)
+  GW -> AUTH: Forward
+  AUTH -> ADB: Save OTP
+  AUTH -> SMTP: Send OTP email
+  AUTH --> FE: Generic success
+
+  FE -> GW: 3) Verify OTP (/api/v1/auth/verify-reset-otp)
+  GW -> AUTH: Forward
+  AUTH -> ADB: Validate OTP + issue resetToken
+  AUTH --> FE: resetToken
+
+  FE -> GW: 4) Reset password (/api/v1/auth/reset-password)
+  GW -> AUTH: Forward
+  AUTH -> ADB: Validate resetToken + update password
+  AUTH --> FE: Success
+
+  FE -> GW: 5) Change password (/api/v1/auth/change-password)
+  GW -> AUTH: Forward
+  AUTH -> ADB: Validate current password + update password
+  AUTH --> FE: Success
+end
+
+note bottom
+Detailed split diagrams:
+- 02a-auth-login.puml
+- 02b-auth-forgot-password.puml
+- 02c-auth-verify-reset-otp.puml
+- 02d-auth-reset-password.puml
+- 02e-auth-change-password.puml
+end note
+
+@enduml

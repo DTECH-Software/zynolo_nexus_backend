@@ -1,0 +1,50 @@
+sequenceDiagram
+autonumber
+
+actor FE as Frontend / Postman
+participant GW as Gateway :8099
+participant GSF as GatewaySecurityFilter
+participant AUTH as Auth Service
+participant SET as Setting Service
+participant ALA as AuditLogFilter (Auth)
+participant ALS as AuditLogFilter (Setting)
+participant AAL as Auth AuditLog Table
+participant SAL as Setting AuditLog Table
+
+rect rgb(245,245,245)
+Note over FE,SET: JWT + Routing
+FE->>GW: POST protected endpoint + Bearer token
+GW->>GSF: Validate token
+alt token invalid
+    GSF-->>FE: 401 Unauthorized
+else token valid
+    GSF->>GSF: Extract companyId claim\nInject X-Company-Id
+    opt audit payload present
+        GSF->>GSF: Validate payload.username == token.subject
+        alt mismatch
+            GSF-->>FE: 403 Invalid username
+        end
+    end
+    alt /api/v1/auth/**
+        GW->>AUTH: Forward
+    else /api/v1/setting/**
+        GW->>SET: Forward
+    end
+end
+end
+
+rect rgb(245,245,245)
+Note over AUTH,SAL: Audit Logging (POST)
+AUTH->>ALA: Capture endpoint + payload + principal
+ALA->>AAL: Save audit row\n(username,channel,ip,userAgent,message,event)
+
+SET->>ALS: Capture endpoint + payload + principal
+ALS->>SAL: Save audit row\n(username,channel,ip,userAgent,message,event)
+end
+
+rect rgb(245,245,245)
+Note over FE,GW: CORS
+FE->>GW: Browser request from UI origin
+GW-->>FE: CORS headers
+Note over FE,GW: Duplicate Access-Control-Allow-Origin will block browser even with backend 200.
+end

@@ -1,0 +1,34 @@
+sequenceDiagram
+autonumber
+
+actor FE as Frontend / Postman
+participant GW as Gateway :8099
+participant AUTH as Auth Service :8091
+participant ADB as Auth DB
+
+rect rgb(245,245,245)
+Note over FE,ADB: Main Dashboard
+FE->>GW: POST /api/v1/auth/main-dashboard (Bearer)
+GW->>AUTH: Forward
+AUTH->>ADB: Load role_module_access by role + companyId
+AUTH->>ADB: Load active modules
+AUTH->>ADB: Load company_module_subscriptions
+AUTH->>AUTH: Enforce subscriptions if present
+AUTH-->>GW: modules[] with canView
+GW-->>FE: Response
+end
+
+rect rgb(245,245,245)
+Note over FE,ADB: Module Dashboard
+FE->>GW: POST /api/v1/auth/module-dashboard {moduleCode}
+GW->>AUTH: Forward
+AUTH->>ADB: Check role module access (company)
+AUTH->>ADB: Check module subscription ACTIVE
+alt not allowed or unsubscribed
+    AUTH-->>GW: Success with empty data
+else allowed
+    AUTH->>ADB: Load sections and pages
+    AUTH-->>GW: section/page data
+end
+GW-->>FE: Response
+end

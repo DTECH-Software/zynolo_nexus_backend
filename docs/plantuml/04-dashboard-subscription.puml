@@ -1,0 +1,45 @@
+@startuml
+title 04 - Dashboard and Company Module Subscription
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Auth Service :8091" as AUTH
+database "Auth DB" as ADB
+
+group Main Dashboard
+  FE -> GW: POST /api/v1/auth/main-dashboard\nAuthorization Bearer
+  GW -> AUTH: Forward
+  AUTH -> ADB: Resolve user + role
+  AUTH -> ADB: Load role_module_access by role + companyId
+  AUTH -> ADB: Load active modules
+  AUTH -> ADB: Load company_module_subscriptions for company
+  AUTH -> AUTH: If subscriptions exist, enforce them
+  AUTH --> GW: modules[] with canView
+  GW --> FE: Dashboard response
+end
+
+group Module Dashboard
+  FE -> GW: POST /api/v1/auth/module-dashboard\n{moduleCode}
+  GW -> AUTH: Forward
+  AUTH -> ADB: Load requested module
+  AUTH -> ADB: Check role_module_access canView (company scope)
+  AUTH -> ADB: Check module subscription ACTIVE (company scope)
+  alt No access or unsubscribed
+    AUTH --> GW: Success with empty data
+  else Access allowed
+    AUTH -> ADB: Load active sections by module
+    AUTH -> ADB: Load pages by section
+    AUTH --> GW: sections + pages + status
+  end
+  GW --> FE: Response
+end
+
+note bottom
+Company subscription impacts both endpoints:
+- /api/v1/auth/main-dashboard
+- /api/v1/auth/module-dashboard
+end note
+
+@enduml
+

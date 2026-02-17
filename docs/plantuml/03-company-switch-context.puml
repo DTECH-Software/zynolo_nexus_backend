@@ -1,0 +1,50 @@
+@startuml
+title 03 - Company Switch and Company Context
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "GatewaySecurityFilter" as GSF
+participant "Auth Service :8091" as AUTH
+participant "CompanyContextFilter" as ACF
+database "Auth DB" as ADB
+
+group Switch Company
+  FE -> GW: POST /api/v1/auth/switch-company\nAuthorization Bearer\n{companyId OR companyCode}
+  GW -> GSF: Validate token
+  GSF -> GSF: Extract companyId claim\ninject X-Company-Id
+  GSF -> GW: Continue
+  GW -> AUTH: Forward request
+  AUTH -> ACF: Resolve context (header/token)
+  AUTH -> ADB: Validate user-company mapping ACTIVE
+  alt Mapping valid
+    AUTH -> AUTH: Generate NEW accessToken with selected companyId
+    AUTH -> ADB: Replace refresh token
+    AUTH --> GW: LoginData(defaultCompanyId=selected,\ncompanies[] marked isDefault)
+    GW --> FE: 200 Success
+  else Mapping invalid
+    AUTH --> GW: 400/401 invalid switch
+    GW --> FE: Error
+  end
+end
+
+group Next API Call after Switch
+  FE -> FE: Replace old accessToken with new token
+  FE -> GW: POST protected endpoint + NEW token
+  GW -> GSF: Validate token + inject X-Company-Id(new)
+  alt New token used
+    GW -> AUTH: /api/v1/auth/** OR /api/v1/setting/**
+    AUTH -> ACF: CompanyContext = new companyId
+  else Old token still used
+    GW -> AUTH: Request executes under old company
+    AUTH --> FE: Old company data appears
+  end
+end
+
+note bottom
+Most common switch-company issue:
+frontend does not update Authorization header with the NEW access token.
+end note
+
+@enduml
+

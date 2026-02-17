@@ -1,0 +1,26 @@
+@startuml
+title 05f - User Management Profile Image Update
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Setting Filters\n(CompanyContext + AuditLog)" as SF
+database "Setting DB" as SDB
+
+FE -> GW: POST /api/v1/setting/users/profile-image/update\n{username, file(base64), fileName, fileType, type}
+GW -> SET: Forward
+
+SET -> SF: Audit USER_PROFILE_IMAGE_UPDATE
+SET -> SDB: Find user by username
+SET -> SDB: Save profileImgDoc + fileName + fileType + type
+
+SET --> GW: updated profileImg
+GW --> FE: Response
+
+note bottom
+Stored as received base64 payload (no conversion in service).
+end note
+
+@enduml
+

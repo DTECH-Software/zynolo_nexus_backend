@@ -4,6 +4,8 @@ import com.zynolo_nexus.contracts.modules.ModuleDto;
 import com.zynolo_nexus.contracts.modules.ModuleStatus;
 import com.zynolo_nexus.setting_service.client.AuthModuleClient;
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
+import com.zynolo_nexus.setting_service.dto.request.CompanyModuleBulkUpdateRequest;
+import com.zynolo_nexus.setting_service.dto.request.CompanyModuleBulkViewRequest;
 import com.zynolo_nexus.setting_service.dto.request.CompanyModuleCheckRequest;
 import com.zynolo_nexus.setting_service.dto.request.CompanyModuleCreateRequest;
 import com.zynolo_nexus.setting_service.dto.request.CompanyModuleFilterRequest;
@@ -11,6 +13,8 @@ import com.zynolo_nexus.setting_service.dto.request.CompanyModuleFilterSearch;
 import com.zynolo_nexus.setting_service.dto.request.CompanyModuleReferenceDataRequest;
 import com.zynolo_nexus.setting_service.dto.request.CompanyModuleStatusUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.request.CompanyModuleUpdateRequest;
+import com.zynolo_nexus.setting_service.dto.response.CompanyModuleBulkItemDto;
+import com.zynolo_nexus.setting_service.dto.response.CompanyModuleBulkViewDto;
 import com.zynolo_nexus.setting_service.dto.response.CompanyModuleCheckDto;
 import com.zynolo_nexus.setting_service.dto.response.CompanyModuleDto;
 import com.zynolo_nexus.setting_service.dto.response.CompanyModuleFilterResultDto;
@@ -41,9 +45,11 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -322,6 +328,89 @@ public class CompanyModuleSubscriptionServiceImpl implements CompanyModuleSubscr
                 .build();
     }
 
+    @Override
+    public MessageResponseDTO<CompanyModuleBulkViewDto> bulkView(CompanyModuleBulkViewRequest request) {
+        if (request == null || !StringUtils.hasText(request.getCompanyCode())) {
+            throw new BadRequestException("company.module.invalid");
+        }
+
+        Company company = resolveActiveCompany(request.getCompanyCode());
+        CompanyModuleBulkViewDto data = buildBulkView(company);
+
+        return MessageResponseDTO.<CompanyModuleBulkViewDto>builder()
+                .success(true)
+                .message("Company module matrix retrieved successfully")
+                .data(data)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public MessageResponseDTO<CompanyModuleBulkViewDto> bulkUpdate(CompanyModuleBulkUpdateRequest request) {
+        if (request == null
+                || !StringUtils.hasText(request.getCompanyCode())
+                || request.getModules() == null
+                || request.getModules().isEmpty()) {
+            throw new BadRequestException("company.module.invalid");
+        }
+
+        Company company = resolveActiveCompany(request.getCompanyCode());
+        Map<String, ModuleDto> activeModules = loadModuleMap(true);
+        Map<String, CompanyModuleSubscription> existing = companyModuleSubscriptionRepository.findByCompany_Id(company.getId())
+                .stream()
+                .filter(item -> StringUtils.hasText(item.getModuleCode()))
+                .collect(java.util.stream.Collectors.toMap(
+                        item -> item.getModuleCode().trim().toLowerCase(Locale.ROOT),
+                        item -> item,
+                        (left, right) -> left
+                ));
+
+        Set<String> seenModuleCodes = new HashSet<>();
+
+        for (CompanyModuleBulkUpdateRequest.ModuleAccess item : request.getModules()) {
+            if (item == null || !StringUtils.hasText(item.getModuleCode())) {
+                throw new BadRequestException("company.module.invalid");
+            }
+
+            String codeKey = item.getModuleCode().trim().toLowerCase(Locale.ROOT);
+            if (!seenModuleCodes.add(codeKey)) {
+                throw new BadRequestException("company.module.invalid");
+            }
+
+            ModuleDto module = activeModules.get(codeKey);
+            if (module == null) {
+                throw new BadRequestException("module.notfound");
+            }
+
+            boolean allowed = Boolean.TRUE.equals(item.getAllowed());
+            CompanyModuleSubscription entity = existing.get(codeKey);
+            if (entity == null) {
+                entity = CompanyModuleSubscription.builder()
+                        .company(company)
+                        .moduleCode(module.getCode())
+                        .status(toStatus(allowed))
+                        .build();
+            } else {
+                entity.setStatus(toStatus(allowed));
+            }
+            entity = companyModuleSubscriptionRepository.save(entity);
+            existing.put(codeKey, entity);
+        }
+
+        CompanyModuleBulkViewDto data = buildBulkView(company);
+        return MessageResponseDTO.<CompanyModuleBulkViewDto>builder()
+                .success(true)
+                .message("Company module subscriptions updated successfully")
+                .data(data)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
     private Company resolveActiveCompany(String companyCode) {
         Company company = companyRepository.findByCodeIgnoreCase(companyCode)
                 .orElseThrow(() -> new BadRequestException("company.notfound"));
@@ -341,6 +430,52 @@ public class CompanyModuleSubscriptionServiceImpl implements CompanyModuleSubscr
         }
         return companyRepository.findByCodeIgnoreCase(companyCode)
                 .orElseThrow(() -> new NotFoundException("company.notfound"));
+    }
+
+    private CompanyModuleBulkViewDto buildBulkView(Company company) {
+        Map<String, ModuleDto> activeModulesByCode = loadModuleMap(true);
+        Map<String, CompanyModuleSubscription> subscriptionsByCode = companyModuleSubscriptionRepository
+                .findByCompany_Id(company.getId())
+                .stream()
+                .filter(item -> StringUtils.hasText(item.getModuleCode()))
+                .collect(java.util.stream.Collectors.toMap(
+                        item -> item.getModuleCode().trim().toLowerCase(Locale.ROOT),
+                        item -> item,
+                        (left, right) -> left
+                ));
+
+        List<CompanyModuleBulkItemDto> modules = activeModulesByCode.values().stream()
+                .sorted(Comparator
+                        .comparing(ModuleDto::getSortOrder, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(ModuleDto::getCode, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .map(module -> {
+                    CompanyModuleSubscription subscription =
+                            subscriptionsByCode.get(module.getCode().trim().toLowerCase(Locale.ROOT));
+                    boolean allowed = subscription != null && isEnabled(subscription.getStatus());
+                    String status = allowed
+                            ? CompanyModuleSubscriptionStatus.ACTIVE.name()
+                            : CompanyModuleSubscriptionStatus.INACTIVE.name();
+
+                    return CompanyModuleBulkItemDto.builder()
+                            .subscriptionId(subscription != null ? subscription.getId() : null)
+                            .moduleId(module.getId())
+                            .moduleCode(module.getCode())
+                            .moduleDescription(StringUtils.hasText(module.getDescription())
+                                    ? module.getDescription()
+                                    : module.getName())
+                            .allowed(allowed)
+                            .status(status)
+                            .statusDescription(allowed ? "Active" : "Inactive")
+                            .build();
+                })
+                .toList();
+
+        return CompanyModuleBulkViewDto.builder()
+                .companyId(company.getId())
+                .companyCode(company.getCode())
+                .companyDescription(company.getDescription())
+                .modules(modules)
+                .build();
     }
 
     private ModuleDto resolveModule(String moduleCode, boolean onlyActive) {

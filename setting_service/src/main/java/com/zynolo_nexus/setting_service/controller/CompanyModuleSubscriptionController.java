@@ -1,6 +1,8 @@
 package com.zynolo_nexus.setting_service.controller;
 
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
+import com.zynolo_nexus.setting_service.dto.request.CompanyModuleBulkUpdateRequest;
+import com.zynolo_nexus.setting_service.dto.request.CompanyModuleBulkViewRequest;
 import com.zynolo_nexus.setting_service.dto.request.CompanyModuleCheckRequest;
 import com.zynolo_nexus.setting_service.dto.request.CompanyModuleCreateRequest;
 import com.zynolo_nexus.setting_service.dto.request.CompanyModuleFilterRequest;
@@ -8,6 +10,7 @@ import com.zynolo_nexus.setting_service.dto.request.CompanyModuleReferenceDataRe
 import com.zynolo_nexus.setting_service.dto.request.CompanyModuleStatusUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.request.CompanyModuleUpdateRequest;
 import com.zynolo_nexus.setting_service.dto.request.CompanyModuleViewRequest;
+import com.zynolo_nexus.setting_service.dto.response.CompanyModuleBulkViewDto;
 import com.zynolo_nexus.setting_service.dto.response.CompanyModuleCheckDto;
 import com.zynolo_nexus.setting_service.dto.response.CompanyModuleDto;
 import com.zynolo_nexus.setting_service.dto.response.CompanyModuleFilterResultDto;
@@ -60,5 +63,15 @@ public class CompanyModuleSubscriptionController {
     @PostMapping("/check")
     public MessageResponseDTO<CompanyModuleCheckDto> check(@RequestBody CompanyModuleCheckRequest request) {
         return companyModuleSubscriptionService.check(request);
+    }
+
+    @PostMapping("/bulk-view")
+    public MessageResponseDTO<CompanyModuleBulkViewDto> bulkView(@RequestBody CompanyModuleBulkViewRequest request) {
+        return companyModuleSubscriptionService.bulkView(request);
+    }
+
+    @PostMapping("/bulk-update")
+    public MessageResponseDTO<CompanyModuleBulkViewDto> bulkUpdate(@RequestBody CompanyModuleBulkUpdateRequest request) {
+        return companyModuleSubscriptionService.bulkUpdate(request);
     }
 }

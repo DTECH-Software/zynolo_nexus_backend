@@ -1,0 +1,56 @@
+@startuml
+title 07 - Master Management Blocks (Overview)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+database "Setting DB" as SDB
+
+group 1) Company (COMM)
+  FE -> GW: POST /api/v1/setting/companies/*
+  GW -> SET: Forward
+  SET -> SDB: CRUD + filter + reference
+  SET --> FE: response
+end
+
+group 2) Module/Section/Page/Task (MODM/SECM/PAGM/TASM)
+  FE -> GW: POST /api/v1/setting/modules/*
+  FE -> GW: POST /api/v1/setting/sections/*
+  FE -> GW: POST /api/v1/setting/pages/*
+  FE -> GW: POST /api/v1/setting/tasks/*
+  GW -> SET: Forward
+  SET -> SDB: Local CRUD/filter/reference
+  SET --> FE: response
+end
+
+group 3) Role + Policies (USRM/PSPM/UNPM)
+  FE -> GW: POST /api/v1/setting/roles/*
+  FE -> GW: POST /api/v1/setting/password-policy/*
+  FE -> GW: POST /api/v1/setting/username-policy/*
+  GW -> SET: Forward
+  SET -> SDB: CRUD/filter/reference
+  SET --> FE: response
+end
+
+group 4) User-Company + Company-Module
+  FE -> GW: POST /api/v1/setting/user-companies/*
+  FE -> GW: POST /api/v1/setting/company-modules/*
+  GW -> SET: Forward
+  SET -> SDB: Mapping + subscription management
+  SET --> FE: response
+end
+
+note bottom
+Detailed split diagrams:
+- 07a-company-management.puml
+- 07b-module-management.puml
+- 07c-section-management.puml
+- 07d-page-management.puml
+- 07e-task-management.puml
+- 07f-role-and-policy-management.puml
+- 07g-user-company-management.puml
+- 07h-company-module-subscription.puml
+end note
+
+@enduml

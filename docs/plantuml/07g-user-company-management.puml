@@ -1,0 +1,49 @@
+@startuml
+title 07g - User Company Management
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+database "Setting DB" as SDB
+
+group Reference Data
+  FE -> GW: POST /api/v1/setting/user-companies/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load users + companies + roles + statuses + privileges
+  SET --> FE: reference-data
+end
+
+group Add / Update / Status
+  FE -> GW: POST /api/v1/setting/user-companies (assign)
+  GW -> SET: Forward
+  SET -> SDB: Resolve user/company/role by code or id
+  SET -> SDB: Validate uniqueness/default rules
+  SET -> SDB: Insert mapping
+  SET --> FE: created mapping
+
+  FE -> GW: POST /api/v1/setting/user-companies/update
+  GW -> SET: Forward
+  SET -> SDB: Update mapping
+  SET --> FE: updated mapping
+
+  FE -> GW: POST /api/v1/setting/user-companies/status
+  GW -> SET: Forward
+  SET -> SDB: Update mapping status
+  SET --> FE: updated mapping
+end
+
+group View / Filter
+  FE -> GW: POST /api/v1/setting/user-companies/view
+  GW -> SET: Forward
+  SET -> SDB: Find mapping by id
+  SET --> FE: mapping details
+
+  FE -> GW: POST /api/v1/setting/user-companies/filter-list
+  GW -> SET: Forward
+  SET -> SDB: Filter + sort + paginate
+  SET --> FE: content[] + totalRecords
+end
+
+@enduml
+

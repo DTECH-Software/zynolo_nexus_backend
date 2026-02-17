@@ -1,0 +1,30 @@
+@startuml
+title 02a - Auth Login
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Auth Service :8091" as AUTH
+database "Auth DB" as ADB
+
+FE -> GW: POST /api/v1/auth/login
+GW -> AUTH: Forward
+
+AUTH -> ADB: Find user by username + ACTIVE
+ADB --> AUTH: User
+
+AUTH -> AUTH: Validate password
+AUTH -> AUTH: Validate password expiry
+
+AUTH -> AUTH: Resolve default company
+AUTH -> AUTH: Generate accessToken(companyId claim)
+AUTH -> AUTH: Generate refreshToken
+
+AUTH -> ADB: Save refresh token
+AUTH -> ADB: Update last login metadata
+
+AUTH --> GW: LoginData(profileDetails,\ntokenDetails, defaultCompanyId, companies[])
+GW --> FE: 200 Success
+
+@enduml
+

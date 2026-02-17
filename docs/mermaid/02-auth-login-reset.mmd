@@ -1,0 +1,71 @@
+// [MermaidChart: 1728135e-7d6a-4645-ad8d-6a25c0f5e07e]
+sequenceDiagram
+autonumber
+
+actor FE as Frontend / Postman
+participant GW as Gateway :8099
+participant AUTH as Auth Service :8091
+participant ADB as Auth DB
+participant SMTP as SMTP
+
+rect rgb(245,245,245)
+Note over FE,ADB: Login
+FE->>GW: POST /api/v1/auth/login
+GW->>AUTH: Forward
+AUTH->>ADB: Find user + validate password
+AUTH->>AUTH: Create access/refresh tokens
+AUTH->>ADB: Save refresh token + update last login
+AUTH-->>GW: LoginData
+GW-->>FE: 200
+end
+
+rect rgb(245,245,245)
+Note over FE,SMTP: Forgot Password
+FE->>GW: POST /api/v1/auth/forgot-password
+GW->>AUTH: Forward (public)
+AUTH->>ADB: Find user/email
+alt user and email exists
+    AUTH->>ADB: Save OTP token
+    AUTH->>SMTP: Send OTP
+end
+AUTH-->>GW: Generic success
+GW-->>FE: Response
+end
+
+rect rgb(245,245,245)
+Note over FE,ADB: Verify OTP
+FE->>GW: POST /api/v1/auth/verify-reset-otp
+GW->>AUTH: Forward
+AUTH->>ADB: Validate OTP
+alt valid OTP
+    AUTH->>ADB: Mark otpVerified + save resetToken
+    AUTH-->>GW: resetToken
+else invalid OTP
+    AUTH-->>GW: 400
+end
+GW-->>FE: Response
+end
+
+rect rgb(245,245,245)
+Note over FE,ADB: Reset Password
+FE->>GW: POST /api/v1/auth/reset-password
+GW->>AUTH: Forward
+AUTH->>ADB: Validate resetToken
+alt valid resetToken
+    AUTH->>ADB: Update password + mark used + clear refresh tokens
+    AUTH-->>GW: Success
+else invalid resetToken
+    AUTH-->>GW: 400
+end
+GW-->>FE: Response
+end
+
+rect rgb(245,245,245)
+Note over FE,ADB: Change Password
+FE->>GW: POST /api/v1/auth/change-password (Bearer)
+GW->>AUTH: Forward
+AUTH->>ADB: Validate current password
+AUTH->>ADB: Save new password + clear refresh tokens
+AUTH-->>GW: Success
+GW-->>FE: Response
+end

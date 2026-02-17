@@ -15,4 +15,6 @@ public interface CompanyModuleSubscriptionRepository extends JpaRepository<Compa
     boolean existsByCompanyAndModuleCodeIgnoreCaseAndIdNot(Company company, String moduleCode, Long id);
 
     List<CompanyModuleSubscription> findByCompany_IdAndStatus(Long companyId, CompanyModuleSubscriptionStatus status);
+
+    List<CompanyModuleSubscription> findByCompany_Id(Long companyId);
 }

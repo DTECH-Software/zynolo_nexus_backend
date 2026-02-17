@@ -1,0 +1,37 @@
+@startuml
+title 01 - System Context
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "API Gateway\n:8099" as GW
+participant "GatewaySecurityFilter" as GSF
+participant "Auth Service\n:8091" as AUTH
+participant "Setting Service\n:8092" as SET
+database "Auth DB" as ADB
+database "Setting DB" as SDB
+collections "SMTP" as SMTP
+
+FE -> GW: HTTP requests
+GW -> GSF: Validate JWT\nInject X-Company-Id
+
+alt Route /api/v1/auth/**
+  GW -> AUTH: Forward request
+  AUTH -> ADB: Read/Write auth data
+  AUTH -> SMTP: Send OTP emails
+  ADB --> AUTH: Result
+  AUTH --> GW: Response
+else Route /api/v1/setting/**
+  GW -> SET: Forward request
+  SET -> SDB: Read/Write setting data
+  SET --> GW: Response
+end
+
+GW --> FE: JSON response
+
+note bottom
+Core runtime path:
+Frontend -> Gateway -> Service -> DB -> Gateway -> Frontend
+end note
+
+@enduml
+

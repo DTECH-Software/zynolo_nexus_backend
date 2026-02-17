@@ -1,0 +1,47 @@
+sequenceDiagram
+autonumber
+
+actor FE as Frontend / Postman
+participant GW as Gateway :8099
+participant GSF as GatewaySecurityFilter
+participant AUTH as Auth Service :8091
+participant ACF as CompanyContextFilter
+participant ADB as Auth DB
+
+rect rgb(245,245,245)
+Note over FE,ADB: Switch Company
+FE->>GW: POST /api/v1/auth/switch-company\nAuthorization: Bearer ...\n{companyId OR companyCode}
+GW->>GSF: Validate token
+GSF->>GSF: Extract companyId claim\nInject X-Company-Id
+GSF-->>GW: Continue
+GW->>AUTH: Forward request
+AUTH->>ACF: Resolve context (header/token)
+AUTH->>ADB: Validate ACTIVE user-company mapping
+
+alt Mapping valid
+    AUTH->>AUTH: Generate NEW accessToken\nwith selected companyId
+    AUTH->>ADB: Replace refresh token
+    AUTH-->>GW: LoginData(defaultCompanyId=selected,\ncompanies[] isDefault updated)
+    GW-->>FE: 200 Success
+else Mapping invalid
+    AUTH-->>GW: 400/401 invalid switch
+    GW-->>FE: Error
+end
+end
+
+rect rgb(245,245,245)
+Note over FE,AUTH: Next API Call after Switch
+FE->>FE: Replace old accessToken with new token
+FE->>GW: POST protected endpoint + NEW token
+GW->>GSF: Validate token + inject X-Company-Id(new)
+
+alt New token used
+    GW->>AUTH: /api/v1/auth/** OR /api/v1/setting/**
+    AUTH->>ACF: CompanyContext = new companyId
+else Old token still used
+    GW->>AUTH: Request executes under old company
+    AUTH-->>FE: Old company data appears
+end
+end
+
+Note over FE,AUTH: Most common issue: frontend does not update Authorization header with NEW access token.

@@ -1,0 +1,69 @@
+@startuml
+title 07h - Company Module Subscription
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+database "Setting DB" as SDB
+
+group Reference Data
+  FE -> GW: POST /api/v1/setting/company-modules/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load active companies/modules/statuses + privileges
+  SET --> FE: reference-data
+end
+
+group Add / Update / Status
+  FE -> GW: POST /api/v1/setting/company-modules
+  GW -> SET: Forward
+  SET -> SDB: Validate companyCode + moduleCode
+  SET -> SDB: Insert subscription
+  SET --> FE: created subscription
+
+  FE -> GW: POST /api/v1/setting/company-modules/update
+  GW -> SET: Forward
+  SET -> SDB: Update subscription
+  SET --> FE: updated subscription
+
+  FE -> GW: POST /api/v1/setting/company-modules/status
+  GW -> SET: Forward
+  SET -> SDB: Enable/disable subscription
+  SET --> FE: updated subscription
+end
+
+group View / Filter / Check
+  FE -> GW: POST /api/v1/setting/company-modules/view
+  GW -> SET: Forward
+  SET -> SDB: Find by id
+  SET --> FE: details
+
+  FE -> GW: POST /api/v1/setting/company-modules/filter-list
+  GW -> SET: Forward
+  SET -> SDB: Filter + sort + paginate
+  SET --> FE: content[] + totalRecords
+
+  FE -> GW: POST /api/v1/setting/company-modules/check
+  GW -> SET: Forward
+  SET -> SDB: Check company-module status
+  SET --> FE: enabled/disabled
+end
+
+group Bulk Matrix and Bulk Update
+  FE -> GW: POST /api/v1/setting/company-modules/bulk-view\n{companyCode}
+  GW -> SET: Forward
+  SET -> SDB: Load all active modules + company subscriptions
+  SET --> FE: modules[] with allowed/unallowed
+
+  FE -> GW: POST /api/v1/setting/company-modules/bulk-update\n{companyCode, modules[{moduleCode, allowed}]}
+  GW -> SET: Forward
+  SET -> SDB: Upsert subscription status for each module
+  SET --> FE: updated matrix (allowed/unallowed)
+end
+
+note bottom
+Subscription state is used by auth dashboard endpoints
+to decide visible modules per company context.
+end note
+
+@enduml

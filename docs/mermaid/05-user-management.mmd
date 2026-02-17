@@ -1,0 +1,74 @@
+sequenceDiagram
+autonumber
+
+actor FE as Frontend / Postman
+participant GW as Gateway :8099
+participant SET as Setting Service :8092
+participant AIC as Auth Internal Client
+participant SDB as Setting DB
+participant ADB as Auth DB
+
+rect rgb(245,245,245)
+Note over FE,ADB: User Reference Data
+FE->>GW: POST /api/v1/setting/users/reference-data
+GW->>SET: Forward
+SET->>SDB: Load companies + roles + statuses
+SET->>SDB: Load usernamePolicy + passwordPolicy
+SET->>AIC: Resolve USER page privileges
+AIC->>ADB: Get role-page-task access
+ADB-->>AIC: privileges
+AIC-->>SET: privileges
+SET-->>GW: reference-data
+GW-->>FE: Response
+end
+
+rect rgb(245,245,245)
+Note over FE,SDB: Create User
+FE->>GW: POST /api/v1/setting/users
+GW->>SET: Forward
+SET->>SDB: Validate username/password policy
+SET->>SDB: Validate unique username/email
+SET->>SDB: Insert user
+SET->>SDB: Insert default user_company mapping
+SET-->>GW: created profile
+GW-->>FE: Response
+end
+
+rect rgb(245,245,245)
+Note over FE,SDB: View / Update / Status
+FE->>GW: POST /api/v1/setting/users/view {id}
+GW->>SET: Forward
+SET->>SDB: Find user by id
+SET-->>GW: profileDetails (newUsername)
+GW-->>FE: Response
+
+FE->>GW: POST /api/v1/setting/users/update {id,...}
+GW->>SET: Forward
+SET->>SDB: Update user + mapping sync
+SET-->>GW: updated profile
+GW-->>FE: Response
+
+FE->>GW: POST /api/v1/setting/users/status {id,status}
+GW->>SET: Forward
+SET->>SDB: Update status/loginStatus
+SET-->>GW: updated profile
+GW-->>FE: Response
+end
+
+rect rgb(245,245,245)
+Note over FE,SDB: Filter List
+FE->>GW: POST /api/v1/setting/users/filter-list
+GW->>SET: Forward
+SET->>SDB: Filter + sort + paginate
+SET-->>GW: content[] + totalRecords\n(content uses newUsername)
+GW-->>FE: Response
+end
+
+rect rgb(245,245,245)
+Note over FE,SDB: Profile Image
+FE->>GW: POST /api/v1/setting/users/profile-image/update
+GW->>SET: Forward
+SET->>SDB: Save base64 doc + metadata
+SET-->>GW: updated profile
+GW-->>FE: Response
+end

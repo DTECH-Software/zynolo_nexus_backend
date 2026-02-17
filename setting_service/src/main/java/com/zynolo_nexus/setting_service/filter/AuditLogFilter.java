@@ -82,6 +82,8 @@ public class AuditLogFilter extends OncePerRequestFilter {
             Map.entry("/api/v1/setting/company-modules/filter-list", "COMPANY_MODULE_SUBSCRIPTION_FILTER_LIST"),
             Map.entry("/api/v1/setting/company-modules/reference-data", "COMPANY_MODULE_SUBSCRIPTION_REFERENCE_DATA"),
             Map.entry("/api/v1/setting/company-modules/check", "COMPANY_MODULE_SUBSCRIPTION_CHECK"),
+            Map.entry("/api/v1/setting/company-modules/bulk-view", "COMPANY_MODULE_SUBSCRIPTION_BULK_VIEW"),
+            Map.entry("/api/v1/setting/company-modules/bulk-update", "COMPANY_MODULE_SUBSCRIPTION_BULK_UPDATE"),
             Map.entry("/api/v1/setting/tasks", "TASK_CREATE"),
             Map.entry("/api/v1/setting/tasks/update", "TASK_UPDATE"),
             Map.entry("/api/v1/setting/tasks/view", "TASK_VIEW"),

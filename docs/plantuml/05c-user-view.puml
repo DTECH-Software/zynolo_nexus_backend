@@ -1,0 +1,23 @@
+@startuml
+title 05c - User Management View User
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Setting Filters\n(CompanyContext + AuditLog)" as SF
+database "Setting DB" as SDB
+
+FE -> GW: POST /api/v1/setting/users/view\n{id}
+GW -> SET: Forward
+
+SET -> SF: Audit USER_VIEW
+SET -> SDB: Find user by id
+SDB --> SET: user
+
+SET -> SET: Map entity to ProfileDetails\n(username -> newUsername)
+SET --> GW: profileDetails
+GW --> FE: Response
+
+@enduml
+

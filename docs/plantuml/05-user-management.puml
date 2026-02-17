@@ -1,0 +1,65 @@
+@startuml
+title 05 - User Management (Overview)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+database "Setting DB" as SDB
+
+group 1) Reference Data
+  FE -> GW: POST /api/v1/setting/users/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load companies/roles/statuses/policies/privileges
+  SET --> FE: reference-data
+end
+
+group 2) Add User
+  FE -> GW: POST /api/v1/setting/users\n(actor username + newUsername + password + profile)
+  GW -> SET: Forward
+  SET -> SDB: Validate + insert user + default user_company
+  SET --> FE: created profile
+end
+
+group 3) View / Update / Status
+  FE -> GW: POST /api/v1/setting/users/view {id}
+  GW -> SET: Forward
+  SET -> SDB: Find user by id
+  SET --> FE: profileDetails (newUsername)
+
+  FE -> GW: POST /api/v1/setting/users/update {id,...}
+  GW -> SET: Forward
+  SET -> SDB: Update profile + role/company mapping sync
+  SET --> FE: updated profile
+
+  FE -> GW: POST /api/v1/setting/users/status {id,status}
+  GW -> SET: Forward
+  SET -> SDB: Update status + loginStatus rule
+  SET --> FE: updated profile
+end
+
+group 4) Filter List
+  FE -> GW: POST /api/v1/setting/users/filter-list\n(search.newUsername, role, nic, ...)
+  GW -> SET: Forward
+  SET -> SDB: Filter + sort + paginate
+  SET --> FE: content[] + totalRecords\n(content uses newUsername)
+end
+
+group 5) Profile Image
+  FE -> GW: POST /api/v1/setting/users/profile-image/update\n(base64 file payload)
+  GW -> SET: Forward
+  SET -> SDB: Save file doc + fileName + fileType + type
+  SET --> FE: updated profileImg
+end
+
+note bottom
+Detailed split diagrams:
+- 05a-user-reference-data.puml
+- 05b-user-add.puml
+- 05c-user-view.puml
+- 05d-user-update-status.puml
+- 05e-user-filter-list.puml
+- 05f-user-profile-image.puml
+end note
+
+@enduml

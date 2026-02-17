@@ -1,0 +1,49 @@
+flowchart TD
+    FE[Frontend / Postman]
+    GW[Gateway :8099]
+    SET[Setting Service :8092]
+    IAUTH[Auth Internal API :8091]
+    SDB[(Setting DB)]
+    ADB[(Auth DB)]
+
+    FE --> GW
+    GW --> SET
+
+    subgraph MASTER["Master Management Blocks"]
+      COMM["Company (COMM)\nadd/view/update/status/filter/reference"]
+      MODM["Module (MODM)\nadd/view/update/status/filter/reference"]
+      SECM["Section (SECM)\nadd/view/update/status/filter/reference"]
+      PAGM["Page (PAGM)\nadd/view/update/status/filter/reference"]
+      TASM["Task (TASM)\nadd/view/update/status/filter/reference"]
+      USRM["Role (USRM)\nadd/view/update/status/delete/filter/reference"]
+      PSPM["Password Policy (PSPM)\nreference/view/update/reset"]
+      UNPM["Username Policy (UNPM)\nreference/view/update/reset"]
+      UCM["User-Company\nadd/view/update/status/filter/reference"]
+      CMS["Company-Module Subscription\nadd/view/update/status/filter/reference/check"]
+    end
+
+    SET --> COMM
+    SET --> MODM
+    SET --> SECM
+    SET --> PAGM
+    SET --> TASM
+    SET --> USRM
+    SET --> PSPM
+    SET --> UNPM
+    SET --> UCM
+    SET --> CMS
+
+    COMM --> SDB
+    USRM --> SDB
+    PSPM --> SDB
+    UNPM --> SDB
+    UCM --> SDB
+    CMS --> SDB
+
+    MODM --> IAUTH
+    SECM --> IAUTH
+    PAGM --> IAUTH
+    TASM --> IAUTH
+    IAUTH --> ADB
+
+    SET --> GW --> FE

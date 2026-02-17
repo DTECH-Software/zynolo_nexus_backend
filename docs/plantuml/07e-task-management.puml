@@ -1,0 +1,57 @@
+@startuml
+title 07e - Task Management (TASM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Auth Internal API :8091" as IAUTH
+database "Setting DB" as SDB
+database "Auth DB" as ADB
+
+group Reference Data
+  FE -> GW: POST /api/v1/setting/tasks/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load statuses + privileges
+  SET --> FE: reference-data
+end
+
+group Add
+  FE -> GW: POST /api/v1/setting/tasks
+  GW -> SET: Forward
+  SET -> IAUTH: Create task
+  IAUTH -> ADB: Insert task
+  SET -> SDB: Save local task data
+  SET --> FE: created task
+end
+
+group View / Update / Status
+  FE -> GW: POST /api/v1/setting/tasks/view
+  GW -> SET: Forward
+  SET -> SDB: Find by id
+  SET --> FE: task details
+
+  FE -> GW: POST /api/v1/setting/tasks/update
+  GW -> SET: Forward
+  SET -> IAUTH: Update task
+  IAUTH -> ADB: Update task
+  SET -> SDB: Update local task data
+  SET --> FE: updated task
+
+  FE -> GW: POST /api/v1/setting/tasks/status
+  GW -> SET: Forward
+  SET -> IAUTH: Update task status
+  IAUTH -> ADB: Status update
+  SET -> SDB: Status update
+  SET --> FE: updated task
+end
+
+group Filter List
+  FE -> GW: POST /api/v1/setting/tasks/filter-list
+  GW -> SET: Forward
+  SET -> SDB: Filter + sort + paginate
+  SET --> FE: content[] + totalRecords
+end
+
+@enduml
+

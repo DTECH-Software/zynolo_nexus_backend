@@ -1,0 +1,57 @@
+@startuml
+title 07d - Page Management (PAGM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Auth Internal API :8091" as IAUTH
+database "Setting DB" as SDB
+database "Auth DB" as ADB
+
+group Reference Data
+  FE -> GW: POST /api/v1/setting/pages/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load sections + statuses + privileges
+  SET --> FE: reference-data
+end
+
+group Add
+  FE -> GW: POST /api/v1/setting/pages
+  GW -> SET: Forward
+  SET -> IAUTH: Create page
+  IAUTH -> ADB: Insert page
+  SET -> SDB: Save local page data
+  SET --> FE: created page
+end
+
+group View / Update / Status
+  FE -> GW: POST /api/v1/setting/pages/view
+  GW -> SET: Forward
+  SET -> SDB: Find by id
+  SET --> FE: page details
+
+  FE -> GW: POST /api/v1/setting/pages/update
+  GW -> SET: Forward
+  SET -> IAUTH: Update page
+  IAUTH -> ADB: Update page
+  SET -> SDB: Update local page data
+  SET --> FE: updated page
+
+  FE -> GW: POST /api/v1/setting/pages/status
+  GW -> SET: Forward
+  SET -> IAUTH: Update page status
+  IAUTH -> ADB: Status update
+  SET -> SDB: Status update
+  SET --> FE: updated page
+end
+
+group Filter List
+  FE -> GW: POST /api/v1/setting/pages/filter-list
+  GW -> SET: Forward
+  SET -> SDB: Filter + sort + paginate
+  SET --> FE: content[] + totalRecords
+end
+
+@enduml
+
