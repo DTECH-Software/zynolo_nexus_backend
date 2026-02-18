@@ -20,6 +20,7 @@ Set these in your GitHub repo secrets:
 sudo mkdir -p /opt/zynolo-nexus/auth_service
 sudo mkdir -p /opt/zynolo-nexus/setting_service
 sudo mkdir -p /opt/zynolo-nexus/api-gateway
+sudo mkdir -p /opt/zynolo-nexus/cheque_service
 sudo chown -R dtech:dtech /opt/zynolo-nexus
 ```
 
@@ -29,8 +30,9 @@ sudo chown -R dtech:dtech /opt/zynolo-nexus
 sudo cp deploy/systemd/auth_service.service /etc/systemd/system/auth_service.service
 sudo cp deploy/systemd/setting_service.service /etc/systemd/system/setting_service.service
 sudo cp deploy/systemd/api-gateway.service /etc/systemd/system/api-gateway.service
+sudo cp deploy/systemd/cheque_service.service /etc/systemd/system/cheque_service.service
 sudo systemctl daemon-reload
-sudo systemctl enable auth_service setting_service api-gateway
+sudo systemctl enable auth_service setting_service api-gateway cheque_service
 ```
 
 3. Nginx config:

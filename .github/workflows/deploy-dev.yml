@@ -35,6 +35,9 @@ jobs:
       - name: Build api-gateway
         run: mvn -DskipTests -f api-gateway/pom.xml clean package
 
+      - name: Build cheque_service
+        run: mvn -DskipTests -f cheque_service/pom.xml clean package
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -53,6 +56,9 @@ jobs:
           rsync -avz -e "ssh -p ${SSH_PORT}" \
             api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar \
             ${SSH_USER}@${SSH_HOST}:${APP_DIR}/api-gateway/api-gateway.jar
+          rsync -avz -e "ssh -p ${SSH_PORT}" \
+            cheque_service/target/cheque_service-0.0.1-SNAPSHOT.jar \
+            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/cheque_service/cheque_service.jar
 
       - name: Restart services
         run: |
@@ -60,5 +66,6 @@ jobs:
             sudo systemctl daemon-reload &&
             sudo systemctl restart auth_service &&
             sudo systemctl restart setting_service &&
-            sudo systemctl restart api-gateway
+            sudo systemctl restart api-gateway &&
+            sudo systemctl restart cheque_service
           "

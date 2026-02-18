@@ -1,0 +1,16 @@
+[Unit]
+Description=Zynolo Nexus Cheque Service
+After=network.target
+
+[Service]
+User=dtech
+WorkingDirectory=/opt/zynolo-nexus/cheque_service
+ExecStart=/usr/bin/java -jar /opt/zynolo-nexus/cheque_service/cheque_service.jar
+SuccessExitStatus=143
+Restart=always
+RestartSec=5
+Environment=SPRING_PROFILES_ACTIVE=dev
+
+[Install]
+WantedBy=multi-user.target
+
