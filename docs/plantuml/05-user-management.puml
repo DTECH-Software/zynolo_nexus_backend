@@ -52,7 +52,7 @@ group 5) Profile Image
   SET --> FE: updated profileImg
 end
 
-note bottom
+note over FE
 Detailed split diagrams:
 - 05a-user-reference-data.puml
 - 05b-user-add.puml

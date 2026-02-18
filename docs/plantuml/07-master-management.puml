@@ -41,7 +41,7 @@ group 4) User-Company + Company-Module
   SET --> FE: response
 end
 
-note bottom
+note over FE
 Detailed split diagrams:
 - 07a-company-management.puml
 - 07b-module-management.puml

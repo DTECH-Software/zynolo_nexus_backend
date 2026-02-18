@@ -18,7 +18,7 @@ SET -> SDB: Save profileImgDoc + fileName + fileType + type
 SET --> GW: updated profileImg
 GW --> FE: Response
 
-note bottom
+note over FE
 Stored as received base64 payload (no conversion in service).
 end note
 

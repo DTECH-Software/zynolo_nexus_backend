@@ -61,7 +61,7 @@ group Bulk Matrix and Bulk Update
   SET --> FE: updated matrix (allowed/unallowed)
 end
 
-note bottom
+note over FE,SET
 Subscription state is used by auth dashboard endpoints
 to decide visible modules per company context.
 end note

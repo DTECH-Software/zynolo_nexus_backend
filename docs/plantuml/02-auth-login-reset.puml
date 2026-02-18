@@ -36,7 +36,7 @@ group Auth Summary
   AUTH --> FE: Success
 end
 
-note bottom
+note over FE
 Detailed split diagrams:
 - 02a-auth-login.puml
 - 02b-auth-forgot-password.puml

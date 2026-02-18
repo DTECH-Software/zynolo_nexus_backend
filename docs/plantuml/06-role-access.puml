@@ -39,7 +39,7 @@ group YRTM - Role Page Task Management
   SET --> FE: check result
 end
 
-note bottom
+note over FE
 Detailed split diagrams:
 - 06a-role-modules-part1.puml
 - 06b-role-modules-part2.puml

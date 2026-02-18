@@ -189,11 +189,13 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Optional<User> userOpt = userRepository.findByUsername(request.getUsername());
-        if (userOpt.isEmpty() || !StringUtils.hasText(userOpt.get().getEmail())) {
-            // Avoid user enumeration and skip if email is missing.
-            return buildMessageResponse("auth.password.reset.code.sent", true);
+        if (userOpt.isEmpty()) {
+            throw new BadRequestException("auth.password.reset.user.notfound");
         }
         User user = userOpt.get();
+        if (!StringUtils.hasText(user.getEmail())) {
+            throw new BadRequestException("auth.password.reset.user.notfound");
+        }
 
         String otp = generateOtp();
         PasswordResetToken resetToken = new PasswordResetToken();

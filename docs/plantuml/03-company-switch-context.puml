@@ -41,7 +41,7 @@ group Next API Call after Switch
   end
 end
 
-note bottom
+note over FE
 Most common switch-company issue:
 frontend does not update Authorization header with the NEW access token.
 end note

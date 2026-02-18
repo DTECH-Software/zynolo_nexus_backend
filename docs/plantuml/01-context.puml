@@ -28,7 +28,7 @@ end
 
 GW --> FE: JSON response
 
-note bottom
+note over FE
 Core runtime path:
 Frontend -> Gateway -> Service -> DB -> Gateway -> Frontend
 end note

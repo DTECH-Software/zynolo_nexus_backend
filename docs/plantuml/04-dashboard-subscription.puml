@@ -35,7 +35,7 @@ group Module Dashboard
   GW --> FE: Response
 end
 
-note bottom
+note over FE
 Company subscription impacts both endpoints:
 - /api/v1/auth/main-dashboard
 - /api/v1/auth/module-dashboard
