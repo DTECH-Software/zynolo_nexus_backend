@@ -77,7 +77,7 @@ public class AuthServiceImpl implements AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
     private static final int PASSWORD_EXPIRY_DAYS = 30;
-    private static final int OTP_EXPIRY_MINUTES = 10;
+    private static final int OTP_EXPIRY_MINUTES = 1;
     private static final int RESET_TOKEN_EXPIRY_MINUTES = 10;
 
     private final UserRepository userRepository;
