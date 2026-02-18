@@ -31,6 +31,9 @@ Independent microservice scaffold for cheque module.
 - `POST /api/v1/cheque/companies/filter-list` (search + paging)
 - `POST /api/v1/cheque/companies/reference-data` (default status + privileges)
 
+Note:
+- CHCM now uses the shared `companies` table (same company master data used by setting service).
+
 ### Sample create payload
 ```json
 {

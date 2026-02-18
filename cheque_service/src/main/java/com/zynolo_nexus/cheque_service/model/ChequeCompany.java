@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "cheque_companies")
+@Table(name = "companies")
 @Data
 @Builder
 @NoArgsConstructor

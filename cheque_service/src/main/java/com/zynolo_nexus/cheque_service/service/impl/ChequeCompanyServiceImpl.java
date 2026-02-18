@@ -384,6 +384,9 @@ public class ChequeCompanyServiceImpl implements ChequeCompanyService {
             return true;
         }
         String normalized = search.trim().toUpperCase(Locale.ROOT);
+        if ("INACTIVE".equals(normalized)) {
+            normalized = "DEACTIVE";
+        }
         return status != null && status.name().equals(normalized);
     }
 
