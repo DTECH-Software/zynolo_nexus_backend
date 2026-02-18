@@ -47,7 +47,15 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public MessageResponseDTO<CompanyDto> createCompany(CompanyCreateRequest request) {
-        if (request == null || !StringUtils.hasText(request.getCode()) || !StringUtils.hasText(request.getDescription())) {
+        if (request == null
+                || !StringUtils.hasText(request.getCode())
+                || !StringUtils.hasText(request.getDescription())
+                || !StringUtils.hasText(request.getStreet1())
+                || !StringUtils.hasText(request.getCity())
+                || !StringUtils.hasText(request.getState())
+                || !StringUtils.hasText(request.getCountry())
+                || !StringUtils.hasText(request.getZipCode())
+                || !StringUtils.hasText(request.getPhoneNumber())) {
             throw new BadRequestException("company.invalid");
         }
 
@@ -61,6 +69,17 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = Company.builder()
                 .code(code)
                 .description(request.getDescription().trim())
+                .street1(request.getStreet1().trim())
+                .street2(trimToNull(request.getStreet2()))
+                .city(request.getCity().trim())
+                .state(request.getState().trim())
+                .country(request.getCountry().trim())
+                .zipCode(request.getZipCode().trim())
+                .phoneNumber(request.getPhoneNumber().trim())
+                .mobileNumber(trimToNull(request.getMobileNumber()))
+                .email(trimToNull(request.getEmail()))
+                .website(trimToNull(request.getWebsite()))
+                .taxId(trimToNull(request.getTaxId()))
                 .status(status)
                 .build();
 
@@ -102,6 +121,49 @@ public class CompanyServiceImpl implements CompanyService {
 
         if (StringUtils.hasText(request.getDescription())) {
             company.setDescription(request.getDescription().trim());
+        }
+
+        if (request.getStreet1() != null) {
+            company.setStreet1(trimToNull(request.getStreet1()));
+        }
+        if (request.getStreet2() != null) {
+            company.setStreet2(trimToNull(request.getStreet2()));
+        }
+        if (request.getCity() != null) {
+            company.setCity(trimToNull(request.getCity()));
+        }
+        if (request.getState() != null) {
+            company.setState(trimToNull(request.getState()));
+        }
+        if (request.getCountry() != null) {
+            company.setCountry(trimToNull(request.getCountry()));
+        }
+        if (request.getZipCode() != null) {
+            company.setZipCode(trimToNull(request.getZipCode()));
+        }
+        if (request.getPhoneNumber() != null) {
+            company.setPhoneNumber(trimToNull(request.getPhoneNumber()));
+        }
+        if (request.getMobileNumber() != null) {
+            company.setMobileNumber(trimToNull(request.getMobileNumber()));
+        }
+        if (request.getEmail() != null) {
+            company.setEmail(trimToNull(request.getEmail()));
+        }
+        if (request.getWebsite() != null) {
+            company.setWebsite(trimToNull(request.getWebsite()));
+        }
+        if (request.getTaxId() != null) {
+            company.setTaxId(trimToNull(request.getTaxId()));
+        }
+
+        if (!StringUtils.hasText(company.getStreet1())
+                || !StringUtils.hasText(company.getCity())
+                || !StringUtils.hasText(company.getState())
+                || !StringUtils.hasText(company.getCountry())
+                || !StringUtils.hasText(company.getZipCode())
+                || !StringUtils.hasText(company.getPhoneNumber())) {
+            throw new BadRequestException("company.invalid");
         }
 
         if (request.getStatus() != null) {
@@ -196,6 +258,17 @@ public class CompanyServiceImpl implements CompanyService {
                             .id(company.getId())
                             .code(company.getCode())
                             .description(company.getDescription())
+                            .street1(company.getStreet1())
+                            .street2(company.getStreet2())
+                            .city(company.getCity())
+                            .state(company.getState())
+                            .country(company.getCountry())
+                            .zipCode(company.getZipCode())
+                            .phoneNumber(company.getPhoneNumber())
+                            .mobileNumber(company.getMobileNumber())
+                            .email(company.getEmail())
+                            .website(company.getWebsite())
+                            .taxId(company.getTaxId())
                             .status(current.name())
                             .statusDescription(current == CompanyStatus.DEACTIVE ? "Inactive" : "Active")
                             .createdDate(company.getCreatedDate())
@@ -266,6 +339,17 @@ public class CompanyServiceImpl implements CompanyService {
                 .id(company.getId())
                 .code(company.getCode())
                 .description(company.getDescription())
+                .street1(company.getStreet1())
+                .street2(company.getStreet2())
+                .city(company.getCity())
+                .state(company.getState())
+                .country(company.getCountry())
+                .zipCode(company.getZipCode())
+                .phoneNumber(company.getPhoneNumber())
+                .mobileNumber(company.getMobileNumber())
+                .email(company.getEmail())
+                .website(company.getWebsite())
+                .taxId(company.getTaxId())
                 .status(current)
                 .statusDescription(current == CompanyStatus.DEACTIVE ? "Inactive" : "Active")
                 .createdDate(company.getCreatedDate())
@@ -284,6 +368,14 @@ public class CompanyServiceImpl implements CompanyService {
             return null;
         }
         return value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private boolean matches(String searchValue, String actual) {

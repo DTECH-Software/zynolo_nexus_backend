@@ -1,17 +1,18 @@
-package com.zynolo_nexus.setting_service.dto.response;
+package com.zynolo_nexus.cheque_service.dto.response;
 
-import com.zynolo_nexus.setting_service.enums.CompanyStatus;
-import java.time.LocalDateTime;
+import com.zynolo_nexus.cheque_service.enums.ChequeCompanyStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CompanyDto {
+public class ChequeCompanyDto {
 
     private Long id;
     private String code;
@@ -27,7 +28,7 @@ public class CompanyDto {
     private String email;
     private String website;
     private String taxId;
-    private CompanyStatus status;
+    private ChequeCompanyStatus status;
     private String statusDescription;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;

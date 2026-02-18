@@ -22,3 +22,25 @@ Independent microservice scaffold for cheque module.
 ## Planned integrations
 - `auth_service` for auth/authorization integration
 - `setting_service` for master/reference data integration
+
+## CHCM - Cheque Company Management Endpoints
+- `POST /api/v1/cheque/companies` (create)
+- `POST /api/v1/cheque/companies/view` (view by `id`)
+- `POST /api/v1/cheque/companies/update` (update by `id`)
+- `POST /api/v1/cheque/companies/status` (status change by `id`)
+- `POST /api/v1/cheque/companies/filter-list` (search + paging)
+- `POST /api/v1/cheque/companies/reference-data` (default status + privileges)
+
+### Sample create payload
+```json
+{
+  "channel": "OP",
+  "ip": "0.0.0.1",
+  "message": "CHEQUE_COMPANY_CREATE",
+  "userAgent": "Chrome",
+  "username": "superadmin",
+  "code": "CHQ_MAIN",
+  "description": "Main cheque company",
+  "status": "ACTIVE"
+}
+```

@@ -1,6 +1,6 @@
-package com.zynolo_nexus.setting_service.model;
+package com.zynolo_nexus.cheque_service.model;
 
-import com.zynolo_nexus.setting_service.enums.CompanyStatus;
+import com.zynolo_nexus.cheque_service.enums.ChequeCompanyStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -8,27 +8,23 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import java.time.LocalDateTime;
 
 @Entity
-@Table(
-        name = "companies",
-        uniqueConstraints = {
-                @UniqueConstraint(name = "UK_company_code", columnNames = {"code"})
-        }
-)
-@Getter
-@Setter
+@Table(name = "cheque_companies")
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Company extends BaseAuditableEntity {
+public class ChequeCompany {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -73,8 +69,38 @@ public class Company extends BaseAuditableEntity {
     @Column(name = "tax_id", length = 100)
     private String taxId;
 
-    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private CompanyStatus status = CompanyStatus.ACTIVE;
+    private ChequeCompanyStatus status;
+
+    @Column(nullable = false)
+    private LocalDateTime createdDate;
+
+    @Column(nullable = false)
+    private LocalDateTime lastModifiedDate;
+
+    @Column(length = 100)
+    private String createdBy;
+
+    @Column(length = 100)
+    private String lastModifiedBy;
+
+    @PrePersist
+    public void onCreate() {
+        LocalDateTime now = LocalDateTime.now();
+        if (createdDate == null) {
+            createdDate = now;
+        }
+        if (lastModifiedDate == null) {
+            lastModifiedDate = now;
+        }
+        if (status == null) {
+            status = ChequeCompanyStatus.ACTIVE;
+        }
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        lastModifiedDate = LocalDateTime.now();
+    }
 }
