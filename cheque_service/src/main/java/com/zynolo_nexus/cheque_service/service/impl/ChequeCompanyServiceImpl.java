@@ -1,5 +1,6 @@
 package com.zynolo_nexus.cheque_service.service.impl;
 
+import com.zynolo_nexus.cheque_service.client.AuthModuleClient;
 import com.zynolo_nexus.cheque_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeCompanyCreateRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeCompanyFilterRequest;
@@ -15,7 +16,9 @@ import com.zynolo_nexus.cheque_service.dto.response.ChequeCompanyReferenceDataDt
 import com.zynolo_nexus.cheque_service.dto.response.ChequeReferenceStatusDto;
 import com.zynolo_nexus.cheque_service.enums.ChequeCompanyStatus;
 import com.zynolo_nexus.cheque_service.model.ChequeCompany;
+import com.zynolo_nexus.cheque_service.model.UserAccount;
 import com.zynolo_nexus.cheque_service.repository.ChequeCompanyRepository;
+import com.zynolo_nexus.cheque_service.repository.UserAccountRepository;
 import com.zynolo_nexus.cheque_service.service.ChequeCompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,8 +26,10 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +38,8 @@ public class ChequeCompanyServiceImpl implements ChequeCompanyService {
     private static final String PAGE_CODE = "CHCM";
 
     private final ChequeCompanyRepository chequeCompanyRepository;
+    private final UserAccountRepository userAccountRepository;
+    private final AuthModuleClient authModuleClient;
 
     @Override
     public MessageResponseDTO<ChequeCompanyDto> create(ChequeCompanyCreateRequest request) {
@@ -252,14 +259,7 @@ public class ChequeCompanyServiceImpl implements ChequeCompanyService {
                 ? request.getPageCode().trim().toUpperCase(Locale.ROOT)
                 : PAGE_CODE;
 
-        boolean hasUser = StringUtils.hasText(request != null ? request.getUsername() : null);
-        ChequeCompanyPrivilegesDto privileges = ChequeCompanyPrivilegesDto.builder()
-                .add(hasUser)
-                .update(hasUser)
-                .view(hasUser)
-                .search(hasUser)
-                .delete(hasUser)
-                .build();
+        ChequeCompanyPrivilegesDto privileges = resolvePrivileges(request, pageCode);
 
         ChequeCompanyReferenceDataDto data = ChequeCompanyReferenceDataDto.builder()
                 .defaultStatus(List.of(
@@ -277,6 +277,54 @@ public class ChequeCompanyServiceImpl implements ChequeCompanyService {
                 .errorCode(0)
                 .responseTime(LocalDateTime.now())
                 .build();
+    }
+
+    private ChequeCompanyPrivilegesDto resolvePrivileges(ChequeCompanyReferenceDataRequest request, String pageCode) {
+        String username = request != null ? request.getUsername() : null;
+        if (!StringUtils.hasText(username)) {
+            return emptyPrivileges();
+        }
+
+        UserAccount user = userAccountRepository.findByUsername(username).orElse(null);
+        if (user == null || user.getRole() == null || !StringUtils.hasText(user.getRole().getCode())) {
+            return emptyPrivileges();
+        }
+
+        try {
+            var access = authModuleClient.getRolePageTaskAccess(user.getRole().getCode());
+            if (access == null || access.getPages() == null) {
+                return emptyPrivileges();
+            }
+
+            Map<String, Boolean> taskAccess = new HashMap<>();
+            access.getPages().stream()
+                    .filter(page -> pageCode.equalsIgnoreCase(page.getPageCode()))
+                    .findFirst()
+                    .ifPresent(page -> {
+                        if (page.getTasks() != null) {
+                            page.getTasks().forEach(task -> {
+                                String codeKey = normalizeTaskKey(task.getTaskCode());
+                                if (StringUtils.hasText(codeKey)) {
+                                    taskAccess.put(codeKey, task.isCanAccess());
+                                }
+                                String nameKey = normalizeTaskKey(task.getTaskName());
+                                if (StringUtils.hasText(nameKey)) {
+                                    taskAccess.putIfAbsent(nameKey, task.isCanAccess());
+                                }
+                            });
+                        }
+                    });
+
+            return ChequeCompanyPrivilegesDto.builder()
+                    .add(hasTask(taskAccess, "ADD", "CREATE", "NEW"))
+                    .update(hasTask(taskAccess, "UPDATE", "EDIT"))
+                    .view(hasTask(taskAccess, "VIEW", "READ"))
+                    .search(hasTask(taskAccess, "SEARCH", "FILTER", "LIST"))
+                    .delete(hasTask(taskAccess, "DELETE", "REMOVE", "DEACTIVATE"))
+                    .build();
+        } catch (Exception ex) {
+            return emptyPrivileges();
+        }
     }
 
     private MessageResponseDTO<ChequeCompanyDto> success(String message, ChequeCompanyDto data) {
@@ -370,6 +418,44 @@ public class ChequeCompanyServiceImpl implements ChequeCompanyService {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String normalizeTaskKey(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        return value.replaceAll("[^A-Za-z0-9]", "").toUpperCase(Locale.ROOT);
+    }
+
+    private boolean hasTask(Map<String, Boolean> taskAccess, String... tokens) {
+        if (taskAccess == null || taskAccess.isEmpty() || tokens == null) {
+            return false;
+        }
+        for (Map.Entry<String, Boolean> entry : taskAccess.entrySet()) {
+            if (!Boolean.TRUE.equals(entry.getValue())) {
+                continue;
+            }
+            String key = entry.getKey();
+            if (!StringUtils.hasText(key)) {
+                continue;
+            }
+            for (String token : tokens) {
+                if (StringUtils.hasText(token) && key.contains(token)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private ChequeCompanyPrivilegesDto emptyPrivileges() {
+        return ChequeCompanyPrivilegesDto.builder()
+                .add(false)
+                .update(false)
+                .view(false)
+                .search(false)
+                .delete(false)
+                .build();
     }
 
     private boolean matches(String search, String actual) {

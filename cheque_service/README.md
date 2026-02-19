@@ -34,6 +34,14 @@ Independent microservice scaffold for cheque module.
 Note:
 - CHCM now uses the shared `companies` table (same company master data used by setting service).
 
+## CHCU - Cheque Customer Management Endpoints
+- `POST /api/v1/cheque/customers` (create)
+- `POST /api/v1/cheque/customers/view` (view by `id`)
+- `POST /api/v1/cheque/customers/update` (update by `id`)
+- `POST /api/v1/cheque/customers/status` (status change by `id`)
+- `POST /api/v1/cheque/customers/filter-list` (search + paging)
+- `POST /api/v1/cheque/customers/reference-data` (default status + privileges)
+
 ### Sample create payload
 ```json
 {
