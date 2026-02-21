@@ -42,6 +42,14 @@ Note:
 - `POST /api/v1/cheque/customers/filter-list` (search + paging)
 - `POST /api/v1/cheque/customers/reference-data` (default status + privileges)
 
+## CHSU - Cheque Supplier Management Endpoints
+- `POST /api/v1/cheque/suppliers` (create)
+- `POST /api/v1/cheque/suppliers/view` (view by `id`)
+- `POST /api/v1/cheque/suppliers/update` (update by `id`)
+- `POST /api/v1/cheque/suppliers/status` (status change by `id`)
+- `POST /api/v1/cheque/suppliers/filter-list` (search + paging)
+- `POST /api/v1/cheque/suppliers/reference-data` (default status + privileges)
+
 ### Sample create payload
 ```json
 {
