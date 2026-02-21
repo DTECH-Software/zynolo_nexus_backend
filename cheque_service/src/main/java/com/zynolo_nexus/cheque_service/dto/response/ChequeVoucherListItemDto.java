@@ -1,0 +1,32 @@
+package com.zynolo_nexus.cheque_service.dto.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ChequeVoucherListItemDto {
+
+    private Long id;
+    private String voucherNo;
+    private String companyCode;
+    private String companyDescription;
+    private String customerCode;
+    private String customerDescription;
+    private String chequeNo;
+    private String description;
+    private BigDecimal totalAmount;
+    private String status;
+    private String statusDescription;
+    private LocalDateTime createdDate;
+    private LocalDateTime lastModifiedDate;
+    private String createdBy;
+    private String lastModifiedBy;
+}
