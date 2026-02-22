@@ -49,6 +49,10 @@ Note:
 - `POST /api/v1/cheque/vouchers/filter-list` (search + paging)
 - `POST /api/v1/cheque/vouchers/reference-data` (status + companies + customers + privileges)
 - `POST /api/v1/cheque/vouchers/export-pdf` (returns base64 PDF)
+- `POST /api/v1/cheque/vouchers/export-pdf-download` (direct PDF file download response)
+
+Note:
+- Voucher PDF is now generated using JasperReports template: `reports/cheque-voucher.jrxml`.
 
 ### Sample create payload
 ```json

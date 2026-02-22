@@ -33,16 +33,18 @@ import com.zynolo_nexus.cheque_service.repository.ChequeVoucherRepository;
 import com.zynolo_nexus.cheque_service.repository.UserAccountRepository;
 import com.zynolo_nexus.cheque_service.service.ChequeVoucherService;
 import lombok.RequiredArgsConstructor;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -62,12 +64,15 @@ import java.util.Map;
 public class ChequeVoucherServiceImpl implements ChequeVoucherService {
 
     private static final String PAGE_CODE = "CHVM";
+    private static final String VOUCHER_REPORT_PATH = "/reports/cheque-voucher.jrxml";
 
     private final ChequeVoucherRepository chequeVoucherRepository;
     private final ChequeCompanyRepository chequeCompanyRepository;
     private final ChequeCustomerRepository chequeCustomerRepository;
     private final UserAccountRepository userAccountRepository;
     private final AuthModuleClient authModuleClient;
+
+    private volatile JasperReport voucherReport;
 
     @Override
     @Transactional
@@ -313,49 +318,14 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
         ChequeVoucherDto dto = toDto(voucher, company, customer);
 
-        try (PDDocument document = new PDDocument(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            PDPage page = new PDPage(PDRectangle.A4);
-            document.addPage(page);
+        try {
+            JasperReport report = getOrLoadVoucherReport();
+            Map<String, Object> params = buildVoucherReportParams(dto);
+            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(buildVoucherRows(dto));
 
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                contentStream.setLeading(16f);
-                contentStream.beginText();
-                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
-                contentStream.newLineAtOffset(50, 780);
-                contentStream.showText("Cheque Voucher");
-                contentStream.newLine();
-                contentStream.newLine();
-                contentStream.setFont(PDType1Font.HELVETICA, 11);
-
-                writeLine(contentStream, "Voucher No: " + safe(dto.getVoucherNo()));
-                writeLine(contentStream, "Company: " + safe(dto.getCompanyCode()) + " - " + safe(dto.getCompanyDescription()));
-                writeLine(contentStream, "Customer: " + safe(dto.getCustomerCode()) + " - " + safe(dto.getCustomerDescription()));
-                writeLine(contentStream, "Cheque No: " + safe(dto.getChequeNo()));
-                writeLine(contentStream, "Description: " + safe(dto.getDescription()));
-                writeLine(contentStream, "Status: " + safe(dto.getStatusDescription()));
-                writeLine(contentStream, "Total Amount: " + (dto.getTotalAmount() != null ? dto.getTotalAmount().toPlainString() : "0.00"));
-                contentStream.newLine();
-                writeLine(contentStream, "Invoice Lines");
-                contentStream.newLine();
-
-                if (dto.getInvoices() != null) {
-                    for (ChequeVoucherInvoiceDto line : dto.getInvoices()) {
-                        String invoiceLine = String.format(
-                                Locale.ROOT,
-                                "%s | %s | %s | %s",
-                                line.getInvoiceDate() != null ? line.getInvoiceDate().toString() : "",
-                                safe(line.getInvoiceNo()),
-                                safe(line.getDescription()),
-                                line.getAmount() != null ? line.getAmount().toPlainString() : "0.00"
-                        );
-                        writeLine(contentStream, invoiceLine);
-                    }
-                }
-                contentStream.endText();
-            }
-
-            document.save(out);
-            String base64 = Base64.getEncoder().encodeToString(out.toByteArray());
+            JasperPrint jasperPrint = JasperFillManager.fillReport(report, params, dataSource);
+            byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
+            String base64 = Base64.getEncoder().encodeToString(pdfBytes);
             String fileName = (dto.getVoucherNo() != null ? dto.getVoucherNo() : "voucher") + ".pdf";
 
             return MessageResponseDTO.<ChequeVoucherPdfDto>builder()
@@ -375,13 +345,57 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
     }
 
-    private void writeLine(PDPageContentStream contentStream, String text) throws Exception {
-        contentStream.showText(text);
-        contentStream.newLine();
-    }
-
     private String safe(String value) {
         return value != null ? value : "";
+    }
+
+    private JasperReport getOrLoadVoucherReport() throws JRException {
+        if (voucherReport != null) {
+            return voucherReport;
+        }
+        synchronized (this) {
+            if (voucherReport == null) {
+                try (InputStream inputStream = ChequeVoucherServiceImpl.class.getResourceAsStream(VOUCHER_REPORT_PATH)) {
+                    if (inputStream == null) {
+                        throw new JRException("Voucher report template not found: " + VOUCHER_REPORT_PATH);
+                    }
+                    voucherReport = JasperCompileManager.compileReport(inputStream);
+                } catch (Exception ex) {
+                    if (ex instanceof JRException jrException) {
+                        throw jrException;
+                    }
+                    throw new JRException("Unable to load voucher report template", ex);
+                }
+            }
+            return voucherReport;
+        }
+    }
+
+    private Map<String, Object> buildVoucherReportParams(ChequeVoucherDto dto) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("voucherNo", safe(dto.getVoucherNo()));
+        params.put("company", safe(dto.getCompanyCode()) + " - " + safe(dto.getCompanyDescription()));
+        params.put("customer", safe(dto.getCustomerCode()) + " - " + safe(dto.getCustomerDescription()));
+        params.put("chequeNo", safe(dto.getChequeNo()));
+        params.put("voucherDescription", safe(dto.getDescription()));
+        params.put("status", safe(dto.getStatusDescription()));
+        params.put("totalAmount", dto.getTotalAmount() != null ? dto.getTotalAmount().toPlainString() : "0.00");
+        params.put("printedAt", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        return params;
+    }
+
+    private List<VoucherInvoiceRow> buildVoucherRows(ChequeVoucherDto dto) {
+        if (dto.getInvoices() == null || dto.getInvoices().isEmpty()) {
+            return List.of();
+        }
+        return dto.getInvoices().stream()
+                .map(line -> new VoucherInvoiceRow(
+                        line.getInvoiceDate() != null ? line.getInvoiceDate().toString() : "",
+                        safe(line.getInvoiceNo()),
+                        safe(line.getDescription()),
+                        line.getAmount() != null ? line.getAmount() : BigDecimal.ZERO
+                ))
+                .toList();
     }
 
     private boolean isValidCreateRequest(ChequeVoucherCreateRequest request) {
@@ -710,4 +724,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         String direction = normalize(sortDirection);
         return "desc".equals(direction) ? comparator.reversed() : comparator;
     }
+
+    private record VoucherInvoiceRow(
+            String invoiceDate,
+            String invoiceNo,
+            String invoiceDescription,
+            BigDecimal amount
+    ) {}
 }
