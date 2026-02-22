@@ -33,6 +33,7 @@ import com.zynolo_nexus.cheque_service.repository.ChequeVoucherRepository;
 import com.zynolo_nexus.cheque_service.repository.UserAccountRepository;
 import com.zynolo_nexus.cheque_service.service.ChequeVoucherService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JasperCompileManager;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -61,6 +62,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ChequeVoucherServiceImpl implements ChequeVoucherService {
 
     private static final String PAGE_CODE = "CHVM";
@@ -342,7 +344,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                     .responseTime(LocalDateTime.now())
                     .build();
         } catch (Exception ex) {
-            return pdfError("Unable to export voucher PDF", 500);
+            log.error("Unable to export voucher PDF for voucherId={}", voucherId, ex);
+            return pdfError("Unable to export voucher PDF", 500, rootCauseMessage(ex));
         }
     }
 
@@ -658,14 +661,33 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     }
 
     private MessageResponseDTO<ChequeVoucherPdfDto> pdfError(String message, int errorCode) {
+        return pdfError(message, errorCode, null);
+    }
+
+    private MessageResponseDTO<ChequeVoucherPdfDto> pdfError(String message, int errorCode, String errors) {
         return MessageResponseDTO.<ChequeVoucherPdfDto>builder()
                 .success(false)
                 .message(message)
                 .data(null)
-                .errors(null)
+                .errors(errors)
                 .errorCode(errorCode)
                 .responseTime(LocalDateTime.now())
                 .build();
+    }
+
+    private String rootCauseMessage(Throwable throwable) {
+        if (throwable == null) {
+            return null;
+        }
+        Throwable root = throwable;
+        while (root.getCause() != null && root.getCause() != root) {
+            root = root.getCause();
+        }
+        String rootMessage = root.getMessage();
+        if (!StringUtils.hasText(rootMessage)) {
+            rootMessage = throwable.getMessage();
+        }
+        return StringUtils.hasText(rootMessage) ? rootMessage : root.getClass().getSimpleName();
     }
 
     private ChequeVoucherDto toDto(ChequeVoucher voucher, ChequeCompany company, ChequeCustomer customer) {
@@ -829,10 +851,33 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         return "desc".equals(direction) ? comparator.reversed() : comparator;
     }
 
-    private record VoucherInvoiceRow(
-            String invoiceDate,
-            String invoiceNo,
-            String invoiceDescription,
-            BigDecimal amount
-    ) {}
+    private static class VoucherInvoiceRow {
+        private final String invoiceDate;
+        private final String invoiceNo;
+        private final String invoiceDescription;
+        private final BigDecimal amount;
+
+        private VoucherInvoiceRow(String invoiceDate, String invoiceNo, String invoiceDescription, BigDecimal amount) {
+            this.invoiceDate = invoiceDate;
+            this.invoiceNo = invoiceNo;
+            this.invoiceDescription = invoiceDescription;
+            this.amount = amount;
+        }
+
+        public String getInvoiceDate() {
+            return invoiceDate;
+        }
+
+        public String getInvoiceNo() {
+            return invoiceNo;
+        }
+
+        public String getInvoiceDescription() {
+            return invoiceDescription;
+        }
+
+        public BigDecimal getAmount() {
+            return amount;
+        }
+    }
 }
