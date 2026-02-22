@@ -40,7 +40,7 @@ import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -324,7 +324,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         try {
             JasperReport report = getOrLoadVoucherReport();
             Map<String, Object> params = buildVoucherReportParams(dto, company, customer);
-            JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(buildVoucherRows(dto));
+            JRMapCollectionDataSource dataSource = new JRMapCollectionDataSource(buildVoucherRows(dto));
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(report, params, dataSource);
             byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
@@ -491,18 +491,20 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         return numNames[number] + " hundred" + current;
     }
 
-    private List<VoucherInvoiceRow> buildVoucherRows(ChequeVoucherDto dto) {
+    private List<Map<String, ?>> buildVoucherRows(ChequeVoucherDto dto) {
         if (dto.getInvoices() == null || dto.getInvoices().isEmpty()) {
             return List.of();
         }
-        return dto.getInvoices().stream()
-                .map(line -> new VoucherInvoiceRow(
-                        line.getInvoiceDate() != null ? line.getInvoiceDate().toString() : "",
-                        safe(line.getInvoiceNo()),
-                        safe(line.getDescription()),
-                        line.getAmount() != null ? line.getAmount() : BigDecimal.ZERO
-                ))
-                .toList();
+        List<Map<String, ?>> rows = new ArrayList<>();
+        for (ChequeVoucherInvoiceDto line : dto.getInvoices()) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("invoiceDate", line.getInvoiceDate() != null ? line.getInvoiceDate().toString() : "");
+            row.put("invoiceNo", safe(line.getInvoiceNo()));
+            row.put("invoiceDescription", safe(line.getDescription()));
+            row.put("amount", line.getAmount() != null ? line.getAmount() : BigDecimal.ZERO);
+            rows.add(row);
+        }
+        return rows;
     }
 
     private boolean isValidCreateRequest(ChequeVoucherCreateRequest request) {
@@ -851,33 +853,4 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         return "desc".equals(direction) ? comparator.reversed() : comparator;
     }
 
-    private static class VoucherInvoiceRow {
-        private final String invoiceDate;
-        private final String invoiceNo;
-        private final String invoiceDescription;
-        private final BigDecimal amount;
-
-        private VoucherInvoiceRow(String invoiceDate, String invoiceNo, String invoiceDescription, BigDecimal amount) {
-            this.invoiceDate = invoiceDate;
-            this.invoiceNo = invoiceNo;
-            this.invoiceDescription = invoiceDescription;
-            this.amount = amount;
-        }
-
-        public String getInvoiceDate() {
-            return invoiceDate;
-        }
-
-        public String getInvoiceNo() {
-            return invoiceNo;
-        }
-
-        public String getInvoiceDescription() {
-            return invoiceDescription;
-        }
-
-        public BigDecimal getAmount() {
-            return amount;
-        }
-    }
 }
