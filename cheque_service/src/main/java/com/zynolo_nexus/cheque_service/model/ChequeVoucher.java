@@ -57,6 +57,30 @@ public class ChequeVoucher {
     @Column(nullable = false, length = 30)
     private ChequeVoucherStatus status;
 
+    @Column(name = "submitted_by", length = 100)
+    private String submittedBy;
+
+    @Column(name = "submitted_date")
+    private LocalDateTime submittedDate;
+
+    @Column(name = "approved_by", length = 100)
+    private String approvedBy;
+
+    @Column(name = "approved_date")
+    private LocalDateTime approvedDate;
+
+    @Column(name = "rejected_by", length = 100)
+    private String rejectedBy;
+
+    @Column(name = "rejected_date")
+    private LocalDateTime rejectedDate;
+
+    @Column(name = "rejection_reason", length = 500)
+    private String rejectionReason;
+
+    @Column(name = "approval_remark", length = 500)
+    private String approvalRemark;
+
     @OneToMany(mappedBy = "voucher", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ChequeVoucherInvoice> invoices = new ArrayList<>();

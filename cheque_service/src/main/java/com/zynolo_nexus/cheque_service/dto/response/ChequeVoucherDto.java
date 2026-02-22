@@ -27,6 +27,14 @@ public class ChequeVoucherDto {
     private BigDecimal totalAmount;
     private ChequeVoucherStatus status;
     private String statusDescription;
+    private String submittedBy;
+    private LocalDateTime submittedDate;
+    private String approvedBy;
+    private LocalDateTime approvedDate;
+    private String rejectedBy;
+    private LocalDateTime rejectedDate;
+    private String rejectionReason;
+    private String approvalRemark;
     private List<ChequeVoucherInvoiceDto> invoices;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;

@@ -2,12 +2,15 @@ package com.zynolo_nexus.cheque_service.service.impl;
 
 import com.zynolo_nexus.cheque_service.client.AuthModuleClient;
 import com.zynolo_nexus.cheque_service.dto.api.MessageResponseDTO;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherApproveRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherCreateRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherExportPdfRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherFilterRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherFilterSearch;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherInvoiceRequest;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherRejectRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherReferenceDataRequest;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherSubmitForApprovalRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherUpdateRequest;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeReferenceCompanyDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeReferenceCustomerDto;
@@ -55,17 +58,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class ChequeVoucherServiceImpl implements ChequeVoucherService {
 
-    private static final String PAGE_CODE = "CHVM";
+    private static final String CHVM_PAGE_CODE = "CHVM";
     private static final String VOUCHER_REPORT_PATH = "/reports/cheque-voucher.jrxml";
 
     private final ChequeVoucherRepository chequeVoucherRepository;
@@ -195,6 +200,132 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     @Override
     @Transactional(readOnly = true)
     public MessageResponseDTO<ChequeVoucherFilterResultDto> filterList(ChequeVoucherFilterRequest request) {
+        return filterListByStatuses(
+                request,
+                EnumSet.of(ChequeVoucherStatus.DRAFT, ChequeVoucherStatus.REJECTED),
+                "Voucher list filtered successfully");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MessageResponseDTO<ChequeVoucherFilterResultDto> approvalFilterList(ChequeVoucherFilterRequest request) {
+        return filterListByStatuses(
+                request,
+                EnumSet.of(ChequeVoucherStatus.PENDING_APPROVAL),
+                "Voucher approval list filtered successfully");
+    }
+
+    @Override
+    @Transactional
+    public MessageResponseDTO<ChequeVoucherDto> submitForApproval(ChequeVoucherSubmitForApprovalRequest request) {
+        if (request == null || request.getId() == null) {
+            return error("Invalid submit for approval request", 400);
+        }
+
+        ChequeVoucher voucher = chequeVoucherRepository.findById(request.getId()).orElse(null);
+        if (voucher == null) {
+            return error("Voucher not found", 404);
+        }
+        if (voucher.getStatus() != ChequeVoucherStatus.DRAFT && voucher.getStatus() != ChequeVoucherStatus.REJECTED) {
+            return error("Only DRAFT or REJECTED vouchers can be submitted for approval", 400);
+        }
+
+        String actor = normalizeUsername(request.getUsername());
+        voucher.setStatus(ChequeVoucherStatus.PENDING_APPROVAL);
+        voucher.setSubmittedBy(actor);
+        voucher.setSubmittedDate(LocalDateTime.now());
+        voucher.setRejectionReason(null);
+        voucher.setRejectedBy(null);
+        voucher.setRejectedDate(null);
+        voucher.setApprovalRemark(null);
+        voucher.setApprovedBy(null);
+        voucher.setApprovedDate(null);
+        if (StringUtils.hasText(actor)) {
+            voucher.setLastModifiedBy(actor);
+            if (!StringUtils.hasText(voucher.getCreatedBy())) {
+                voucher.setCreatedBy(actor);
+            }
+        }
+
+        voucher = chequeVoucherRepository.save(voucher);
+        ChequeCompany company = chequeCompanyRepository.findByCodeIgnoreCase(voucher.getCompanyCode()).orElse(null);
+        ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
+        return success("Voucher submitted for approval successfully", toDto(voucher, company, customer));
+    }
+
+    @Override
+    @Transactional
+    public MessageResponseDTO<ChequeVoucherDto> approve(ChequeVoucherApproveRequest request) {
+        if (request == null || request.getId() == null) {
+            return error("Invalid approve request", 400);
+        }
+
+        ChequeVoucher voucher = chequeVoucherRepository.findById(request.getId()).orElse(null);
+        if (voucher == null) {
+            return error("Voucher not found", 404);
+        }
+        if (voucher.getStatus() != ChequeVoucherStatus.PENDING_APPROVAL) {
+            return error("Only PENDING_APPROVAL vouchers can be approved", 400);
+        }
+
+        String actor = normalizeUsername(request.getUsername());
+        voucher.setStatus(ChequeVoucherStatus.APPROVED);
+        voucher.setApprovedBy(actor);
+        voucher.setApprovedDate(LocalDateTime.now());
+        voucher.setApprovalRemark(trimToNull(request.getRemark()));
+        voucher.setRejectedBy(null);
+        voucher.setRejectedDate(null);
+        voucher.setRejectionReason(null);
+        if (StringUtils.hasText(actor)) {
+            voucher.setLastModifiedBy(actor);
+        }
+
+        voucher = chequeVoucherRepository.save(voucher);
+        ChequeCompany company = chequeCompanyRepository.findByCodeIgnoreCase(voucher.getCompanyCode()).orElse(null);
+        ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
+        return success("Voucher approved successfully", toDto(voucher, company, customer));
+    }
+
+    @Override
+    @Transactional
+    public MessageResponseDTO<ChequeVoucherDto> reject(ChequeVoucherRejectRequest request) {
+        if (request == null || request.getId() == null) {
+            return error("Invalid reject request", 400);
+        }
+        if (!StringUtils.hasText(request.getRejectionReason())) {
+            return error("Rejection reason is required", 400);
+        }
+
+        ChequeVoucher voucher = chequeVoucherRepository.findById(request.getId()).orElse(null);
+        if (voucher == null) {
+            return error("Voucher not found", 404);
+        }
+        if (voucher.getStatus() != ChequeVoucherStatus.PENDING_APPROVAL) {
+            return error("Only PENDING_APPROVAL vouchers can be rejected", 400);
+        }
+
+        String actor = normalizeUsername(request.getUsername());
+        voucher.setStatus(ChequeVoucherStatus.REJECTED);
+        voucher.setRejectedBy(actor);
+        voucher.setRejectedDate(LocalDateTime.now());
+        voucher.setRejectionReason(request.getRejectionReason().trim());
+        voucher.setApprovedBy(null);
+        voucher.setApprovedDate(null);
+        voucher.setApprovalRemark(null);
+        if (StringUtils.hasText(actor)) {
+            voucher.setLastModifiedBy(actor);
+        }
+
+        voucher = chequeVoucherRepository.save(voucher);
+        ChequeCompany company = chequeCompanyRepository.findByCodeIgnoreCase(voucher.getCompanyCode()).orElse(null);
+        ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
+        return success("Voucher rejected successfully", toDto(voucher, company, customer));
+    }
+
+    private MessageResponseDTO<ChequeVoucherFilterResultDto> filterListByStatuses(
+            ChequeVoucherFilterRequest request,
+            Set<ChequeVoucherStatus> statuses,
+            String successMessage) {
         List<ChequeVoucher> vouchers = chequeVoucherRepository.findAll();
 
         ChequeVoucherFilterSearch search = request != null ? request.getSearch() : null;
@@ -216,6 +347,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .filter(voucher -> matches(companyCode, voucher.getCompanyCode()))
                 .filter(voucher -> matches(customerCode, voucher.getCustomerCode()))
                 .filter(voucher -> matches(chequeNo, voucher.getChequeNo()))
+                .filter(voucher -> statuses == null || statuses.isEmpty() || statuses.contains(voucher.getStatus()))
                 .filter(voucher -> matchesStatus(status, voucher.getStatus()))
                 .map(voucher -> toListItem(
                         voucher,
@@ -248,7 +380,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
 
         return MessageResponseDTO.<ChequeVoucherFilterResultDto>builder()
                 .success(true)
-                .message("Voucher list filtered successfully")
+                .message(successMessage)
                 .data(result)
                 .errors(null)
                 .errorCode(0)
@@ -261,7 +393,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     public MessageResponseDTO<ChequeVoucherReferenceDataDto> referenceData(ChequeVoucherReferenceDataRequest request) {
         String pageCode = StringUtils.hasText(request != null ? request.getPageCode() : null)
                 ? request.getPageCode().trim().toUpperCase(Locale.ROOT)
-                : PAGE_CODE;
+                : CHVM_PAGE_CODE;
 
         ChequeVoucherPrivilegesDto privileges = resolvePrivileges(request, pageCode);
 
@@ -706,6 +838,14 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .totalAmount(voucher.getTotalAmount())
                 .status(status)
                 .statusDescription(formatStatus(status))
+                .submittedBy(voucher.getSubmittedBy())
+                .submittedDate(voucher.getSubmittedDate())
+                .approvedBy(voucher.getApprovedBy())
+                .approvedDate(voucher.getApprovedDate())
+                .rejectedBy(voucher.getRejectedBy())
+                .rejectedDate(voucher.getRejectedDate())
+                .rejectionReason(voucher.getRejectionReason())
+                .approvalRemark(voucher.getApprovalRemark())
                 .invoices(voucher.getInvoices() != null ? voucher.getInvoices().stream().map(this::toInvoiceDto).toList() : List.of())
                 .createdDate(voucher.getCreatedDate())
                 .lastModifiedDate(voucher.getLastModifiedDate())
@@ -738,6 +878,10 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .totalAmount(voucher.getTotalAmount())
                 .status(status.name())
                 .statusDescription(formatStatus(status))
+                .submittedDate(voucher.getSubmittedDate())
+                .approvedDate(voucher.getApprovedDate())
+                .rejectedDate(voucher.getRejectedDate())
+                .rejectionReason(voucher.getRejectionReason())
                 .createdDate(voucher.getCreatedDate())
                 .lastModifiedDate(voucher.getLastModifiedDate())
                 .createdBy(voucher.getCreatedBy())

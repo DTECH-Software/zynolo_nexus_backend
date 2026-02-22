@@ -2,9 +2,12 @@ package com.zynolo_nexus.cheque_service.service;
 
 import com.zynolo_nexus.cheque_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherCreateRequest;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherApproveRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherExportPdfRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherFilterRequest;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherRejectRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherReferenceDataRequest;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherSubmitForApprovalRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherUpdateRequest;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherFilterResultDto;
@@ -20,6 +23,14 @@ public interface ChequeVoucherService {
     MessageResponseDTO<ChequeVoucherDto> update(ChequeVoucherUpdateRequest request);
 
     MessageResponseDTO<ChequeVoucherFilterResultDto> filterList(ChequeVoucherFilterRequest request);
+
+    MessageResponseDTO<ChequeVoucherFilterResultDto> approvalFilterList(ChequeVoucherFilterRequest request);
+
+    MessageResponseDTO<ChequeVoucherDto> submitForApproval(ChequeVoucherSubmitForApprovalRequest request);
+
+    MessageResponseDTO<ChequeVoucherDto> approve(ChequeVoucherApproveRequest request);
+
+    MessageResponseDTO<ChequeVoucherDto> reject(ChequeVoucherRejectRequest request);
 
     MessageResponseDTO<ChequeVoucherReferenceDataDto> referenceData(ChequeVoucherReferenceDataRequest request);
 

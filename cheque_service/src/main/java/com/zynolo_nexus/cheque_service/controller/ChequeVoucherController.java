@@ -1,10 +1,13 @@
 package com.zynolo_nexus.cheque_service.controller;
 
 import com.zynolo_nexus.cheque_service.dto.api.MessageResponseDTO;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherApproveRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherCreateRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherExportPdfRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherFilterRequest;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherRejectRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherReferenceDataRequest;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherSubmitForApprovalRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherUpdateRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherViewRequest;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherDto;
@@ -46,6 +49,12 @@ public class ChequeVoucherController {
         return chequeVoucherService.view(id);
     }
 
+    @PostMapping("/approval/view")
+    public MessageResponseDTO<ChequeVoucherDto> approvalView(@RequestBody ChequeVoucherViewRequest request) {
+        Long id = request != null ? request.getId() : null;
+        return chequeVoucherService.view(id);
+    }
+
     @PostMapping("/update")
     public MessageResponseDTO<ChequeVoucherDto> update(@RequestBody ChequeVoucherUpdateRequest request) {
         return chequeVoucherService.update(request);
@@ -54,6 +63,28 @@ public class ChequeVoucherController {
     @PostMapping("/filter-list")
     public MessageResponseDTO<ChequeVoucherFilterResultDto> filterList(@RequestBody ChequeVoucherFilterRequest request) {
         return chequeVoucherService.filterList(request);
+    }
+
+    @PostMapping("/approval/filter-list")
+    public MessageResponseDTO<ChequeVoucherFilterResultDto> approvalFilterList(
+            @RequestBody ChequeVoucherFilterRequest request) {
+        return chequeVoucherService.approvalFilterList(request);
+    }
+
+    @PostMapping("/submit-for-approval")
+    public MessageResponseDTO<ChequeVoucherDto> submitForApproval(
+            @RequestBody ChequeVoucherSubmitForApprovalRequest request) {
+        return chequeVoucherService.submitForApproval(request);
+    }
+
+    @PostMapping("/approve")
+    public MessageResponseDTO<ChequeVoucherDto> approve(@RequestBody ChequeVoucherApproveRequest request) {
+        return chequeVoucherService.approve(request);
+    }
+
+    @PostMapping("/reject")
+    public MessageResponseDTO<ChequeVoucherDto> reject(@RequestBody ChequeVoucherRejectRequest request) {
+        return chequeVoucherService.reject(request);
     }
 
     @PostMapping("/reference-data")
