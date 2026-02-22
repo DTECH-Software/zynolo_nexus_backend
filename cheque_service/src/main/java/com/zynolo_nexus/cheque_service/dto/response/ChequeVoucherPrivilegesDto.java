@@ -17,4 +17,5 @@ public class ChequeVoucherPrivilegesDto {
     private boolean search;
     private boolean delete;
     private boolean export;
+    private boolean approve;
 }

@@ -211,7 +211,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     public MessageResponseDTO<ChequeVoucherFilterResultDto> approvalFilterList(ChequeVoucherFilterRequest request) {
         return filterListByStatuses(
                 request,
-                EnumSet.of(ChequeVoucherStatus.PENDING_APPROVAL),
+                EnumSet.of(ChequeVoucherStatus.PENDING_APPROVAL, ChequeVoucherStatus.APPROVED),
                 "Voucher approval list filtered successfully");
     }
 
@@ -766,6 +766,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                     .search(hasTask(taskAccess, "SEARCH", "FILTER", "LIST"))
                     .delete(hasTask(taskAccess, "DELETE", "REMOVE", "DEACTIVATE"))
                     .export(hasTask(taskAccess, "EXPORT", "DOWNLOAD", "PDF"))
+                    .approve(hasTask(taskAccess, "APPROVE", "AUTHORIZE", "AUTH"))
                     .build();
         } catch (Exception ex) {
             return emptyPrivileges();
@@ -954,6 +955,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .search(false)
                 .delete(false)
                 .export(false)
+                .approve(false)
                 .build();
     }
 
