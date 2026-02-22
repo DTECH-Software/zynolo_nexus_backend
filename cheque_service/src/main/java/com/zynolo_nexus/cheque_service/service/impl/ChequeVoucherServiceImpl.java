@@ -305,11 +305,12 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     @Override
     @Transactional(readOnly = true)
     public MessageResponseDTO<ChequeVoucherPdfDto> exportPdf(ChequeVoucherExportPdfRequest request) {
-        if (request == null || request.getVoucherId() == null) {
+        Long voucherId = resolveVoucherId(request);
+        if (voucherId == null) {
             return pdfError("Invalid voucher export request", 400);
         }
 
-        ChequeVoucher voucher = chequeVoucherRepository.findById(request.getVoucherId()).orElse(null);
+        ChequeVoucher voucher = chequeVoucherRepository.findById(voucherId).orElse(null);
         if (voucher == null) {
             return pdfError("Voucher not found", 404);
         }
@@ -320,7 +321,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
 
         try {
             JasperReport report = getOrLoadVoucherReport();
-            Map<String, Object> params = buildVoucherReportParams(dto);
+            Map<String, Object> params = buildVoucherReportParams(dto, company, customer);
             JRBeanCollectionDataSource dataSource = new JRBeanCollectionDataSource(buildVoucherRows(dto));
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(report, params, dataSource);
@@ -343,6 +344,16 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         } catch (Exception ex) {
             return pdfError("Unable to export voucher PDF", 500);
         }
+    }
+
+    private Long resolveVoucherId(ChequeVoucherExportPdfRequest request) {
+        if (request == null) {
+            return null;
+        }
+        if (request.getVoucherId() != null) {
+            return request.getVoucherId();
+        }
+        return request.getId();
     }
 
     private String safe(String value) {
@@ -371,17 +382,110 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
     }
 
-    private Map<String, Object> buildVoucherReportParams(ChequeVoucherDto dto) {
+    private Map<String, Object> buildVoucherReportParams(
+            ChequeVoucherDto dto,
+            ChequeCompany company,
+            ChequeCustomer customer) {
         Map<String, Object> params = new HashMap<>();
         params.put("voucherNo", safe(dto.getVoucherNo()));
-        params.put("company", safe(dto.getCompanyCode()) + " - " + safe(dto.getCompanyDescription()));
-        params.put("customer", safe(dto.getCustomerCode()) + " - " + safe(dto.getCustomerDescription()));
+        params.put("voucherDate", dto.getCreatedDate() != null
+                ? dto.getCreatedDate().toLocalDate().toString()
+                : LocalDate.now().toString());
+        params.put("companyName", company != null ? safe(company.getDescription()) : safe(dto.getCompanyDescription()));
+        params.put("companyAddress", buildCompanyAddress(company));
+        params.put("companyPhone", company != null ? safe(company.getPhoneNumber()) : "");
+        params.put("payer", customer != null ? "M/s " + safe(customer.getDescription()) : safe(dto.getCustomerDescription()));
         params.put("chequeNo", safe(dto.getChequeNo()));
         params.put("voucherDescription", safe(dto.getDescription()));
         params.put("status", safe(dto.getStatusDescription()));
         params.put("totalAmount", dto.getTotalAmount() != null ? dto.getTotalAmount().toPlainString() : "0.00");
+        params.put("amountInWords", amountToWords(dto.getTotalAmount()));
         params.put("printedAt", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         return params;
+    }
+
+    private String buildCompanyAddress(ChequeCompany company) {
+        if (company == null) {
+            return "";
+        }
+        List<String> parts = new ArrayList<>();
+        if (StringUtils.hasText(company.getStreet1())) {
+            parts.add(company.getStreet1().trim());
+        }
+        if (StringUtils.hasText(company.getStreet2())) {
+            parts.add(company.getStreet2().trim());
+        }
+        if (StringUtils.hasText(company.getCity())) {
+            parts.add(company.getCity().trim());
+        }
+        if (StringUtils.hasText(company.getState())) {
+            parts.add(company.getState().trim());
+        }
+        if (StringUtils.hasText(company.getCountry())) {
+            parts.add(company.getCountry().trim());
+        }
+        if (StringUtils.hasText(company.getZipCode())) {
+            parts.add(company.getZipCode().trim());
+        }
+        return String.join(", ", parts);
+    }
+
+    private String amountToWords(BigDecimal amount) {
+        if (amount == null) {
+            return "ZERO ONLY";
+        }
+        long value = amount.setScale(0, RoundingMode.HALF_UP).longValue();
+        if (value == 0) {
+            return "ZERO ONLY";
+        }
+        return numberToWords(value).trim().toUpperCase(Locale.ROOT) + " ONLY";
+    }
+
+    private String numberToWords(long number) {
+        if (number == 0) {
+            return "zero";
+        }
+
+        String[] tensNames = {
+                "", " ten", " twenty", " thirty", " forty", " fifty",
+                " sixty", " seventy", " eighty", " ninety"
+        };
+        String[] numNames = {
+                "", " one", " two", " three", " four", " five", " six", " seven",
+                " eight", " nine", " ten", " eleven", " twelve", " thirteen", " fourteen",
+                " fifteen", " sixteen", " seventeen", " eighteen", " nineteen"
+        };
+
+        StringBuilder words = new StringBuilder();
+        long[] divisors = {1_000_000_000L, 1_000_000L, 1_000L, 1L};
+        String[] labels = {" billion", " million", " thousand", ""};
+
+        for (int i = 0; i < divisors.length; i++) {
+            long divisor = divisors[i];
+            int chunk = (int) (number / divisor);
+            if (chunk > 0) {
+                words.append(threeDigitToWords(chunk, numNames, tensNames)).append(labels[i]);
+                number %= divisor;
+            }
+        }
+        return words.toString().replaceAll("\\s+", " ").trim();
+    }
+
+    private String threeDigitToWords(int number, String[] numNames, String[] tensNames) {
+        String current;
+        if (number % 100 < 20) {
+            current = numNames[number % 100];
+            number /= 100;
+        } else {
+            current = numNames[number % 10];
+            number /= 10;
+            current = tensNames[number % 10] + current;
+            number /= 10;
+        }
+        if (number == 0) {
+            return current;
+        }
+        return numNames[number] + " hundred" + current;
     }
 
     private List<VoucherInvoiceRow> buildVoucherRows(ChequeVoucherDto dto) {

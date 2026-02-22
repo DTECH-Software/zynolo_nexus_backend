@@ -10,5 +10,6 @@ public class ChequeVoucherExportPdfRequest {
     private String message;
     private String userAgent;
     private String username;
+    private Long id;
     private Long voucherId;
 }

@@ -8,16 +8,20 @@
               columnWidth="535"
               leftMargin="30"
               rightMargin="30"
-              topMargin="30"
-              bottomMargin="30"
+              topMargin="25"
+              bottomMargin="25"
               uuid="f9ea4f26-0a03-4f9d-b73a-7558fe8d2cb4">
 
     <parameter name="voucherNo" class="java.lang.String"/>
-    <parameter name="company" class="java.lang.String"/>
-    <parameter name="customer" class="java.lang.String"/>
+    <parameter name="voucherDate" class="java.lang.String"/>
+    <parameter name="companyName" class="java.lang.String"/>
+    <parameter name="companyAddress" class="java.lang.String"/>
+    <parameter name="companyPhone" class="java.lang.String"/>
+    <parameter name="payer" class="java.lang.String"/>
     <parameter name="chequeNo" class="java.lang.String"/>
     <parameter name="voucherDescription" class="java.lang.String"/>
     <parameter name="status" class="java.lang.String"/>
+    <parameter name="amountInWords" class="java.lang.String"/>
     <parameter name="totalAmount" class="java.lang.String"/>
     <parameter name="printedAt" class="java.lang.String"/>
 
@@ -27,121 +31,228 @@
     <field name="amount" class="java.math.BigDecimal"/>
 
     <title>
-        <band height="140">
-            <staticText>
-                <reportElement x="0" y="0" width="535" height="22"/>
+        <band height="175">
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="535" height="18"/>
                 <textElement textAlignment="Center">
-                    <font size="16" isBold="true"/>
+                    <font size="13" isBold="true"/>
                 </textElement>
-                <text><![CDATA[Cheque Voucher]]></text>
+                <textFieldExpression><![CDATA[$P{companyName}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="20" width="535" height="16"/>
+                <textElement textAlignment="Center">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{companyAddress}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="38" width="535" height="16"/>
+                <textElement textAlignment="Center">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{companyPhone}]]></textFieldExpression>
+            </textField>
+
+            <staticText>
+                <reportElement x="0" y="60" width="535" height="22"/>
+                <textElement textAlignment="Center">
+                    <font size="14" isBold="true"/>
+                </textElement>
+                <text><![CDATA[PAYMENT VOUCHER]]></text>
             </staticText>
 
-            <textField>
-                <reportElement x="0" y="30" width="260" height="16"/>
-                <textFieldExpression><![CDATA["Voucher No: " + $P{voucherNo}]]></textFieldExpression>
-            </textField>
-            <textField>
-                <reportElement x="270" y="30" width="265" height="16"/>
-                <textFieldExpression><![CDATA["Status: " + $P{status}]]></textFieldExpression>
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="90" width="350" height="16"/>
+                <textElement>
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["PAYER : " + $P{payer}]]></textFieldExpression>
             </textField>
 
-            <textField>
-                <reportElement x="0" y="48" width="535" height="16"/>
-                <textFieldExpression><![CDATA["Company: " + $P{company}]]></textFieldExpression>
+            <textField isBlankWhenNull="true">
+                <reportElement x="350" y="90" width="185" height="16"/>
+                <textElement textAlignment="Right">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Voucher No: " + $P{voucherNo}]]></textFieldExpression>
             </textField>
-            <textField>
-                <reportElement x="0" y="66" width="535" height="16"/>
-                <textFieldExpression><![CDATA["Customer: " + $P{customer}]]></textFieldExpression>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="350" y="108" width="185" height="16"/>
+                <textElement textAlignment="Right">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Date: " + $P{voucherDate}]]></textFieldExpression>
             </textField>
-            <textField>
-                <reportElement x="0" y="84" width="260" height="16"/>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="126" width="350" height="16"/>
+                <textElement>
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{voucherDescription}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="350" y="126" width="185" height="16"/>
+                <textElement textAlignment="Right">
+                    <font size="10"/>
+                </textElement>
                 <textFieldExpression><![CDATA["Cheque No: " + $P{chequeNo}]]></textFieldExpression>
-            </textField>
-            <textField>
-                <reportElement x="0" y="102" width="535" height="16"/>
-                <textFieldExpression><![CDATA["Description: " + $P{voucherDescription}]]></textFieldExpression>
             </textField>
         </band>
     </title>
 
     <columnHeader>
-        <band height="20">
+        <band height="24">
             <staticText>
-                <reportElement x="0" y="0" width="90" height="20" mode="Opaque" backcolor="#E8E8E8"/>
-                <textElement textAlignment="Center">
-                    <font isBold="true"/>
-                </textElement>
-                <text><![CDATA[Date]]></text>
-            </staticText>
-            <staticText>
-                <reportElement x="90" y="0" width="120" height="20" mode="Opaque" backcolor="#E8E8E8"/>
-                <textElement textAlignment="Center">
+                <reportElement x="0" y="0" width="120" height="24" mode="Opaque" backcolor="#EFEFEF"/>
+                <box>
+                    <pen lineWidth="0.5"/>
+                </box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font isBold="true"/>
                 </textElement>
                 <text><![CDATA[Invoice No]]></text>
             </staticText>
             <staticText>
-                <reportElement x="210" y="0" width="235" height="20" mode="Opaque" backcolor="#E8E8E8"/>
-                <textElement textAlignment="Center">
+                <reportElement x="120" y="0" width="110" height="24" mode="Opaque" backcolor="#EFEFEF"/>
+                <box>
+                    <pen lineWidth="0.5"/>
+                </box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font isBold="true"/>
                 </textElement>
-                <text><![CDATA[Description]]></text>
+                <text><![CDATA[Invoice Date]]></text>
             </staticText>
             <staticText>
-                <reportElement x="445" y="0" width="90" height="20" mode="Opaque" backcolor="#E8E8E8"/>
-                <textElement textAlignment="Center">
+                <reportElement x="230" y="0" width="215" height="24" mode="Opaque" backcolor="#EFEFEF"/>
+                <box>
+                    <pen lineWidth="0.5"/>
+                </box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font isBold="true"/>
                 </textElement>
-                <text><![CDATA[Amount]]></text>
+                <text><![CDATA[Details / Description]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="445" y="0" width="90" height="24" mode="Opaque" backcolor="#EFEFEF"/>
+                <box>
+                    <pen lineWidth="0.5"/>
+                </box>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[Amount (Rs)]]></text>
             </staticText>
         </band>
     </columnHeader>
 
     <detail>
-        <band height="18">
-            <textField>
-                <reportElement x="0" y="0" width="90" height="18"/>
-                <textFieldExpression><![CDATA[$F{invoiceDate}]]></textFieldExpression>
-            </textField>
-            <textField>
-                <reportElement x="90" y="0" width="120" height="18"/>
+        <band height="22">
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="0" width="120" height="22"/>
+                <box>
+                    <pen lineWidth="0.5"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
                 <textFieldExpression><![CDATA[$F{invoiceNo}]]></textFieldExpression>
             </textField>
-            <textField>
-                <reportElement x="210" y="0" width="235" height="18"/>
+            <textField isBlankWhenNull="true">
+                <reportElement x="120" y="0" width="110" height="22"/>
+                <box>
+                    <pen lineWidth="0.5"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$F{invoiceDate}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement x="230" y="0" width="215" height="22"/>
+                <box>
+                    <pen lineWidth="0.5"/>
+                </box>
+                <textElement verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
                 <textFieldExpression><![CDATA[$F{invoiceDescription}]]></textFieldExpression>
             </textField>
             <textField pattern="#,##0.00">
-                <reportElement x="445" y="0" width="90" height="18"/>
-                <textElement textAlignment="Right"/>
+                <reportElement x="445" y="0" width="90" height="22"/>
+                <box>
+                    <pen lineWidth="0.5"/>
+                </box>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="10"/>
+                </textElement>
                 <textFieldExpression><![CDATA[$F{amount}]]></textFieldExpression>
             </textField>
         </band>
     </detail>
 
     <summary>
-        <band height="55">
-            <line>
-                <reportElement x="0" y="0" width="535" height="1"/>
-            </line>
-            <textField>
-                <reportElement x="320" y="8" width="120" height="18"/>
-                <textElement textAlignment="Right">
-                    <font isBold="true"/>
+        <band height="95">
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="8" width="385" height="18"/>
+                <textElement>
+                    <font size="10" isBold="true"/>
                 </textElement>
-                <textFieldExpression><![CDATA["Total:"]]></textFieldExpression>
+                <textFieldExpression><![CDATA[$P{amountInWords}]]></textFieldExpression>
             </textField>
             <textField>
+                <reportElement x="385" y="8" width="60" height="18"/>
+                <textElement textAlignment="Right">
+                    <font size="10" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Total Amount"]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
                 <reportElement x="445" y="8" width="90" height="18"/>
                 <textElement textAlignment="Right">
-                    <font isBold="true"/>
+                    <font size="10" isBold="true"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{totalAmount}]]></textFieldExpression>
             </textField>
-            <textField>
-                <reportElement x="0" y="34" width="535" height="16"/>
+
+            <staticText>
+                <reportElement x="0" y="48" width="130" height="18"/>
+                <textElement textAlignment="Center">
+                    <font size="10"/>
+                </textElement>
+                <text><![CDATA[Prepared By]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="135" y="48" width="130" height="18"/>
+                <textElement textAlignment="Center">
+                    <font size="10"/>
+                </textElement>
+                <text><![CDATA[Checked By]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="270" y="48" width="130" height="18"/>
+                <textElement textAlignment="Center">
+                    <font size="10"/>
+                </textElement>
+                <text><![CDATA[Authorised By]]></text>
+            </staticText>
+            <staticText>
+                <reportElement x="405" y="48" width="130" height="18"/>
+                <textElement textAlignment="Center">
+                    <font size="10"/>
+                </textElement>
+                <text><![CDATA[Received By]]></text>
+            </staticText>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="0" y="76" width="535" height="14"/>
                 <textElement textAlignment="Right">
-                    <font size="9"/>
+                    <font size="8"/>
                 </textElement>
                 <textFieldExpression><![CDATA["Printed At: " + $P{printedAt}]]></textFieldExpression>
             </textField>

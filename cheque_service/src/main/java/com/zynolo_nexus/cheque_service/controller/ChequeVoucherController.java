@@ -14,6 +14,7 @@ import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherReferenceDataDt
 import com.zynolo_nexus.cheque_service.service.ChequeVoucherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -64,14 +65,24 @@ public class ChequeVoucherController {
     }
 
     @PostMapping("/export-pdf-download")
-    public ResponseEntity<byte[]> exportPdfDownload(@RequestBody ChequeVoucherExportPdfRequest request) {
+    public ResponseEntity<?> exportPdfDownload(@RequestBody ChequeVoucherExportPdfRequest request) {
+        normalizeExportRequest(request);
         MessageResponseDTO<ChequeVoucherPdfDto> response = chequeVoucherService.exportPdf(request);
-        if (response == null || !response.isSuccess() || response.getData() == null
-                || !StringUtils.hasText(response.getData().getDoc())) {
-            return ResponseEntity.badRequest().build();
+        if (response == null) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+        if (!response.isSuccess() || response.getData() == null || !StringUtils.hasText(response.getData().getDoc())) {
+            int code = response.getErrorCode() > 0 ? response.getErrorCode() : 400;
+            HttpStatus status = HttpStatus.resolve(code);
+            return ResponseEntity.status(status != null ? status : HttpStatus.BAD_REQUEST).body(response);
         }
 
-        byte[] pdfBytes = Base64.getDecoder().decode(response.getData().getDoc());
+        byte[] pdfBytes;
+        try {
+            pdfBytes = Base64.getDecoder().decode(response.getData().getDoc());
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
         String fileName = StringUtils.hasText(response.getData().getFileName())
                 ? response.getData().getFileName()
                 : "voucher.pdf";
@@ -81,5 +92,14 @@ public class ChequeVoucherController {
                 .contentLength(pdfBytes.length)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
                 .body(pdfBytes);
+    }
+
+    private void normalizeExportRequest(ChequeVoucherExportPdfRequest request) {
+        if (request == null) {
+            return;
+        }
+        if (request.getVoucherId() == null && request.getId() != null) {
+            request.setVoucherId(request.getId());
+        }
     }
 }
