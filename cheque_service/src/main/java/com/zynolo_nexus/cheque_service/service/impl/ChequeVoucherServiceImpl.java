@@ -343,7 +343,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                     .errorCode(0)
                     .responseTime(LocalDateTime.now())
                     .build();
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             log.error("Unable to export voucher PDF for voucherId={}", voucherId, ex);
             return pdfError("Unable to export voucher PDF", 500, rootCauseMessage(ex));
         }

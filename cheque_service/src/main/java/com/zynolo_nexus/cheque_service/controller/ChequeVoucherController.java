@@ -13,6 +13,7 @@ import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherPdfDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherReferenceDataDto;
 import com.zynolo_nexus.cheque_service.service.ChequeVoucherService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,10 +25,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Base64;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/v1/cheque/vouchers")
 @RequiredArgsConstructor
+@Slf4j
 public class ChequeVoucherController {
 
     private final ChequeVoucherService chequeVoucherService;
@@ -66,32 +69,45 @@ public class ChequeVoucherController {
 
     @PostMapping("/export-pdf-download")
     public ResponseEntity<?> exportPdfDownload(@RequestBody ChequeVoucherExportPdfRequest request) {
-        normalizeExportRequest(request);
-        MessageResponseDTO<ChequeVoucherPdfDto> response = chequeVoucherService.exportPdf(request);
-        if (response == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-        if (!response.isSuccess() || response.getData() == null || !StringUtils.hasText(response.getData().getDoc())) {
-            int code = response.getErrorCode() > 0 ? response.getErrorCode() : 400;
-            HttpStatus status = HttpStatus.resolve(code);
-            return ResponseEntity.status(status != null ? status : HttpStatus.BAD_REQUEST).body(response);
-        }
-
-        byte[] pdfBytes;
         try {
-            pdfBytes = Base64.getDecoder().decode(response.getData().getDoc());
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-        String fileName = StringUtils.hasText(response.getData().getFileName())
-                ? response.getData().getFileName()
-                : "voucher.pdf";
+            normalizeExportRequest(request);
+            MessageResponseDTO<ChequeVoucherPdfDto> response = chequeVoucherService.exportPdf(request);
+            if (response == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+            if (!response.isSuccess() || response.getData() == null || !StringUtils.hasText(response.getData().getDoc())) {
+                int code = response.getErrorCode() > 0 ? response.getErrorCode() : 400;
+                HttpStatus status = HttpStatus.resolve(code);
+                return ResponseEntity.status(status != null ? status : HttpStatus.BAD_REQUEST).body(response);
+            }
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_PDF)
-                .contentLength(pdfBytes.length)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                .body(pdfBytes);
+            byte[] pdfBytes;
+            try {
+                pdfBytes = Base64.getDecoder().decode(response.getData().getDoc());
+            } catch (IllegalArgumentException ex) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
+            String fileName = StringUtils.hasText(response.getData().getFileName())
+                    ? response.getData().getFileName()
+                    : "voucher.pdf";
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .contentLength(pdfBytes.length)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .body(pdfBytes);
+        } catch (Throwable ex) {
+            log.error("Unhandled error in export-pdf-download", ex);
+            MessageResponseDTO<ChequeVoucherPdfDto> error = MessageResponseDTO.<ChequeVoucherPdfDto>builder()
+                    .success(false)
+                    .message("Unable to export voucher PDF")
+                    .data(null)
+                    .errors(ex.getMessage())
+                    .errorCode(500)
+                    .responseTime(LocalDateTime.now())
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
     private void normalizeExportRequest(ChequeVoucherExportPdfRequest request) {
