@@ -1037,9 +1037,14 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         params.put("dateDay", String.format("%02d", chequeDate.getDayOfMonth()));
         params.put("dateMonth", String.format("%02d", chequeDate.getMonthValue()));
         params.put("dateYear", String.valueOf(chequeDate.getYear()));
-        params.put("customerName", safe(customerName));
-        params.put("amountNumber", formatCurrency(amount));
-        params.put("amountWords", amountToWords(amount));
+        params.put("customerName", wrapWithStars(safe(customerName)));
+        params.put("amountNumber", wrapWithStars(formatCurrency(amount)));
+        String amountWords = wrapWithStars(amountToWords(amount));
+        List<String> amountLines = splitTextIntoLines(amountWords, 40, 3);
+        params.put("amountWords", amountWords);
+        params.put("amountWordsLine1", amountLines.get(0));
+        params.put("amountWordsLine2", amountLines.get(1));
+        params.put("amountWordsLine3", amountLines.get(2));
         return params;
     }
 
@@ -1050,6 +1055,63 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         symbols.setGroupingSeparator(',');
         DecimalFormat format = new DecimalFormat("#,##0.00", symbols);
         return format.format(value);
+    }
+
+    private String wrapWithStars(String value) {
+        if (!StringUtils.hasText(value)) {
+            return "";
+        }
+        return "**" + value.trim() + "**";
+    }
+
+    private List<String> splitTextIntoLines(String text, int maxCharsPerLine, int maxLines) {
+        if (maxLines <= 0) {
+            return List.of();
+        }
+        List<String> lines = new ArrayList<>();
+        if (!StringUtils.hasText(text)) {
+            for (int i = 0; i < maxLines; i++) {
+                lines.add("");
+            }
+            return lines;
+        }
+
+        String[] words = text.trim().replaceAll("\\s+", " ").split(" ");
+        StringBuilder current = new StringBuilder();
+
+        for (String word : words) {
+            if (lines.size() == maxLines - 1) {
+                if (current.length() > 0) {
+                    current.append(' ');
+                }
+                current.append(word);
+                continue;
+            }
+
+            if (current.isEmpty()) {
+                current.append(word);
+                continue;
+            }
+
+            if (current.length() + 1 + word.length() <= maxCharsPerLine) {
+                current.append(' ').append(word);
+            } else {
+                lines.add(current.toString());
+                current = new StringBuilder(word);
+            }
+        }
+
+        if (!current.isEmpty()) {
+            lines.add(current.toString());
+        }
+
+        while (lines.size() < maxLines) {
+            lines.add("");
+        }
+        if (lines.size() > maxLines) {
+            return lines.subList(0, maxLines);
+        }
+        return lines;
     }
 
     private MessageResponseDTO<ChequeReprintRequestDto> reprintSuccess(String message, ChequeReprintRequestDto data) {
