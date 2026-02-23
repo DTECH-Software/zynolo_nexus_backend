@@ -24,7 +24,8 @@ public class ChequeVoucherDto {
     private String customerCode;
     private String customerDescription;
     private String chequeNo;
-    private String chequeBankName;
+    private String bankCode;
+    private String bankName;
     private String chequeType;
     private LocalDate chequeDate;
     private String description;

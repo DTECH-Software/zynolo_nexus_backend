@@ -49,8 +49,8 @@ public class ChequeVoucher {
     @Column(name = "cheque_no", nullable = false, length = 100)
     private String chequeNo;
 
-    @Column(name = "cheque_bank_name", nullable = false, length = 150)
-    private String chequeBankName;
+    @Column(name = "bank_code", length = 50)
+    private String bankCode;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "cheque_type", length = 20)

@@ -12,6 +12,7 @@ import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherRejectRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherReferenceDataRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherSubmitForApprovalRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherUpdateRequest;
+import com.zynolo_nexus.cheque_service.dto.response.ChequeReferenceBankDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeReferenceCompanyDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeReferenceCustomerDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeReferenceStatusDto;
@@ -22,15 +23,18 @@ import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherListItemDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherPdfDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherPrivilegesDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherReferenceDataDto;
+import com.zynolo_nexus.cheque_service.enums.ChequeBankStatus;
 import com.zynolo_nexus.cheque_service.enums.ChequeType;
 import com.zynolo_nexus.cheque_service.enums.ChequeCompanyStatus;
 import com.zynolo_nexus.cheque_service.enums.ChequeCustomerStatus;
 import com.zynolo_nexus.cheque_service.enums.ChequeVoucherStatus;
+import com.zynolo_nexus.cheque_service.model.ChequeBank;
 import com.zynolo_nexus.cheque_service.model.ChequeCompany;
 import com.zynolo_nexus.cheque_service.model.ChequeCustomer;
 import com.zynolo_nexus.cheque_service.model.ChequeVoucher;
 import com.zynolo_nexus.cheque_service.model.ChequeVoucherInvoice;
 import com.zynolo_nexus.cheque_service.model.UserAccount;
+import com.zynolo_nexus.cheque_service.repository.ChequeBankRepository;
 import com.zynolo_nexus.cheque_service.repository.ChequeCompanyRepository;
 import com.zynolo_nexus.cheque_service.repository.ChequeCustomerRepository;
 import com.zynolo_nexus.cheque_service.repository.ChequeVoucherRepository;
@@ -75,6 +79,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     private static final String VOUCHER_REPORT_PATH = "/reports/cheque-voucher.jrxml";
 
     private final ChequeVoucherRepository chequeVoucherRepository;
+    private final ChequeBankRepository chequeBankRepository;
     private final ChequeCompanyRepository chequeCompanyRepository;
     private final ChequeCustomerRepository chequeCustomerRepository;
     private final UserAccountRepository userAccountRepository;
@@ -97,6 +102,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         ChequeCustomer customer = resolveActiveCustomer(request.getCustomerCode());
         if (customer == null) {
             return error("Customer not found or inactive", 400);
+        }
+
+        ChequeBank bank = resolveActiveBank(request.getBankCode());
+        if (bank == null) {
+            return error("Bank not found or inactive", 400);
         }
 
         if (!isValidInvoiceLines(request.getInvoices())) {
@@ -122,7 +132,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .companyCode(company.getCode())
                 .customerCode(customer.getCode())
                 .chequeNo(request.getChequeNo().trim())
-                .chequeBankName(request.getChequeBankName().trim())
+                .bankCode(bank.getCode())
                 .chequeType(chequeType)
                 .chequeDate(chequeDate)
                 .description(trimToNull(request.getDescription()))
@@ -137,7 +147,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         voucher.getInvoices().addAll(invoices);
 
         voucher = chequeVoucherRepository.save(voucher);
-        return success("Voucher created successfully", toDto(voucher, company, customer));
+        return success("Voucher created successfully", toDto(voucher, company, customer, bank));
     }
 
     @Override
@@ -154,7 +164,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
 
         ChequeCompany company = chequeCompanyRepository.findByCodeIgnoreCase(voucher.getCompanyCode()).orElse(null);
         ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
-        return success("Voucher found with ID: " + id, toDto(voucher, company, customer));
+        ChequeBank bank = resolveBank(voucher.getBankCode());
+        return success("Voucher found with ID: " + id, toDto(voucher, company, customer, bank));
     }
 
     @Override
@@ -176,7 +187,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         if (!StringUtils.hasText(request.getCompanyCode())
                 || !StringUtils.hasText(request.getCustomerCode())
                 || !StringUtils.hasText(request.getChequeNo())
-                || !StringUtils.hasText(request.getChequeBankName())
+                || !StringUtils.hasText(request.getBankCode())
                 || !StringUtils.hasText(request.getChequeType())
                 || !isValidInvoiceLines(request.getInvoices())) {
             return error("Invalid voucher update request", 400);
@@ -192,6 +203,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             return error("Customer not found or inactive", 400);
         }
 
+        ChequeBank bank = resolveActiveBank(request.getBankCode());
+        if (bank == null) {
+            return error("Bank not found or inactive", 400);
+        }
+
         ChequeType chequeType = resolveChequeType(request.getChequeType());
         if (chequeType == null) {
             return error("Invalid cheque type. Allowed values: NORMAL, DATED", 400);
@@ -205,7 +221,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         voucher.setCompanyCode(company.getCode());
         voucher.setCustomerCode(customer.getCode());
         voucher.setChequeNo(request.getChequeNo().trim());
-        voucher.setChequeBankName(request.getChequeBankName().trim());
+        voucher.setBankCode(bank.getCode());
         voucher.setChequeType(chequeType);
         voucher.setChequeDate(chequeDate);
         voucher.setDescription(trimToNull(request.getDescription()));
@@ -223,7 +239,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         voucher.getInvoices().addAll(buildInvoices(voucher, request.getInvoices()));
 
         voucher = chequeVoucherRepository.save(voucher);
-        return success("Voucher updated successfully", toDto(voucher, company, customer));
+        return success("Voucher updated successfully", toDto(voucher, company, customer, bank));
     }
 
     @Override
@@ -279,7 +295,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         voucher = chequeVoucherRepository.save(voucher);
         ChequeCompany company = chequeCompanyRepository.findByCodeIgnoreCase(voucher.getCompanyCode()).orElse(null);
         ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
-        return success("Voucher submitted for approval successfully", toDto(voucher, company, customer));
+        ChequeBank bank = resolveBank(voucher.getBankCode());
+        return success("Voucher submitted for approval successfully", toDto(voucher, company, customer, bank));
     }
 
     @Override
@@ -312,7 +329,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         voucher = chequeVoucherRepository.save(voucher);
         ChequeCompany company = chequeCompanyRepository.findByCodeIgnoreCase(voucher.getCompanyCode()).orElse(null);
         ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
-        return success("Voucher approved successfully", toDto(voucher, company, customer));
+        ChequeBank bank = resolveBank(voucher.getBankCode());
+        return success("Voucher approved successfully", toDto(voucher, company, customer, bank));
     }
 
     @Override
@@ -348,7 +366,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         voucher = chequeVoucherRepository.save(voucher);
         ChequeCompany company = chequeCompanyRepository.findByCodeIgnoreCase(voucher.getCompanyCode()).orElse(null);
         ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
-        return success("Voucher rejected successfully", toDto(voucher, company, customer));
+        ChequeBank bank = resolveBank(voucher.getBankCode());
+        return success("Voucher rejected successfully", toDto(voucher, company, customer, bank));
     }
 
     private MessageResponseDTO<ChequeVoucherFilterResultDto> filterListByStatuses(
@@ -362,7 +381,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         String companyCode = normalize(search != null ? search.getCompanyCode() : null);
         String customerCode = normalize(search != null ? search.getCustomerCode() : null);
         String chequeNo = normalize(search != null ? search.getChequeNo() : null);
-        String chequeBankName = normalize(search != null ? search.getChequeBankName() : null);
+        String bankCode = normalize(search != null ? search.getBankCode() : null);
         String chequeType = normalize(search != null ? search.getChequeType() : null);
         String status = normalize(search != null ? search.getStatus() : null);
 
@@ -372,20 +391,24 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         Map<String, String> customerDescriptions = new HashMap<>();
         chequeCustomerRepository.findAll()
                 .forEach(customer -> customerDescriptions.put(customer.getCode(), customer.getDescription()));
+        Map<String, String> bankNames = new HashMap<>();
+        chequeBankRepository.findAll()
+                .forEach(bank -> bankNames.put(bank.getCode(), bank.getName()));
 
         List<ChequeVoucherListItemDto> filtered = vouchers.stream()
                 .filter(voucher -> matches(voucherNo, voucher.getVoucherNo()))
                 .filter(voucher -> matches(companyCode, voucher.getCompanyCode()))
                 .filter(voucher -> matches(customerCode, voucher.getCustomerCode()))
                 .filter(voucher -> matches(chequeNo, voucher.getChequeNo()))
-                .filter(voucher -> matches(chequeBankName, voucher.getChequeBankName()))
+                .filter(voucher -> matches(bankCode, voucher.getBankCode()))
                 .filter(voucher -> matchesChequeType(chequeType, voucher.getChequeType()))
                 .filter(voucher -> statuses == null || statuses.isEmpty() || statuses.contains(voucher.getStatus()))
                 .filter(voucher -> matchesStatus(status, voucher.getStatus()))
                 .map(voucher -> toListItem(
                         voucher,
                         companyDescriptions.get(voucher.getCompanyCode()),
-                        customerDescriptions.get(voucher.getCustomerCode())))
+                        customerDescriptions.get(voucher.getCustomerCode()),
+                        bankNames.get(voucher.getBankCode())))
                 .toList();
 
         Comparator<ChequeVoucherListItemDto> comparator = resolveComparator(
@@ -446,6 +469,14 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                         .build())
                 .toList();
 
+        List<ChequeReferenceBankDto> banks = chequeBankRepository.findAllByStatusOrderByCodeAsc(ChequeBankStatus.ACTIVE)
+                .stream()
+                .map(bank -> ChequeReferenceBankDto.builder()
+                        .code(bank.getCode())
+                        .name(bank.getName())
+                        .build())
+                .toList();
+
         ChequeVoucherReferenceDataDto data = ChequeVoucherReferenceDataDto.builder()
                 .defaultStatus(List.of(
                         ChequeReferenceStatusDto.builder().code("DRAFT").description("Draft").build(),
@@ -460,6 +491,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 ))
                 .companies(companies)
                 .customers(customers)
+                .banks(banks)
                 .privileges(privileges)
                 .build();
 
@@ -488,7 +520,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
 
         ChequeCompany company = chequeCompanyRepository.findByCodeIgnoreCase(voucher.getCompanyCode()).orElse(null);
         ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
-        ChequeVoucherDto dto = toDto(voucher, company, customer);
+        ChequeBank bank = resolveBank(voucher.getBankCode());
+        ChequeVoucherDto dto = toDto(voucher, company, customer, bank);
 
         try {
             JasperReport report = getOrLoadVoucherReport();
@@ -568,7 +601,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         params.put("companyPhone", company != null ? safe(company.getPhoneNumber()) : "");
         params.put("payer", customer != null ? "M/s " + safe(customer.getDescription()) : safe(dto.getCustomerDescription()));
         params.put("chequeNo", safe(dto.getChequeNo()));
-        params.put("chequeBankName", safe(dto.getChequeBankName()));
+        params.put("chequeBankName", safe(StringUtils.hasText(dto.getBankName()) ? dto.getBankName() : dto.getBankCode()));
         params.put("chequeType", safe(dto.getChequeType()));
         params.put("chequeDate", dto.getChequeDate() != null ? dto.getChequeDate().toString() : "");
         params.put("voucherDescription", safe(dto.getDescription()));
@@ -684,7 +717,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 && StringUtils.hasText(request.getCompanyCode())
                 && StringUtils.hasText(request.getCustomerCode())
                 && StringUtils.hasText(request.getChequeNo())
-                && StringUtils.hasText(request.getChequeBankName())
+                && StringUtils.hasText(request.getBankCode())
                 && StringUtils.hasText(request.getChequeType())
                 && request.getInvoices() != null
                 && !request.getInvoices().isEmpty();
@@ -747,6 +780,24 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             return null;
         }
         return customer;
+    }
+
+    private ChequeBank resolveActiveBank(String bankCode) {
+        if (!StringUtils.hasText(bankCode)) {
+            return null;
+        }
+        ChequeBank bank = chequeBankRepository.findByCodeIgnoreCase(bankCode.trim()).orElse(null);
+        if (bank == null || bank.getStatus() != ChequeBankStatus.ACTIVE) {
+            return null;
+        }
+        return bank;
+    }
+
+    private ChequeBank resolveBank(String bankCode) {
+        if (!StringUtils.hasText(bankCode)) {
+            return null;
+        }
+        return chequeBankRepository.findByCodeIgnoreCase(bankCode.trim()).orElse(null);
     }
 
     private List<ChequeVoucherInvoice> buildInvoices(ChequeVoucher voucher, List<ChequeVoucherInvoiceRequest> requests) {
@@ -888,7 +939,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         return StringUtils.hasText(rootMessage) ? rootMessage : root.getClass().getSimpleName();
     }
 
-    private ChequeVoucherDto toDto(ChequeVoucher voucher, ChequeCompany company, ChequeCustomer customer) {
+    private ChequeVoucherDto toDto(
+            ChequeVoucher voucher,
+            ChequeCompany company,
+            ChequeCustomer customer,
+            ChequeBank bank) {
         ChequeVoucherStatus status = voucher.getStatus() != null ? voucher.getStatus() : ChequeVoucherStatus.DRAFT;
         return ChequeVoucherDto.builder()
                 .id(voucher.getId())
@@ -898,7 +953,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .customerCode(voucher.getCustomerCode())
                 .customerDescription(customer != null ? customer.getDescription() : null)
                 .chequeNo(voucher.getChequeNo())
-                .chequeBankName(voucher.getChequeBankName())
+                .bankCode(voucher.getBankCode())
+                .bankName(bank != null ? bank.getName() : null)
                 .chequeType(voucher.getChequeType() != null ? voucher.getChequeType().name() : null)
                 .chequeDate(voucher.getChequeDate())
                 .description(voucher.getDescription())
@@ -931,7 +987,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .build();
     }
 
-    private ChequeVoucherListItemDto toListItem(ChequeVoucher voucher, String companyDescription, String customerDescription) {
+    private ChequeVoucherListItemDto toListItem(
+            ChequeVoucher voucher,
+            String companyDescription,
+            String customerDescription,
+            String bankName) {
         ChequeVoucherStatus status = voucher.getStatus() != null ? voucher.getStatus() : ChequeVoucherStatus.DRAFT;
         return ChequeVoucherListItemDto.builder()
                 .id(voucher.getId())
@@ -941,7 +1001,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .customerCode(voucher.getCustomerCode())
                 .customerDescription(customerDescription)
                 .chequeNo(voucher.getChequeNo())
-                .chequeBankName(voucher.getChequeBankName())
+                .bankCode(voucher.getBankCode())
+                .bankName(bankName)
                 .chequeType(voucher.getChequeType() != null ? voucher.getChequeType().name() : null)
                 .chequeDate(voucher.getChequeDate())
                 .description(voucher.getDescription())
@@ -1060,8 +1121,10 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             comparator = Comparator.comparing(ChequeVoucherListItemDto::getCustomerCode, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         } else if ("chequeno".equals(column)) {
             comparator = Comparator.comparing(ChequeVoucherListItemDto::getChequeNo, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
-        } else if ("chequebankname".equals(column)) {
-            comparator = Comparator.comparing(ChequeVoucherListItemDto::getChequeBankName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        } else if ("bankcode".equals(column)) {
+            comparator = Comparator.comparing(ChequeVoucherListItemDto::getBankCode, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        } else if ("bankname".equals(column) || "chequebankname".equals(column)) {
+            comparator = Comparator.comparing(ChequeVoucherListItemDto::getBankName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         } else if ("chequetype".equals(column)) {
             comparator = Comparator.comparing(ChequeVoucherListItemDto::getChequeType, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         } else if ("chequedate".equals(column)) {
