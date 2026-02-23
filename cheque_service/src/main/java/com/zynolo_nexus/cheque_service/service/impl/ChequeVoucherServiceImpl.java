@@ -1619,6 +1619,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .chequeDate(voucher.getChequeDate())
                 .description(voucher.getDescription())
                 .totalAmount(voucher.getTotalAmount())
+                .amountInWords(amountToWords(voucher.getTotalAmount()))
                 .status(status)
                 .statusDescription(formatStatus(status))
                 .submittedBy(voucher.getSubmittedBy())

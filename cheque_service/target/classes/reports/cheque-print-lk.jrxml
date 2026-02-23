@@ -11,6 +11,7 @@
               topMargin="0"
               bottomMargin="0"
               uuid="26cda9fc-63e8-4d80-b0f3-f24f98fd1227">
+    <property name="net.sf.jasperreports.awt.ignore.missing.font" value="true"/>
 
     <parameter name="dateDay" class="java.lang.String"/>
     <parameter name="dateMonth" class="java.lang.String"/>
@@ -28,7 +29,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="350" y="28" width="14" height="18"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Times New Roman" size="11" isBold="true"/>
+                    <font fontName="Times New Roman" size="11" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{dateDay} != null && $P{dateDay}.length() > 0 ? $P{dateDay}.substring(0,1) : ""]]></textFieldExpression>
             </textField>
@@ -36,7 +37,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="368" y="28" width="14" height="18"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Times New Roman" size="11" isBold="true"/>
+                    <font fontName="Times New Roman" size="11" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{dateDay} != null && $P{dateDay}.length() > 1 ? $P{dateDay}.substring(1,2) : ""]]></textFieldExpression>
             </textField>
@@ -44,7 +45,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="386" y="28" width="14" height="18"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Times New Roman" size="11" isBold="true"/>
+                    <font fontName="Times New Roman" size="11" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{dateMonth} != null && $P{dateMonth}.length() > 0 ? $P{dateMonth}.substring(0,1) : ""]]></textFieldExpression>
             </textField>
@@ -52,7 +53,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="404" y="28" width="14" height="18"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Times New Roman" size="11" isBold="true"/>
+                    <font fontName="Times New Roman" size="11" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{dateMonth} != null && $P{dateMonth}.length() > 1 ? $P{dateMonth}.substring(1,2) : ""]]></textFieldExpression>
             </textField>
@@ -60,7 +61,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="421" y="28" width="14" height="18"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Times New Roman" size="11" isBold="true"/>
+                    <font fontName="Times New Roman" size="11" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{dateYear} != null && $P{dateYear}.length() > 0 ? $P{dateYear}.substring(0,1) : ""]]></textFieldExpression>
             </textField>
@@ -68,7 +69,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="439" y="28" width="14" height="18"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Times New Roman" size="11" isBold="true"/>
+                    <font fontName="Times New Roman" size="11" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{dateYear} != null && $P{dateYear}.length() > 1 ? $P{dateYear}.substring(1,2) : ""]]></textFieldExpression>
             </textField>
@@ -76,7 +77,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="457" y="28" width="14" height="18"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Times New Roman" size="11" isBold="true"/>
+                    <font fontName="Times New Roman" size="11" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{dateYear} != null && $P{dateYear}.length() > 2 ? $P{dateYear}.substring(2,3) : ""]]></textFieldExpression>
             </textField>
@@ -84,7 +85,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="474" y="28" width="14" height="18"/>
                 <textElement textAlignment="Center">
-                    <font fontName="Times New Roman" size="11" isBold="true"/>
+                    <font fontName="Times New Roman" size="11" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{dateYear} != null && $P{dateYear}.length() > 3 ? $P{dateYear}.substring(3,4) : ""]]></textFieldExpression>
             </textField>
@@ -93,7 +94,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="43" y="71" width="280" height="20"/>
                 <textElement>
-                    <font fontName="Times New Roman" size="12" isBold="true"/>
+                    <font fontName="Times New Roman" size="12" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{customerName}]]></textFieldExpression>
             </textField>
@@ -102,7 +103,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="55" y="100" width="247" height="16"/>
                 <textElement>
-                    <font fontName="Times New Roman" size="10" isBold="true"/>
+                    <font fontName="Times New Roman" size="10" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{amountWordsLine1}]]></textFieldExpression>
             </textField>
@@ -110,7 +111,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="55" y="118" width="247" height="16"/>
                 <textElement>
-                    <font fontName="Times New Roman" size="10" isBold="true"/>
+                    <font fontName="Times New Roman" size="10" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{amountWordsLine2}]]></textFieldExpression>
             </textField>
@@ -118,7 +119,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="55" y="145" width="247" height="16"/>
                 <textElement>
-                    <font fontName="Times New Roman" size="10" isBold="true"/>
+                    <font fontName="Times New Roman" size="10" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{amountWordsLine3}]]></textFieldExpression>
             </textField>
@@ -127,7 +128,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="343" y="114" width="138" height="18"/>
                 <textElement textAlignment="Right">
-                    <font fontName="Times New Roman" size="14" isBold="true"/>
+                    <font fontName="Times New Roman" size="14" isBold="true" pdfFontName="Times-Roman" pdfEncoding="Cp1252" isPdfEmbedded="false"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{amountNumber}]]></textFieldExpression>
             </textField>

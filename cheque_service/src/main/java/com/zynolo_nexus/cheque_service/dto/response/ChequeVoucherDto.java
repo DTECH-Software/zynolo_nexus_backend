@@ -30,6 +30,7 @@ public class ChequeVoucherDto {
     private LocalDate chequeDate;
     private String description;
     private BigDecimal totalAmount;
+    private String amountInWords;
     private ChequeVoucherStatus status;
     private String statusDescription;
     private String submittedBy;
