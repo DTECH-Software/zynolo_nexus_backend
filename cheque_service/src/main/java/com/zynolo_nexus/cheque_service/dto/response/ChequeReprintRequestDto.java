@@ -1,6 +1,5 @@
 package com.zynolo_nexus.cheque_service.dto.response;
 
-import com.zynolo_nexus.cheque_service.enums.ChequeVoucherStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,43 +8,40 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChequeVoucherDto {
+public class ChequeReprintRequestDto {
 
     private Long id;
+    private Long voucherId;
     private String voucherNo;
     private String companyCode;
     private String companyDescription;
     private String customerCode;
     private String customerDescription;
-    private String chequeNo;
     private String bankCode;
     private String bankName;
-    private String chequeType;
+    private String chequeNo;
     private LocalDate chequeDate;
-    private String description;
     private BigDecimal totalAmount;
-    private ChequeVoucherStatus status;
+    private String voucherStatus;
+    private String voucherStatusDescription;
+    private String reprintReason;
+    private String status;
     private String statusDescription;
-    private String submittedBy;
-    private LocalDateTime submittedDate;
+    private String requestedBy;
+    private LocalDateTime requestedDate;
     private String approvedBy;
     private LocalDateTime approvedDate;
     private String rejectedBy;
     private LocalDateTime rejectedDate;
-    private String rejectionReason;
     private String approvalRemark;
-    private String printStatus;
-    private String printStatusDescription;
-    private Integer printCount;
-    private String lastPrintedBy;
-    private LocalDateTime lastPrintedDate;
-    private List<ChequeVoucherInvoiceDto> invoices;
+    private String rejectionReason;
+    private boolean usedForPrint;
+    private LocalDateTime usedDate;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
     private String createdBy;

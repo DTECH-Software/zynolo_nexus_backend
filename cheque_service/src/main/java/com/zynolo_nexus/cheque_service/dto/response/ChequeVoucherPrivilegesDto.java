@@ -18,4 +18,6 @@ public class ChequeVoucherPrivilegesDto {
     private boolean delete;
     private boolean export;
     private boolean approve;
+    private boolean print;
+    private boolean requestReprint;
 }

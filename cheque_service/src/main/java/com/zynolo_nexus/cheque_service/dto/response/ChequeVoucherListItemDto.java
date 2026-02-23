@@ -30,6 +30,11 @@ public class ChequeVoucherListItemDto {
     private BigDecimal totalAmount;
     private String status;
     private String statusDescription;
+    private String printStatus;
+    private String printStatusDescription;
+    private Integer printCount;
+    private String lastPrintedBy;
+    private LocalDateTime lastPrintedDate;
     private LocalDateTime submittedDate;
     private LocalDateTime approvedDate;
     private LocalDateTime rejectedDate;

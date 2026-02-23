@@ -2,6 +2,13 @@ package com.zynolo_nexus.cheque_service.service.impl;
 
 import com.zynolo_nexus.cheque_service.client.AuthModuleClient;
 import com.zynolo_nexus.cheque_service.dto.api.MessageResponseDTO;
+import com.zynolo_nexus.cheque_service.dto.request.ChequePrintRequest;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeReprintApproveRequest;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeReprintCreateRequest;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeReprintFilterRequest;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeReprintFilterSearch;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeReprintReferenceDataRequest;
+import com.zynolo_nexus.cheque_service.dto.request.ChequeReprintRejectRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherApproveRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherCreateRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeVoucherExportPdfRequest;
@@ -16,6 +23,9 @@ import com.zynolo_nexus.cheque_service.dto.response.ChequeReferenceBankDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeReferenceCompanyDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeReferenceCustomerDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeReferenceStatusDto;
+import com.zynolo_nexus.cheque_service.dto.response.ChequeReprintFilterResultDto;
+import com.zynolo_nexus.cheque_service.dto.response.ChequeReprintReferenceDataDto;
+import com.zynolo_nexus.cheque_service.dto.response.ChequeReprintRequestDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherFilterResultDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherInvoiceDto;
@@ -24,19 +34,23 @@ import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherPdfDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherPrivilegesDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherReferenceDataDto;
 import com.zynolo_nexus.cheque_service.enums.ChequeBankStatus;
-import com.zynolo_nexus.cheque_service.enums.ChequeType;
+import com.zynolo_nexus.cheque_service.enums.ChequePrintStatus;
+import com.zynolo_nexus.cheque_service.enums.ChequeReprintStatus;
 import com.zynolo_nexus.cheque_service.enums.ChequeCompanyStatus;
 import com.zynolo_nexus.cheque_service.enums.ChequeCustomerStatus;
+import com.zynolo_nexus.cheque_service.enums.ChequeType;
 import com.zynolo_nexus.cheque_service.enums.ChequeVoucherStatus;
 import com.zynolo_nexus.cheque_service.model.ChequeBank;
 import com.zynolo_nexus.cheque_service.model.ChequeCompany;
 import com.zynolo_nexus.cheque_service.model.ChequeCustomer;
+import com.zynolo_nexus.cheque_service.model.ChequeReprintRequest;
 import com.zynolo_nexus.cheque_service.model.ChequeVoucher;
 import com.zynolo_nexus.cheque_service.model.ChequeVoucherInvoice;
 import com.zynolo_nexus.cheque_service.model.UserAccount;
 import com.zynolo_nexus.cheque_service.repository.ChequeBankRepository;
 import com.zynolo_nexus.cheque_service.repository.ChequeCompanyRepository;
 import com.zynolo_nexus.cheque_service.repository.ChequeCustomerRepository;
+import com.zynolo_nexus.cheque_service.repository.ChequeReprintRequestRepository;
 import com.zynolo_nexus.cheque_service.repository.ChequeVoucherRepository;
 import com.zynolo_nexus.cheque_service.repository.UserAccountRepository;
 import com.zynolo_nexus.cheque_service.service.ChequeVoucherService;
@@ -76,12 +90,15 @@ import java.util.Set;
 public class ChequeVoucherServiceImpl implements ChequeVoucherService {
 
     private static final String CHVM_PAGE_CODE = "CHVM";
+    private static final String CHCP_PAGE_CODE = "CHCP";
+    private static final String CHAP_PAGE_CODE = "CHAP";
     private static final String VOUCHER_REPORT_PATH = "/reports/cheque-voucher.jrxml";
 
     private final ChequeVoucherRepository chequeVoucherRepository;
     private final ChequeBankRepository chequeBankRepository;
     private final ChequeCompanyRepository chequeCompanyRepository;
     private final ChequeCustomerRepository chequeCustomerRepository;
+    private final ChequeReprintRequestRepository chequeReprintRequestRepository;
     private final UserAccountRepository userAccountRepository;
     private final AuthModuleClient authModuleClient;
 
@@ -263,6 +280,37 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public MessageResponseDTO<ChequeVoucherFilterResultDto> chequeFilterList(ChequeVoucherFilterRequest request) {
+        return filterListByStatuses(
+                request,
+                EnumSet.of(ChequeVoucherStatus.APPROVED, ChequeVoucherStatus.CHEQUE_CREATED),
+                "Cheque list filtered successfully");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MessageResponseDTO<ChequeVoucherDto> chequeView(Long id) {
+        if (id == null) {
+            return error("Invalid cheque view request", 400);
+        }
+
+        ChequeVoucher voucher = chequeVoucherRepository.findById(id).orElse(null);
+        if (voucher == null) {
+            return error("Cheque record not found", 404);
+        }
+        if (voucher.getStatus() != ChequeVoucherStatus.APPROVED
+                && voucher.getStatus() != ChequeVoucherStatus.CHEQUE_CREATED) {
+            return error("Cheque can be viewed only for APPROVED or CHEQUE_CREATED vouchers", 400);
+        }
+
+        ChequeCompany company = chequeCompanyRepository.findByCodeIgnoreCase(voucher.getCompanyCode()).orElse(null);
+        ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
+        ChequeBank bank = resolveBank(voucher.getBankCode());
+        return success("Cheque details retrieved successfully", toDto(voucher, company, customer, bank));
+    }
+
+    @Override
     @Transactional
     public MessageResponseDTO<ChequeVoucherDto> submitForApproval(ChequeVoucherSubmitForApprovalRequest request) {
         if (request == null || request.getId() == null) {
@@ -386,6 +434,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         String bankCode = normalize(search != null ? search.getBankCode() : null);
         String chequeType = normalize(search != null ? search.getChequeType() : null);
         String status = normalize(search != null ? search.getStatus() : null);
+        String printStatus = normalize(search != null ? search.getPrintStatus() : null);
 
         Map<String, String> companyDescriptions = new HashMap<>();
         chequeCompanyRepository.findAll()
@@ -406,6 +455,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .filter(voucher -> matchesChequeType(chequeType, voucher.getChequeType()))
                 .filter(voucher -> statuses == null || statuses.isEmpty() || statuses.contains(voucher.getStatus()))
                 .filter(voucher -> matchesStatus(status, voucher.getStatus()))
+                .filter(voucher -> matchesPrintStatus(printStatus, voucher.getPrintStatus()))
                 .map(voucher -> toListItem(
                         voucher,
                         companyDescriptions.get(voucher.getCompanyCode()),
@@ -479,13 +529,24 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                         .build())
                 .toList();
 
+        List<ChequeReferenceStatusDto> defaultStatuses = CHCP_PAGE_CODE.equalsIgnoreCase(pageCode)
+                ? List.of(
+                ChequeReferenceStatusDto.builder().code("APPROVED").description("Approved").build(),
+                ChequeReferenceStatusDto.builder().code("CHEQUE_CREATED").description("Cheque Created").build()
+        )
+                : List.of(
+                ChequeReferenceStatusDto.builder().code("DRAFT").description("Draft").build(),
+                ChequeReferenceStatusDto.builder().code("PENDING_APPROVAL").description("Pending Approval").build(),
+                ChequeReferenceStatusDto.builder().code("APPROVED").description("Approved").build(),
+                ChequeReferenceStatusDto.builder().code("REJECTED").description("Rejected").build(),
+                ChequeReferenceStatusDto.builder().code("CHEQUE_CREATED").description("Cheque Created").build()
+        );
+
         ChequeVoucherReferenceDataDto data = ChequeVoucherReferenceDataDto.builder()
-                .defaultStatus(List.of(
-                        ChequeReferenceStatusDto.builder().code("DRAFT").description("Draft").build(),
-                        ChequeReferenceStatusDto.builder().code("PENDING_APPROVAL").description("Pending Approval").build(),
-                        ChequeReferenceStatusDto.builder().code("APPROVED").description("Approved").build(),
-                        ChequeReferenceStatusDto.builder().code("REJECTED").description("Rejected").build(),
-                        ChequeReferenceStatusDto.builder().code("CHEQUE_CREATED").description("Cheque Created").build()
+                .defaultStatus(defaultStatuses)
+                .printStatuses(List.of(
+                        ChequeReferenceStatusDto.builder().code("NOT_PRINTED").description("Not Printed").build(),
+                        ChequeReferenceStatusDto.builder().code("PRINTED").description("Printed").build()
                 ))
                 .chequeTypes(List.of(
                         ChequeReferenceStatusDto.builder().code("NORMAL").description("Normal cheque").build(),
@@ -553,6 +614,302 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
     }
 
+    @Override
+    @Transactional
+    public MessageResponseDTO<ChequeVoucherPdfDto> printCheque(ChequePrintRequest request) {
+        Long voucherId = resolveVoucherId(request);
+        if (voucherId == null) {
+            return pdfError("Invalid cheque print request", 400);
+        }
+
+        ChequeVoucher voucher = chequeVoucherRepository.findById(voucherId).orElse(null);
+        if (voucher == null) {
+            return pdfError("Voucher not found", 404);
+        }
+        if (voucher.getStatus() != ChequeVoucherStatus.APPROVED
+                && voucher.getStatus() != ChequeVoucherStatus.CHEQUE_CREATED) {
+            return pdfError("Cheque can be printed only for APPROVED or CHEQUE_CREATED vouchers", 400);
+        }
+
+        int existingPrintCount = voucher.getPrintCount() != null ? voucher.getPrintCount() : 0;
+        ChequeReprintRequest approvedReprint = null;
+        if (existingPrintCount > 0) {
+            approvedReprint = chequeReprintRequestRepository
+                    .findFirstByVoucherIdAndStatusAndUsedForPrintFalseOrderByApprovedDateDesc(
+                            voucher.getId(), ChequeReprintStatus.REPRINT_APPROVED)
+                    .orElse(null);
+            if (approvedReprint == null) {
+                return pdfError("Reprint approval is required before printing again", 400);
+            }
+        }
+
+        MessageResponseDTO<ChequeVoucherPdfDto> exported = exportPdfForVoucher(voucher);
+        if (exported == null || !exported.isSuccess() || exported.getData() == null) {
+            return exported != null ? exported : pdfError("Unable to print cheque", 500);
+        }
+
+        String actor = normalizeUsername(request.getUsername());
+        LocalDateTime now = LocalDateTime.now();
+        voucher.setPrintCount(existingPrintCount + 1);
+        voucher.setPrintStatus(ChequePrintStatus.PRINTED);
+        voucher.setLastPrintedBy(actor);
+        voucher.setLastPrintedDate(now);
+        if (voucher.getStatus() == ChequeVoucherStatus.APPROVED) {
+            voucher.setStatus(ChequeVoucherStatus.CHEQUE_CREATED);
+        }
+        if (StringUtils.hasText(actor)) {
+            voucher.setLastModifiedBy(actor);
+            if (!StringUtils.hasText(voucher.getCreatedBy())) {
+                voucher.setCreatedBy(actor);
+            }
+        }
+        chequeVoucherRepository.save(voucher);
+
+        if (approvedReprint != null) {
+            approvedReprint.setUsedForPrint(true);
+            approvedReprint.setUsedDate(now);
+            if (StringUtils.hasText(actor)) {
+                approvedReprint.setLastModifiedBy(actor);
+                if (!StringUtils.hasText(approvedReprint.getCreatedBy())) {
+                    approvedReprint.setCreatedBy(actor);
+                }
+            }
+            chequeReprintRequestRepository.save(approvedReprint);
+        }
+
+        return MessageResponseDTO.<ChequeVoucherPdfDto>builder()
+                .success(true)
+                .message(existingPrintCount == 0 ? "Cheque printed successfully" : "Cheque reprinted successfully")
+                .data(exported.getData())
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public MessageResponseDTO<ChequeReprintRequestDto> requestReprint(ChequeReprintCreateRequest request) {
+        if (request == null || request.getVoucherId() == null || !StringUtils.hasText(request.getReprintReason())) {
+            return reprintError("Invalid reprint request", 400);
+        }
+
+        ChequeVoucher voucher = chequeVoucherRepository.findById(request.getVoucherId()).orElse(null);
+        if (voucher == null) {
+            return reprintError("Voucher not found", 404);
+        }
+        if (voucher.getStatus() != ChequeVoucherStatus.CHEQUE_CREATED) {
+            return reprintError("Reprint can be requested only after first cheque print", 400);
+        }
+        int printCount = voucher.getPrintCount() != null ? voucher.getPrintCount() : 0;
+        if (printCount <= 0) {
+            return reprintError("Reprint can be requested only after first cheque print", 400);
+        }
+        if (chequeReprintRequestRepository.existsByVoucherIdAndStatus(voucher.getId(), ChequeReprintStatus.REPRINT_PENDING)) {
+            return reprintError("A pending reprint request already exists for this voucher", 400);
+        }
+
+        String actor = normalizeUsername(request.getUsername());
+        ChequeReprintRequest reprintRequest = ChequeReprintRequest.builder()
+                .voucherId(voucher.getId())
+                .reprintReason(request.getReprintReason().trim())
+                .status(ChequeReprintStatus.REPRINT_PENDING)
+                .requestedBy(actor)
+                .requestedDate(LocalDateTime.now())
+                .createdBy(actor)
+                .lastModifiedBy(actor)
+                .build();
+
+        reprintRequest = chequeReprintRequestRepository.save(reprintRequest);
+        return reprintSuccess("Reprint request submitted successfully", toReprintDto(reprintRequest, voucher));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MessageResponseDTO<ChequeReprintReferenceDataDto> reprintReferenceData(ChequeReprintReferenceDataRequest request) {
+        String pageCode = StringUtils.hasText(request != null ? request.getPageCode() : null)
+                ? request.getPageCode().trim().toUpperCase(Locale.ROOT)
+                : CHAP_PAGE_CODE;
+
+        ChequeVoucherReferenceDataRequest permissionRequest = new ChequeVoucherReferenceDataRequest();
+        permissionRequest.setUsername(request != null ? request.getUsername() : null);
+        permissionRequest.setPageCode(pageCode);
+        ChequeVoucherPrivilegesDto privileges = resolvePrivileges(permissionRequest, pageCode);
+
+        ChequeReprintReferenceDataDto data = ChequeReprintReferenceDataDto.builder()
+                .defaultStatus(List.of(
+                        ChequeReferenceStatusDto.builder().code("REPRINT_PENDING").description("Reprint Pending").build(),
+                        ChequeReferenceStatusDto.builder().code("REPRINT_APPROVED").description("Reprint Approved").build(),
+                        ChequeReferenceStatusDto.builder().code("REPRINT_REJECTED").description("Reprint Rejected").build()
+                ))
+                .privileges(privileges)
+                .build();
+
+        return MessageResponseDTO.<ChequeReprintReferenceDataDto>builder()
+                .success(true)
+                .message("Reference data " + pageCode + " retrieved successfully")
+                .data(data)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MessageResponseDTO<ChequeReprintFilterResultDto> reprintFilterList(ChequeReprintFilterRequest request) {
+        List<ChequeReprintRequest> requests = chequeReprintRequestRepository.findAll();
+        Map<Long, ChequeVoucher> voucherMap = loadVoucherMap(requests.stream().map(ChequeReprintRequest::getVoucherId).toList());
+
+        ChequeReprintFilterSearch search = request != null ? request.getSearch() : null;
+        String voucherNo = normalize(search != null ? search.getVoucherNo() : null);
+        String companyCode = normalize(search != null ? search.getCompanyCode() : null);
+        String customerCode = normalize(search != null ? search.getCustomerCode() : null);
+        String bankCode = normalize(search != null ? search.getBankCode() : null);
+        String status = normalize(search != null ? search.getStatus() : null);
+
+        List<ChequeReprintRequestDto> filtered = requests.stream()
+                .filter(item -> {
+                    ChequeVoucher voucher = voucherMap.get(item.getVoucherId());
+                    if (voucher == null) {
+                        return false;
+                    }
+                    return matches(voucherNo, voucher.getVoucherNo())
+                            && matches(companyCode, voucher.getCompanyCode())
+                            && matches(customerCode, voucher.getCustomerCode())
+                            && matches(bankCode, voucher.getBankCode())
+                            && matchesReprintStatus(status, item.getStatus());
+                })
+                .map(item -> toReprintDto(item, voucherMap.get(item.getVoucherId())))
+                .toList();
+
+        Comparator<ChequeReprintRequestDto> comparator = resolveReprintComparator(
+                request != null ? request.getSortColumn() : null,
+                request != null ? request.getSortDirection() : null
+        );
+
+        List<ChequeReprintRequestDto> sorted = filtered.stream().sorted(comparator).toList();
+        int requestedSize = request != null && request.getSize() != null && request.getSize() > 0 ? request.getSize() : 10;
+        int page = request != null && request.getPage() != null && request.getPage() >= 0 ? request.getPage() : 0;
+
+        int totalRecords = sorted.size();
+        int fromIndex = Math.min(page * requestedSize, totalRecords);
+        int toIndex = Math.min(fromIndex + requestedSize, totalRecords);
+        List<ChequeReprintRequestDto> content = sorted.subList(fromIndex, toIndex);
+        int totalPages = requestedSize == 0 ? 1 : (int) Math.ceil((double) totalRecords / requestedSize);
+
+        ChequeReprintFilterResultDto result = ChequeReprintFilterResultDto.builder()
+                .content(content)
+                .size(content.size())
+                .totalRecords(totalRecords)
+                .page(page)
+                .totalPages(totalPages)
+                .build();
+
+        return MessageResponseDTO.<ChequeReprintFilterResultDto>builder()
+                .success(true)
+                .message("Cheque reprint requests filtered successfully")
+                .data(result)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public MessageResponseDTO<ChequeReprintRequestDto> reprintView(Long id) {
+        if (id == null) {
+            return reprintError("Invalid reprint view request", 400);
+        }
+
+        ChequeReprintRequest reprintRequest = chequeReprintRequestRepository.findById(id).orElse(null);
+        if (reprintRequest == null) {
+            return reprintError("Reprint request not found", 404);
+        }
+        ChequeVoucher voucher = chequeVoucherRepository.findById(reprintRequest.getVoucherId()).orElse(null);
+        if (voucher == null) {
+            return reprintError("Voucher not found for this reprint request", 404);
+        }
+        return reprintSuccess("Reprint request retrieved successfully", toReprintDto(reprintRequest, voucher));
+    }
+
+    @Override
+    @Transactional
+    public MessageResponseDTO<ChequeReprintRequestDto> approveReprint(ChequeReprintApproveRequest request) {
+        if (request == null || request.getId() == null) {
+            return reprintError("Invalid reprint approve request", 400);
+        }
+
+        ChequeReprintRequest reprintRequest = chequeReprintRequestRepository.findById(request.getId()).orElse(null);
+        if (reprintRequest == null) {
+            return reprintError("Reprint request not found", 404);
+        }
+        if (reprintRequest.getStatus() != ChequeReprintStatus.REPRINT_PENDING) {
+            return reprintError("Only REPRINT_PENDING requests can be approved", 400);
+        }
+
+        String actor = normalizeUsername(request.getUsername());
+        reprintRequest.setStatus(ChequeReprintStatus.REPRINT_APPROVED);
+        reprintRequest.setApprovedBy(actor);
+        reprintRequest.setApprovedDate(LocalDateTime.now());
+        reprintRequest.setApprovalRemark(trimToNull(request.getApprovalRemark()));
+        reprintRequest.setRejectedBy(null);
+        reprintRequest.setRejectedDate(null);
+        reprintRequest.setRejectionReason(null);
+        if (StringUtils.hasText(actor)) {
+            reprintRequest.setLastModifiedBy(actor);
+            if (!StringUtils.hasText(reprintRequest.getCreatedBy())) {
+                reprintRequest.setCreatedBy(actor);
+            }
+        }
+
+        reprintRequest = chequeReprintRequestRepository.save(reprintRequest);
+        ChequeVoucher voucher = chequeVoucherRepository.findById(reprintRequest.getVoucherId()).orElse(null);
+        if (voucher == null) {
+            return reprintError("Voucher not found for this reprint request", 404);
+        }
+        return reprintSuccess("Reprint request approved successfully", toReprintDto(reprintRequest, voucher));
+    }
+
+    @Override
+    @Transactional
+    public MessageResponseDTO<ChequeReprintRequestDto> rejectReprint(ChequeReprintRejectRequest request) {
+        if (request == null || request.getId() == null || !StringUtils.hasText(request.getRejectionReason())) {
+            return reprintError("Invalid reprint reject request", 400);
+        }
+
+        ChequeReprintRequest reprintRequest = chequeReprintRequestRepository.findById(request.getId()).orElse(null);
+        if (reprintRequest == null) {
+            return reprintError("Reprint request not found", 404);
+        }
+        if (reprintRequest.getStatus() != ChequeReprintStatus.REPRINT_PENDING) {
+            return reprintError("Only REPRINT_PENDING requests can be rejected", 400);
+        }
+
+        String actor = normalizeUsername(request.getUsername());
+        reprintRequest.setStatus(ChequeReprintStatus.REPRINT_REJECTED);
+        reprintRequest.setRejectedBy(actor);
+        reprintRequest.setRejectedDate(LocalDateTime.now());
+        reprintRequest.setRejectionReason(request.getRejectionReason().trim());
+        reprintRequest.setApprovedBy(null);
+        reprintRequest.setApprovedDate(null);
+        reprintRequest.setApprovalRemark(null);
+        if (StringUtils.hasText(actor)) {
+            reprintRequest.setLastModifiedBy(actor);
+            if (!StringUtils.hasText(reprintRequest.getCreatedBy())) {
+                reprintRequest.setCreatedBy(actor);
+            }
+        }
+
+        reprintRequest = chequeReprintRequestRepository.save(reprintRequest);
+        ChequeVoucher voucher = chequeVoucherRepository.findById(reprintRequest.getVoucherId()).orElse(null);
+        if (voucher == null) {
+            return reprintError("Voucher not found for this reprint request", 404);
+        }
+        return reprintSuccess("Reprint request rejected successfully", toReprintDto(reprintRequest, voucher));
+    }
+
     private Long resolveVoucherId(ChequeVoucherExportPdfRequest request) {
         if (request == null) {
             return null;
@@ -561,6 +918,159 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             return request.getVoucherId();
         }
         return request.getId();
+    }
+
+    private Long resolveVoucherId(ChequePrintRequest request) {
+        if (request == null) {
+            return null;
+        }
+        if (request.getVoucherId() != null) {
+            return request.getVoucherId();
+        }
+        return request.getId();
+    }
+
+    private MessageResponseDTO<ChequeVoucherPdfDto> exportPdfForVoucher(ChequeVoucher voucher) {
+        if (voucher == null) {
+            return pdfError("Voucher not found", 404);
+        }
+
+        ChequeCompany company = chequeCompanyRepository.findByCodeIgnoreCase(voucher.getCompanyCode()).orElse(null);
+        ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
+        ChequeBank bank = resolveBank(voucher.getBankCode());
+        ChequeVoucherDto dto = toDto(voucher, company, customer, bank);
+
+        try {
+            JasperReport report = getOrLoadVoucherReport();
+            Map<String, Object> params = buildVoucherReportParams(dto, company, customer);
+            JRMapCollectionDataSource dataSource = new JRMapCollectionDataSource(buildVoucherRows(dto));
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(report, params, dataSource);
+            byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
+            String base64 = Base64.getEncoder().encodeToString(pdfBytes);
+            String fileName = (dto.getVoucherNo() != null ? dto.getVoucherNo() : "voucher") + ".pdf";
+
+            return MessageResponseDTO.<ChequeVoucherPdfDto>builder()
+                    .success(true)
+                    .message("Voucher PDF exported successfully")
+                    .data(ChequeVoucherPdfDto.builder()
+                            .fileName(fileName)
+                            .fileType("application/pdf")
+                            .doc(base64)
+                            .build())
+                    .errors(null)
+                    .errorCode(0)
+                    .responseTime(LocalDateTime.now())
+                    .build();
+        } catch (Throwable ex) {
+            log.error("Unable to export voucher PDF for voucherId={}", voucher.getId(), ex);
+            return pdfError("Unable to export voucher PDF", 500, rootCauseMessage(ex));
+        }
+    }
+
+    private MessageResponseDTO<ChequeReprintRequestDto> reprintSuccess(String message, ChequeReprintRequestDto data) {
+        return MessageResponseDTO.<ChequeReprintRequestDto>builder()
+                .success(true)
+                .message(message)
+                .data(data)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
+    private MessageResponseDTO<ChequeReprintRequestDto> reprintError(String message, int errorCode) {
+        return MessageResponseDTO.<ChequeReprintRequestDto>builder()
+                .success(false)
+                .message(message)
+                .data(null)
+                .errors(null)
+                .errorCode(errorCode)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
+    private Map<Long, ChequeVoucher> loadVoucherMap(List<Long> voucherIds) {
+        if (voucherIds == null || voucherIds.isEmpty()) {
+            return Map.of();
+        }
+        Map<Long, ChequeVoucher> map = new HashMap<>();
+        chequeVoucherRepository.findAllById(voucherIds).forEach(voucher -> map.put(voucher.getId(), voucher));
+        return map;
+    }
+
+    private boolean matchesReprintStatus(String search, ChequeReprintStatus status) {
+        if (!StringUtils.hasText(search)) {
+            return true;
+        }
+        String normalized = search.trim().toUpperCase(Locale.ROOT);
+        return status != null && status.name().equals(normalized);
+    }
+
+    private Comparator<ChequeReprintRequestDto> resolveReprintComparator(String sortColumn, String sortDirection) {
+        String column = normalize(sortColumn);
+        Comparator<ChequeReprintRequestDto> comparator;
+        if ("status".equals(column)) {
+            comparator = Comparator.comparing(ChequeReprintRequestDto::getStatus, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        } else if ("voucherno".equals(column)) {
+            comparator = Comparator.comparing(ChequeReprintRequestDto::getVoucherNo, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        } else if ("requestedby".equals(column)) {
+            comparator = Comparator.comparing(ChequeReprintRequestDto::getRequestedBy, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        } else if ("approveddate".equals(column)) {
+            comparator = Comparator.comparing(ChequeReprintRequestDto::getApprovedDate, Comparator.nullsLast(Comparator.naturalOrder()));
+        } else if ("rejecteddate".equals(column)) {
+            comparator = Comparator.comparing(ChequeReprintRequestDto::getRejectedDate, Comparator.nullsLast(Comparator.naturalOrder()));
+        } else {
+            comparator = Comparator.comparing(ChequeReprintRequestDto::getRequestedDate, Comparator.nullsLast(Comparator.naturalOrder()));
+        }
+        String direction = normalize(sortDirection);
+        return "asc".equals(direction) ? comparator : comparator.reversed();
+    }
+
+    private ChequeReprintRequestDto toReprintDto(ChequeReprintRequest request, ChequeVoucher voucher) {
+        if (request == null || voucher == null) {
+            return null;
+        }
+        ChequeCompany company = chequeCompanyRepository.findByCodeIgnoreCase(voucher.getCompanyCode()).orElse(null);
+        ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
+        ChequeBank bank = resolveBank(voucher.getBankCode());
+
+        ChequeVoucherStatus voucherStatus = voucher.getStatus() != null ? voucher.getStatus() : ChequeVoucherStatus.DRAFT;
+        ChequeReprintStatus status = request.getStatus() != null ? request.getStatus() : ChequeReprintStatus.REPRINT_PENDING;
+
+        return ChequeReprintRequestDto.builder()
+                .id(request.getId())
+                .voucherId(voucher.getId())
+                .voucherNo(voucher.getVoucherNo())
+                .companyCode(voucher.getCompanyCode())
+                .companyDescription(company != null ? company.getDescription() : null)
+                .customerCode(voucher.getCustomerCode())
+                .customerDescription(customer != null ? customer.getDescription() : null)
+                .bankCode(voucher.getBankCode())
+                .bankName(bank != null ? bank.getName() : voucher.getChequeBankName())
+                .chequeNo(voucher.getChequeNo())
+                .chequeDate(voucher.getChequeDate())
+                .totalAmount(voucher.getTotalAmount())
+                .voucherStatus(voucherStatus.name())
+                .voucherStatusDescription(formatStatus(voucherStatus))
+                .reprintReason(request.getReprintReason())
+                .status(status.name())
+                .statusDescription(formatReprintStatus(status))
+                .requestedBy(request.getRequestedBy())
+                .requestedDate(request.getRequestedDate())
+                .approvedBy(request.getApprovedBy())
+                .approvedDate(request.getApprovedDate())
+                .rejectedBy(request.getRejectedBy())
+                .rejectedDate(request.getRejectedDate())
+                .approvalRemark(request.getApprovalRemark())
+                .rejectionReason(request.getRejectionReason())
+                .usedForPrint(Boolean.TRUE.equals(request.getUsedForPrint()))
+                .usedDate(request.getUsedDate())
+                .createdDate(request.getCreatedDate())
+                .lastModifiedDate(request.getLastModifiedDate())
+                .createdBy(request.getCreatedBy())
+                .lastModifiedBy(request.getLastModifiedBy())
+                .build();
     }
 
     private String safe(String value) {
@@ -883,6 +1393,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                     .delete(hasTask(taskAccess, "DELETE", "REMOVE", "DEACTIVATE"))
                     .export(hasTask(taskAccess, "EXPORT", "DOWNLOAD", "PDF"))
                     .approve(hasTask(taskAccess, "APPROVE", "AUTHORIZE", "AUTH"))
+                    .print(hasTask(taskAccess, "PRINT"))
+                    .requestReprint(hasTask(taskAccess, "REPRINT", "REQUESTREPRINT"))
                     .build();
         } catch (Exception ex) {
             return emptyPrivileges();
@@ -971,6 +1483,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .rejectedDate(voucher.getRejectedDate())
                 .rejectionReason(voucher.getRejectionReason())
                 .approvalRemark(voucher.getApprovalRemark())
+                .printStatus(resolvePrintStatus(voucher).name())
+                .printStatusDescription(formatPrintStatus(resolvePrintStatus(voucher)))
+                .printCount(voucher.getPrintCount() != null ? voucher.getPrintCount() : 0)
+                .lastPrintedBy(voucher.getLastPrintedBy())
+                .lastPrintedDate(voucher.getLastPrintedDate())
                 .invoices(voucher.getInvoices() != null ? voucher.getInvoices().stream().map(this::toInvoiceDto).toList() : List.of())
                 .createdDate(voucher.getCreatedDate())
                 .lastModifiedDate(voucher.getLastModifiedDate())
@@ -995,6 +1512,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             String customerDescription,
             String bankName) {
         ChequeVoucherStatus status = voucher.getStatus() != null ? voucher.getStatus() : ChequeVoucherStatus.DRAFT;
+        ChequePrintStatus printStatus = resolvePrintStatus(voucher);
         return ChequeVoucherListItemDto.builder()
                 .id(voucher.getId())
                 .voucherNo(voucher.getVoucherNo())
@@ -1011,6 +1529,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .totalAmount(voucher.getTotalAmount())
                 .status(status.name())
                 .statusDescription(formatStatus(status))
+                .printStatus(printStatus.name())
+                .printStatusDescription(formatPrintStatus(printStatus))
+                .printCount(voucher.getPrintCount() != null ? voucher.getPrintCount() : 0)
+                .lastPrintedBy(voucher.getLastPrintedBy())
+                .lastPrintedDate(voucher.getLastPrintedDate())
                 .submittedDate(voucher.getSubmittedDate())
                 .approvedDate(voucher.getApprovedDate())
                 .rejectedDate(voucher.getRejectedDate())
@@ -1030,6 +1553,18 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             case REJECTED -> "Rejected";
             case CHEQUE_CREATED -> "Cheque Created";
         };
+    }
+
+    private ChequePrintStatus resolvePrintStatus(ChequeVoucher voucher) {
+        if (voucher != null && voucher.getPrintStatus() != null) {
+            return voucher.getPrintStatus();
+        }
+        int count = voucher != null && voucher.getPrintCount() != null ? voucher.getPrintCount() : 0;
+        return count > 0 ? ChequePrintStatus.PRINTED : ChequePrintStatus.NOT_PRINTED;
+    }
+
+    private String formatPrintStatus(ChequePrintStatus status) {
+        return status == ChequePrintStatus.PRINTED ? "Printed" : "Not Printed";
     }
 
     private String normalize(String value) {
@@ -1088,6 +1623,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .delete(false)
                 .export(false)
                 .approve(false)
+                .print(false)
+                .requestReprint(false)
                 .build();
     }
 
@@ -1104,6 +1641,15 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
         String normalized = search.trim().toUpperCase(Locale.ROOT);
         return status != null && status.name().equals(normalized);
+    }
+
+    private boolean matchesPrintStatus(String search, ChequePrintStatus status) {
+        if (!StringUtils.hasText(search)) {
+            return true;
+        }
+        String normalized = search.trim().toUpperCase(Locale.ROOT);
+        ChequePrintStatus current = status != null ? status : ChequePrintStatus.NOT_PRINTED;
+        return current.name().equals(normalized);
     }
 
     private boolean matchesChequeType(String search, ChequeType chequeType) {
@@ -1133,6 +1679,10 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             comparator = Comparator.comparing(ChequeVoucherListItemDto::getChequeDate, Comparator.nullsLast(Comparator.naturalOrder()));
         } else if ("status".equals(column)) {
             comparator = Comparator.comparing(ChequeVoucherListItemDto::getStatus, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        } else if ("printstatus".equals(column)) {
+            comparator = Comparator.comparing(ChequeVoucherListItemDto::getPrintStatus, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        } else if ("printcount".equals(column)) {
+            comparator = Comparator.comparing(ChequeVoucherListItemDto::getPrintCount, Comparator.nullsLast(Comparator.naturalOrder()));
         } else if ("totalamount".equals(column)) {
             comparator = Comparator.comparing(ChequeVoucherListItemDto::getTotalAmount, Comparator.nullsLast(Comparator.naturalOrder()));
         } else if ("createddate".equals(column)) {
@@ -1145,6 +1695,14 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
 
         String direction = normalize(sortDirection);
         return "desc".equals(direction) ? comparator.reversed() : comparator;
+    }
+
+    private String formatReprintStatus(ChequeReprintStatus status) {
+        return switch (status) {
+            case REPRINT_PENDING -> "Reprint Pending";
+            case REPRINT_APPROVED -> "Reprint Approved";
+            case REPRINT_REJECTED -> "Reprint Rejected";
+        };
     }
 
 }

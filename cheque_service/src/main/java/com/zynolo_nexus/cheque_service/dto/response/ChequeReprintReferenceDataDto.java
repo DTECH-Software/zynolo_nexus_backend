@@ -11,13 +11,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChequeVoucherReferenceDataDto {
+public class ChequeReprintReferenceDataDto {
 
     private List<ChequeReferenceStatusDto> defaultStatus;
-    private List<ChequeReferenceStatusDto> printStatuses;
-    private List<ChequeReferenceStatusDto> chequeTypes;
-    private List<ChequeReferenceCompanyDto> companies;
-    private List<ChequeReferenceCustomerDto> customers;
-    private List<ChequeReferenceBankDto> banks;
     private ChequeVoucherPrivilegesDto privileges;
 }

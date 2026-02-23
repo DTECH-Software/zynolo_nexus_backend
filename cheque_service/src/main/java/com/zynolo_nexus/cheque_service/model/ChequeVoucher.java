@@ -1,6 +1,7 @@
 package com.zynolo_nexus.cheque_service.model;
 
 import com.zynolo_nexus.cheque_service.enums.ChequeType;
+import com.zynolo_nexus.cheque_service.enums.ChequePrintStatus;
 import com.zynolo_nexus.cheque_service.enums.ChequeVoucherStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -96,6 +97,19 @@ public class ChequeVoucher {
     @Column(name = "approval_remark", length = 500)
     private String approvalRemark;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "print_status", length = 20)
+    private ChequePrintStatus printStatus;
+
+    @Column(name = "print_count")
+    private Integer printCount;
+
+    @Column(name = "last_printed_by", length = 100)
+    private String lastPrintedBy;
+
+    @Column(name = "last_printed_date")
+    private LocalDateTime lastPrintedDate;
+
     @OneToMany(mappedBy = "voucher", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<ChequeVoucherInvoice> invoices = new ArrayList<>();
@@ -123,6 +137,12 @@ public class ChequeVoucher {
         }
         if (status == null) {
             status = ChequeVoucherStatus.DRAFT;
+        }
+        if (printStatus == null) {
+            printStatus = ChequePrintStatus.NOT_PRINTED;
+        }
+        if (printCount == null) {
+            printCount = 0;
         }
     }
 
