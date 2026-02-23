@@ -18,6 +18,7 @@ public class ChequeVoucherUpdateRequest {
     private String companyCode;
     private String customerCode;
     private String chequeNo;
+    private String chequeBankName;
     private String chequeType;
     private LocalDate chequeDate;
     private String description;

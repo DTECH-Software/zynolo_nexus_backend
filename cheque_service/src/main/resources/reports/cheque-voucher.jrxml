@@ -19,6 +19,7 @@
     <parameter name="companyPhone" class="java.lang.String"/>
     <parameter name="payer" class="java.lang.String"/>
     <parameter name="chequeNo" class="java.lang.String"/>
+    <parameter name="chequeBankName" class="java.lang.String"/>
     <parameter name="voucherDescription" class="java.lang.String"/>
     <parameter name="status" class="java.lang.String"/>
     <parameter name="amountInWords" class="java.lang.String"/>
@@ -31,7 +32,7 @@
     <field name="amount" class="java.math.BigDecimal"/>
 
     <title>
-        <band height="175">
+        <band height="192">
             <textField isBlankWhenNull="true">
                 <reportElement x="0" y="0" width="535" height="18"/>
                 <textElement textAlignment="Center">
@@ -102,6 +103,14 @@
                     <font size="10"/>
                 </textElement>
                 <textFieldExpression><![CDATA["Cheque No: " + $P{chequeNo}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="350" y="144" width="185" height="16"/>
+                <textElement textAlignment="Right">
+                    <font size="10"/>
+                </textElement>
+                <textFieldExpression><![CDATA["Bank: " + $P{chequeBankName}]]></textFieldExpression>
             </textField>
         </band>
     </title>

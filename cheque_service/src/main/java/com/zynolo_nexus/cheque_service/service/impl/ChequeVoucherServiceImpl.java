@@ -122,6 +122,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .companyCode(company.getCode())
                 .customerCode(customer.getCode())
                 .chequeNo(request.getChequeNo().trim())
+                .chequeBankName(request.getChequeBankName().trim())
                 .chequeType(chequeType)
                 .chequeDate(chequeDate)
                 .description(trimToNull(request.getDescription()))
@@ -175,6 +176,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         if (!StringUtils.hasText(request.getCompanyCode())
                 || !StringUtils.hasText(request.getCustomerCode())
                 || !StringUtils.hasText(request.getChequeNo())
+                || !StringUtils.hasText(request.getChequeBankName())
                 || !StringUtils.hasText(request.getChequeType())
                 || !isValidInvoiceLines(request.getInvoices())) {
             return error("Invalid voucher update request", 400);
@@ -203,6 +205,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         voucher.setCompanyCode(company.getCode());
         voucher.setCustomerCode(customer.getCode());
         voucher.setChequeNo(request.getChequeNo().trim());
+        voucher.setChequeBankName(request.getChequeBankName().trim());
         voucher.setChequeType(chequeType);
         voucher.setChequeDate(chequeDate);
         voucher.setDescription(trimToNull(request.getDescription()));
@@ -359,6 +362,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         String companyCode = normalize(search != null ? search.getCompanyCode() : null);
         String customerCode = normalize(search != null ? search.getCustomerCode() : null);
         String chequeNo = normalize(search != null ? search.getChequeNo() : null);
+        String chequeBankName = normalize(search != null ? search.getChequeBankName() : null);
         String chequeType = normalize(search != null ? search.getChequeType() : null);
         String status = normalize(search != null ? search.getStatus() : null);
 
@@ -374,6 +378,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .filter(voucher -> matches(companyCode, voucher.getCompanyCode()))
                 .filter(voucher -> matches(customerCode, voucher.getCustomerCode()))
                 .filter(voucher -> matches(chequeNo, voucher.getChequeNo()))
+                .filter(voucher -> matches(chequeBankName, voucher.getChequeBankName()))
                 .filter(voucher -> matchesChequeType(chequeType, voucher.getChequeType()))
                 .filter(voucher -> statuses == null || statuses.isEmpty() || statuses.contains(voucher.getStatus()))
                 .filter(voucher -> matchesStatus(status, voucher.getStatus()))
@@ -563,6 +568,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         params.put("companyPhone", company != null ? safe(company.getPhoneNumber()) : "");
         params.put("payer", customer != null ? "M/s " + safe(customer.getDescription()) : safe(dto.getCustomerDescription()));
         params.put("chequeNo", safe(dto.getChequeNo()));
+        params.put("chequeBankName", safe(dto.getChequeBankName()));
         params.put("chequeType", safe(dto.getChequeType()));
         params.put("chequeDate", dto.getChequeDate() != null ? dto.getChequeDate().toString() : "");
         params.put("voucherDescription", safe(dto.getDescription()));
@@ -678,6 +684,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 && StringUtils.hasText(request.getCompanyCode())
                 && StringUtils.hasText(request.getCustomerCode())
                 && StringUtils.hasText(request.getChequeNo())
+                && StringUtils.hasText(request.getChequeBankName())
                 && StringUtils.hasText(request.getChequeType())
                 && request.getInvoices() != null
                 && !request.getInvoices().isEmpty();
@@ -891,6 +898,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .customerCode(voucher.getCustomerCode())
                 .customerDescription(customer != null ? customer.getDescription() : null)
                 .chequeNo(voucher.getChequeNo())
+                .chequeBankName(voucher.getChequeBankName())
                 .chequeType(voucher.getChequeType() != null ? voucher.getChequeType().name() : null)
                 .chequeDate(voucher.getChequeDate())
                 .description(voucher.getDescription())
@@ -933,6 +941,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .customerCode(voucher.getCustomerCode())
                 .customerDescription(customerDescription)
                 .chequeNo(voucher.getChequeNo())
+                .chequeBankName(voucher.getChequeBankName())
                 .chequeType(voucher.getChequeType() != null ? voucher.getChequeType().name() : null)
                 .chequeDate(voucher.getChequeDate())
                 .description(voucher.getDescription())
@@ -1051,6 +1060,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             comparator = Comparator.comparing(ChequeVoucherListItemDto::getCustomerCode, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         } else if ("chequeno".equals(column)) {
             comparator = Comparator.comparing(ChequeVoucherListItemDto::getChequeNo, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        } else if ("chequebankname".equals(column)) {
+            comparator = Comparator.comparing(ChequeVoucherListItemDto::getChequeBankName, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         } else if ("chequetype".equals(column)) {
             comparator = Comparator.comparing(ChequeVoucherListItemDto::getChequeType, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         } else if ("chequedate".equals(column)) {
