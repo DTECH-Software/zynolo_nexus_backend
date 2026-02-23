@@ -133,6 +133,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .customerCode(customer.getCode())
                 .chequeNo(request.getChequeNo().trim())
                 .bankCode(bank.getCode())
+                .chequeBankName(bank.getName())
                 .chequeType(chequeType)
                 .chequeDate(chequeDate)
                 .description(trimToNull(request.getDescription()))
@@ -222,6 +223,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         voucher.setCustomerCode(customer.getCode());
         voucher.setChequeNo(request.getChequeNo().trim());
         voucher.setBankCode(bank.getCode());
+        voucher.setChequeBankName(bank.getName());
         voucher.setChequeType(chequeType);
         voucher.setChequeDate(chequeDate);
         voucher.setDescription(trimToNull(request.getDescription()));
@@ -954,7 +956,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .customerDescription(customer != null ? customer.getDescription() : null)
                 .chequeNo(voucher.getChequeNo())
                 .bankCode(voucher.getBankCode())
-                .bankName(bank != null ? bank.getName() : null)
+                .bankName(bank != null ? bank.getName() : voucher.getChequeBankName())
                 .chequeType(voucher.getChequeType() != null ? voucher.getChequeType().name() : null)
                 .chequeDate(voucher.getChequeDate())
                 .description(voucher.getDescription())
@@ -1002,7 +1004,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .customerDescription(customerDescription)
                 .chequeNo(voucher.getChequeNo())
                 .bankCode(voucher.getBankCode())
-                .bankName(bankName)
+                .bankName(StringUtils.hasText(bankName) ? bankName : voucher.getChequeBankName())
                 .chequeType(voucher.getChequeType() != null ? voucher.getChequeType().name() : null)
                 .chequeDate(voucher.getChequeDate())
                 .description(voucher.getDescription())
