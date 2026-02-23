@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="cheque_print_lk"
+              pageWidth="842"
+              pageHeight="260"
+              columnWidth="802"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="10"
+              bottomMargin="10"
+              uuid="26cda9fc-63e8-4d80-b0f3-f24f98fd1227">
+
+    <parameter name="dateDay" class="java.lang.String"/>
+    <parameter name="dateMonth" class="java.lang.String"/>
+    <parameter name="dateYear" class="java.lang.String"/>
+    <parameter name="customerName" class="java.lang.String"/>
+    <parameter name="amountNumber" class="java.lang.String"/>
+    <parameter name="amountWords" class="java.lang.String"/>
+
+    <title>
+        <band height="220">
+            <textField isBlankWhenNull="true">
+                <reportElement x="642" y="24" width="24" height="18"/>
+                <textElement textAlignment="Center">
+                    <font size="13" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{dateDay}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="674" y="24" width="24" height="18"/>
+                <textElement textAlignment="Center">
+                    <font size="13" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{dateMonth}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="706" y="24" width="42" height="18"/>
+                <textElement textAlignment="Center">
+                    <font size="13" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{dateYear}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="102" y="84" width="470" height="20"/>
+                <textElement>
+                    <font size="14" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{customerName}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="622" y="84" width="180" height="20"/>
+                <textElement textAlignment="Right">
+                    <font size="14" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{amountNumber}]]></textFieldExpression>
+            </textField>
+
+            <textField isBlankWhenNull="true">
+                <reportElement x="102" y="116" width="700" height="20"/>
+                <textElement>
+                    <font size="13" isBold="true"/>
+                </textElement>
+                <textFieldExpression><![CDATA[$P{amountWords}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <detail>
+        <band height="1"/>
+    </detail>
+</jasperReport>

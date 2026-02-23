@@ -70,6 +70,8 @@ import org.springframework.util.StringUtils;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -93,6 +95,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     private static final String CHCP_PAGE_CODE = "CHCP";
     private static final String CHAP_PAGE_CODE = "CHAP";
     private static final String VOUCHER_REPORT_PATH = "/reports/cheque-voucher.jrxml";
+    private static final String CHEQUE_PRINT_REPORT_PATH = "/reports/cheque-print-lk.jrxml";
 
     private final ChequeVoucherRepository chequeVoucherRepository;
     private final ChequeBankRepository chequeBankRepository;
@@ -103,6 +106,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     private final AuthModuleClient authModuleClient;
 
     private volatile JasperReport voucherReport;
+    private volatile JasperReport chequePrintReport;
 
     @Override
     @Transactional
@@ -643,7 +647,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             }
         }
 
-        MessageResponseDTO<ChequeVoucherPdfDto> exported = exportPdfForVoucher(voucher);
+        MessageResponseDTO<ChequeVoucherPdfDto> exported = exportChequePdfForVoucher(voucher);
         if (exported == null || !exported.isSuccess() || exported.getData() == null) {
             return exported != null ? exported : pdfError("Unable to print cheque", 500);
         }
@@ -966,6 +970,86 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             log.error("Unable to export voucher PDF for voucherId={}", voucher.getId(), ex);
             return pdfError("Unable to export voucher PDF", 500, rootCauseMessage(ex));
         }
+    }
+
+    private MessageResponseDTO<ChequeVoucherPdfDto> exportChequePdfForVoucher(ChequeVoucher voucher) {
+        if (voucher == null) {
+            return pdfError("Voucher not found", 404);
+        }
+
+        ChequeCustomer customer = chequeCustomerRepository.findByCodeIgnoreCase(voucher.getCustomerCode()).orElse(null);
+        String customerName = customer != null ? customer.getDescription() : "";
+        LocalDate chequeDate = voucher.getChequeDate() != null ? voucher.getChequeDate() : LocalDate.now();
+        BigDecimal amount = voucher.getTotalAmount() != null ? voucher.getTotalAmount() : BigDecimal.ZERO;
+
+        try {
+            JasperReport report = getOrLoadChequePrintReport();
+            Map<String, Object> params = buildChequePrintReportParams(chequeDate, customerName, amount);
+            JRMapCollectionDataSource dataSource = new JRMapCollectionDataSource(List.of(Map.of("row", 1)));
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(report, params, dataSource);
+            byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
+            String base64 = Base64.getEncoder().encodeToString(pdfBytes);
+            String fileName = "Cheque_" + voucher.getId() + ".pdf";
+
+            return MessageResponseDTO.<ChequeVoucherPdfDto>builder()
+                    .success(true)
+                    .message("Cheque PDF generated successfully")
+                    .data(ChequeVoucherPdfDto.builder()
+                            .fileName(fileName)
+                            .fileType("application/pdf")
+                            .doc(base64)
+                            .build())
+                    .errors(null)
+                    .errorCode(0)
+                    .responseTime(LocalDateTime.now())
+                    .build();
+        } catch (Throwable ex) {
+            log.error("Unable to generate cheque PDF for voucherId={}", voucher.getId(), ex);
+            return pdfError("Unable to generate cheque PDF", 500, rootCauseMessage(ex));
+        }
+    }
+
+    private JasperReport getOrLoadChequePrintReport() throws JRException {
+        if (chequePrintReport != null) {
+            return chequePrintReport;
+        }
+        synchronized (this) {
+            if (chequePrintReport == null) {
+                try (InputStream inputStream = ChequeVoucherServiceImpl.class.getResourceAsStream(CHEQUE_PRINT_REPORT_PATH)) {
+                    if (inputStream == null) {
+                        throw new JRException("Cheque print template not found: " + CHEQUE_PRINT_REPORT_PATH);
+                    }
+                    chequePrintReport = JasperCompileManager.compileReport(inputStream);
+                } catch (Exception ex) {
+                    if (ex instanceof JRException jrException) {
+                        throw jrException;
+                    }
+                    throw new JRException("Unable to load cheque print template", ex);
+                }
+            }
+            return chequePrintReport;
+        }
+    }
+
+    private Map<String, Object> buildChequePrintReportParams(LocalDate chequeDate, String customerName, BigDecimal amount) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("dateDay", String.format("%02d", chequeDate.getDayOfMonth()));
+        params.put("dateMonth", String.format("%02d", chequeDate.getMonthValue()));
+        params.put("dateYear", String.valueOf(chequeDate.getYear()));
+        params.put("customerName", safe(customerName));
+        params.put("amountNumber", formatCurrency(amount));
+        params.put("amountWords", amountToWords(amount));
+        return params;
+    }
+
+    private String formatCurrency(BigDecimal amount) {
+        BigDecimal value = amount != null ? amount.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(Locale.ENGLISH);
+        symbols.setDecimalSeparator('.');
+        symbols.setGroupingSeparator(',');
+        DecimalFormat format = new DecimalFormat("#,##0.00", symbols);
+        return format.format(value);
     }
 
     private MessageResponseDTO<ChequeReprintRequestDto> reprintSuccess(String message, ChequeReprintRequestDto data) {
