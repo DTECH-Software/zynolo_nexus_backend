@@ -1,5 +1,6 @@
 package com.zynolo_nexus.cheque_service.model;
 
+import com.zynolo_nexus.cheque_service.enums.ChequeType;
 import com.zynolo_nexus.cheque_service.enums.ChequeVoucherStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -19,6 +20,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +48,13 @@ public class ChequeVoucher {
 
     @Column(name = "cheque_no", nullable = false, length = 100)
     private String chequeNo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "cheque_type", length = 20)
+    private ChequeType chequeType;
+
+    @Column(name = "cheque_date")
+    private LocalDate chequeDate;
 
     @Column(length = 500)
     private String description;

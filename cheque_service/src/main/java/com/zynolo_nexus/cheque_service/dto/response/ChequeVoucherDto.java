@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,6 +24,8 @@ public class ChequeVoucherDto {
     private String customerCode;
     private String customerDescription;
     private String chequeNo;
+    private String chequeType;
+    private LocalDate chequeDate;
     private String description;
     private BigDecimal totalAmount;
     private ChequeVoucherStatus status;

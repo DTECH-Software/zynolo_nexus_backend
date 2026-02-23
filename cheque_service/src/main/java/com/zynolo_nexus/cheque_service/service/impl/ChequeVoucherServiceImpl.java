@@ -22,6 +22,7 @@ import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherListItemDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherPdfDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherPrivilegesDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherReferenceDataDto;
+import com.zynolo_nexus.cheque_service.enums.ChequeType;
 import com.zynolo_nexus.cheque_service.enums.ChequeCompanyStatus;
 import com.zynolo_nexus.cheque_service.enums.ChequeCustomerStatus;
 import com.zynolo_nexus.cheque_service.enums.ChequeVoucherStatus;
@@ -102,6 +103,16 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             return error("Invalid invoice details", 400);
         }
 
+        ChequeType chequeType = resolveChequeType(request.getChequeType());
+        if (chequeType == null) {
+            return error("Invalid cheque type. Allowed values: NORMAL, DATED", 400);
+        }
+
+        LocalDate chequeDate = resolveChequeDate(chequeType, request.getChequeDate());
+        if (chequeDate == null) {
+            return error("Cheque date is required for DATED cheque type", 400);
+        }
+
         String actor = normalizeUsername(request.getUsername());
         String voucherNo = generateVoucherNo();
         BigDecimal totalAmount = calculateTotal(request.getInvoices());
@@ -111,6 +122,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .companyCode(company.getCode())
                 .customerCode(customer.getCode())
                 .chequeNo(request.getChequeNo().trim())
+                .chequeType(chequeType)
+                .chequeDate(chequeDate)
                 .description(trimToNull(request.getDescription()))
                 .totalAmount(totalAmount)
                 .status(ChequeVoucherStatus.DRAFT)
@@ -162,6 +175,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         if (!StringUtils.hasText(request.getCompanyCode())
                 || !StringUtils.hasText(request.getCustomerCode())
                 || !StringUtils.hasText(request.getChequeNo())
+                || !StringUtils.hasText(request.getChequeType())
                 || !isValidInvoiceLines(request.getInvoices())) {
             return error("Invalid voucher update request", 400);
         }
@@ -176,9 +190,21 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             return error("Customer not found or inactive", 400);
         }
 
+        ChequeType chequeType = resolveChequeType(request.getChequeType());
+        if (chequeType == null) {
+            return error("Invalid cheque type. Allowed values: NORMAL, DATED", 400);
+        }
+
+        LocalDate chequeDate = resolveChequeDate(chequeType, request.getChequeDate());
+        if (chequeDate == null) {
+            return error("Cheque date is required for DATED cheque type", 400);
+        }
+
         voucher.setCompanyCode(company.getCode());
         voucher.setCustomerCode(customer.getCode());
         voucher.setChequeNo(request.getChequeNo().trim());
+        voucher.setChequeType(chequeType);
+        voucher.setChequeDate(chequeDate);
         voucher.setDescription(trimToNull(request.getDescription()));
         voucher.setTotalAmount(calculateTotal(request.getInvoices()));
 
@@ -333,6 +359,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         String companyCode = normalize(search != null ? search.getCompanyCode() : null);
         String customerCode = normalize(search != null ? search.getCustomerCode() : null);
         String chequeNo = normalize(search != null ? search.getChequeNo() : null);
+        String chequeType = normalize(search != null ? search.getChequeType() : null);
         String status = normalize(search != null ? search.getStatus() : null);
 
         Map<String, String> companyDescriptions = new HashMap<>();
@@ -347,6 +374,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .filter(voucher -> matches(companyCode, voucher.getCompanyCode()))
                 .filter(voucher -> matches(customerCode, voucher.getCustomerCode()))
                 .filter(voucher -> matches(chequeNo, voucher.getChequeNo()))
+                .filter(voucher -> matchesChequeType(chequeType, voucher.getChequeType()))
                 .filter(voucher -> statuses == null || statuses.isEmpty() || statuses.contains(voucher.getStatus()))
                 .filter(voucher -> matchesStatus(status, voucher.getStatus()))
                 .map(voucher -> toListItem(
@@ -420,6 +448,10 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                         ChequeReferenceStatusDto.builder().code("APPROVED").description("Approved").build(),
                         ChequeReferenceStatusDto.builder().code("REJECTED").description("Rejected").build(),
                         ChequeReferenceStatusDto.builder().code("CHEQUE_CREATED").description("Cheque Created").build()
+                ))
+                .chequeTypes(List.of(
+                        ChequeReferenceStatusDto.builder().code("NORMAL").description("Normal cheque").build(),
+                        ChequeReferenceStatusDto.builder().code("DATED").description("Dated cheque").build()
                 ))
                 .companies(companies)
                 .customers(customers)
@@ -531,6 +563,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         params.put("companyPhone", company != null ? safe(company.getPhoneNumber()) : "");
         params.put("payer", customer != null ? "M/s " + safe(customer.getDescription()) : safe(dto.getCustomerDescription()));
         params.put("chequeNo", safe(dto.getChequeNo()));
+        params.put("chequeType", safe(dto.getChequeType()));
+        params.put("chequeDate", dto.getChequeDate() != null ? dto.getChequeDate().toString() : "");
         params.put("voucherDescription", safe(dto.getDescription()));
         params.put("status", safe(dto.getStatusDescription()));
         params.put("totalAmount", dto.getTotalAmount() != null ? dto.getTotalAmount().toPlainString() : "0.00");
@@ -644,6 +678,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 && StringUtils.hasText(request.getCompanyCode())
                 && StringUtils.hasText(request.getCustomerCode())
                 && StringUtils.hasText(request.getChequeNo())
+                && StringUtils.hasText(request.getChequeType())
                 && request.getInvoices() != null
                 && !request.getInvoices().isEmpty();
     }
@@ -662,6 +697,27 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             }
         }
         return true;
+    }
+
+    private ChequeType resolveChequeType(String chequeType) {
+        if (!StringUtils.hasText(chequeType)) {
+            return null;
+        }
+        try {
+            return ChequeType.valueOf(chequeType.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private LocalDate resolveChequeDate(ChequeType chequeType, LocalDate requestedChequeDate) {
+        if (chequeType == null) {
+            return null;
+        }
+        if (chequeType == ChequeType.DATED) {
+            return requestedChequeDate;
+        }
+        return LocalDate.now();
     }
 
     private ChequeCompany resolveActiveCompany(String companyCode) {
@@ -835,6 +891,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .customerCode(voucher.getCustomerCode())
                 .customerDescription(customer != null ? customer.getDescription() : null)
                 .chequeNo(voucher.getChequeNo())
+                .chequeType(voucher.getChequeType() != null ? voucher.getChequeType().name() : null)
+                .chequeDate(voucher.getChequeDate())
                 .description(voucher.getDescription())
                 .totalAmount(voucher.getTotalAmount())
                 .status(status)
@@ -875,6 +933,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .customerCode(voucher.getCustomerCode())
                 .customerDescription(customerDescription)
                 .chequeNo(voucher.getChequeNo())
+                .chequeType(voucher.getChequeType() != null ? voucher.getChequeType().name() : null)
+                .chequeDate(voucher.getChequeDate())
                 .description(voucher.getDescription())
                 .totalAmount(voucher.getTotalAmount())
                 .status(status.name())
@@ -974,6 +1034,14 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         return status != null && status.name().equals(normalized);
     }
 
+    private boolean matchesChequeType(String search, ChequeType chequeType) {
+        if (!StringUtils.hasText(search)) {
+            return true;
+        }
+        String normalized = search.trim().toUpperCase(Locale.ROOT);
+        return chequeType != null && chequeType.name().contains(normalized);
+    }
+
     private Comparator<ChequeVoucherListItemDto> resolveComparator(String sortColumn, String sortDirection) {
         String column = normalize(sortColumn);
         Comparator<ChequeVoucherListItemDto> comparator;
@@ -983,6 +1051,10 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             comparator = Comparator.comparing(ChequeVoucherListItemDto::getCustomerCode, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         } else if ("chequeno".equals(column)) {
             comparator = Comparator.comparing(ChequeVoucherListItemDto::getChequeNo, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        } else if ("chequetype".equals(column)) {
+            comparator = Comparator.comparing(ChequeVoucherListItemDto::getChequeType, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+        } else if ("chequedate".equals(column)) {
+            comparator = Comparator.comparing(ChequeVoucherListItemDto::getChequeDate, Comparator.nullsLast(Comparator.naturalOrder()));
         } else if ("status".equals(column)) {
             comparator = Comparator.comparing(ChequeVoucherListItemDto::getStatus, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
         } else if ("totalamount".equals(column)) {

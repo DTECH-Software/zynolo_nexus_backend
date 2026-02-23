@@ -9,5 +9,6 @@ public class ChequeVoucherFilterSearch {
     private String companyCode;
     private String customerCode;
     private String chequeNo;
+    private String chequeType;
     private String status;
 }

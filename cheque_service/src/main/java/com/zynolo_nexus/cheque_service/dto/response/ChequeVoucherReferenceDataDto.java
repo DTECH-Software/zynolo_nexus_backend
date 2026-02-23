@@ -14,6 +14,7 @@ import java.util.List;
 public class ChequeVoucherReferenceDataDto {
 
     private List<ChequeReferenceStatusDto> defaultStatus;
+    private List<ChequeReferenceStatusDto> chequeTypes;
     private List<ChequeReferenceCompanyDto> companies;
     private List<ChequeReferenceCustomerDto> customers;
     private ChequeVoucherPrivilegesDto privileges;
