@@ -748,6 +748,14 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                         .build())
                 .toList();
 
+        List<ChequeReferenceBankDto> banks = chequeBankRepository.findAllByStatusOrderByCodeAsc(ChequeBankStatus.ACTIVE)
+                .stream()
+                .map(bank -> ChequeReferenceBankDto.builder()
+                        .code(bank.getCode())
+                        .name(bank.getName())
+                        .build())
+                .toList();
+
         ChequeReprintReferenceDataDto data = ChequeReprintReferenceDataDto.builder()
                 .defaultStatus(List.of(
                         ChequeReferenceStatusDto.builder().code("REPRINT_PENDING").description("Reprint Pending").build(),
@@ -755,6 +763,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                         ChequeReferenceStatusDto.builder().code("REPRINT_REJECTED").description("Reprint Rejected").build()
                 ))
                 .companies(companies)
+                .banks(banks)
                 .privileges(privileges)
                 .build();
 
