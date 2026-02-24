@@ -26,7 +26,7 @@
 
             <!-- Date digits -->
             <textField isBlankWhenNull="true">
-                <reportElement x="332" y="28" width="14" height="18"/>
+                <reportElement x="336" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -34,7 +34,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="368" y="28" width="14" height="18"/>
+                <reportElement x="352" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -42,7 +42,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="372" y="28" width="14" height="18"/>
+                <reportElement x="372" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -50,7 +50,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="392" y="28" width="14" height="18"/>
+                <reportElement x="392" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -58,7 +58,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="410" y="28" width="14" height="18"/>
+                <reportElement x="410" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -66,7 +66,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="427" y="28" width="14" height="18"/>
+                <reportElement x="427" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -74,7 +74,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="445" y="28" width="14" height="18"/>
+                <reportElement x="445" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -82,7 +82,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="463" y="28" width="14" height="18"/>
+                <reportElement x="463" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -91,7 +91,7 @@
 
             <!-- Customer name -->
             <textField isBlankWhenNull="true">
-                <reportElement x="43" y="71" width="280" height="20"/>
+                <reportElement x="43" y="60" width="280" height="20"/>
                 <textElement>
                     <font size="12" isBold="true"/>
                 </textElement>
@@ -100,7 +100,7 @@
 
             <!-- Amount in words lines -->
             <textField isBlankWhenNull="true">
-                <reportElement x="55" y="100" width="247" height="16"/>
+                <reportElement x="55" y="89" width="247" height="16"/>
                 <textElement>
                     <font size="10" isBold="true"/>
                 </textElement>
