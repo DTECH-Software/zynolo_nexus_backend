@@ -2,7 +2,7 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
               xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
-              name="cheque_print_lk"
+              name="cheque_print_lk_debug"
               pageWidth="502"
               pageHeight="252"
               columnWidth="502"
@@ -21,26 +21,20 @@
     <parameter name="amountWordsLine2" class="java.lang.String"/>
     <parameter name="amountWordsLine3" class="java.lang.String"/>
 
-    <!-- Optional background scan + guide switch -->
+    <!-- Optional debug params -->
     <parameter name="chequeScanPath" class="java.lang.String"/>
     <parameter name="showGuides" class="java.lang.Boolean">
-        <defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression>
+        <defaultValueExpression><![CDATA[Boolean.TRUE]]></defaultValueExpression>
     </parameter>
 
     <title>
         <band height="252">
 
-            <!-- Cheque scan background (commented) -->
-            <!--
+            <!-- Optional cheque scan image background -->
             <image onErrorType="Blank" scaleImage="FillFrame">
                 <reportElement x="0" y="0" width="502" height="252"/>
-                <imageExpression><![CDATA[
-                    ($P{chequeScanPath} != null && $P{chequeScanPath}.trim().length() > 0)
-                        ? net.sf.jasperreports.engine.util.JRLoader.getLocationInputStream($P{chequeScanPath})
-                        : Thread.currentThread().getContextClassLoader().getResourceAsStream("reports/cheque-scan-hnb.jpg")
-                ]]></imageExpression>
+                <imageExpression><![CDATA[$P{chequeScanPath} != null && $P{chequeScanPath}.trim().length() > 0 ? $P{chequeScanPath} : null]]></imageExpression>
             </image>
-            -->
 
             <!-- Calibration guides -->
             <frame>
@@ -109,7 +103,7 @@
 
             <!-- Date digits -->
             <textField isBlankWhenNull="true">
-                <reportElement x="343" y="22" width="14" height="18"/>
+                <reportElement x="336" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -117,7 +111,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="360" y="22" width="14" height="18"/>
+                <reportElement x="352" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -125,7 +119,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="378" y="22" width="14" height="18"/>
+                <reportElement x="372" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -133,7 +127,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="396" y="22" width="14" height="18"/>
+                <reportElement x="392" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -141,7 +135,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="414" y="22" width="14" height="18"/>
+                <reportElement x="410" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -149,7 +143,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="431" y="22" width="14" height="18"/>
+                <reportElement x="427" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -157,7 +151,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="449" y="22" width="14" height="18"/>
+                <reportElement x="445" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -165,7 +159,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="466" y="22" width="14" height="18"/>
+                <reportElement x="463" y="26" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -191,7 +185,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="55" y="110" width="247" height="16"/>
+                <reportElement x="55" y="118" width="247" height="16"/>
                 <textElement>
                     <font size="10" isBold="true"/>
                 </textElement>
@@ -199,7 +193,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="55" y="135" width="247" height="16"/>
+                <reportElement x="55" y="145" width="247" height="16"/>
                 <textElement>
                     <font size="10" isBold="true"/>
                 </textElement>
@@ -208,7 +202,7 @@
 
             <!-- Amount in numbers -->
             <textField isBlankWhenNull="true" textAdjust="ScaleFont">
-                <reportElement x="335" y="108" width="138" height="18"/>
+                <reportElement x="343" y="114" width="138" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="14" isBold="true"/>
                 </textElement>

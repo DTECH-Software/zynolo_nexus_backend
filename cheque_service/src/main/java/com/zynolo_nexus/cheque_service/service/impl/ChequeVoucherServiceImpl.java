@@ -1079,8 +1079,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         BigDecimal value = amount != null ? amount.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(Locale.ENGLISH);
         symbols.setDecimalSeparator('.');
-        symbols.setGroupingSeparator(',');
-        DecimalFormat format = new DecimalFormat("#,##0.00", symbols);
+        DecimalFormat format = new DecimalFormat("0.00", symbols);
         return format.format(value);
     }
 

@@ -10,7 +10,7 @@
               rightMargin="0"
               topMargin="0"
               bottomMargin="0"
-              uuid="26cda9fc-63e8-4d80-b0f3-f24f98fd1227">
+              uuid="3f9f37b2-fcf8-4662-a1c8-42870e9c6241">
 
     <parameter name="dateDay" class="java.lang.String"/>
     <parameter name="dateMonth" class="java.lang.String"/>
@@ -21,12 +21,95 @@
     <parameter name="amountWordsLine2" class="java.lang.String"/>
     <parameter name="amountWordsLine3" class="java.lang.String"/>
 
+    <!-- Optional background scan + guide switch -->
+    <parameter name="chequeScanPath" class="java.lang.String"/>
+    <parameter name="showGuides" class="java.lang.Boolean">
+        <defaultValueExpression><![CDATA[Boolean.FALSE]]></defaultValueExpression>
+    </parameter>
+
     <title>
-        <band height="220">
+        <band height="252">
+
+            <!-- Cheque scan background (commented) -->
+            <!--
+            <image onErrorType="Blank" scaleImage="FillFrame">
+                <reportElement x="0" y="0" width="502" height="252"/>
+                <imageExpression><![CDATA[
+                    ($P{chequeScanPath} != null && $P{chequeScanPath}.trim().length() > 0)
+                        ? net.sf.jasperreports.engine.util.JRLoader.getLocationInputStream($P{chequeScanPath})
+                        : Thread.currentThread().getContextClassLoader().getResourceAsStream("reports/cheque-scan-hnb.jpg")
+                ]]></imageExpression>
+            </image>
+            -->
+
+            <!-- Calibration guides -->
+            <frame>
+                <reportElement x="0" y="0" width="502" height="252" forecolor="#CC0000">
+                    <printWhenExpression><![CDATA[$P{showGuides} == null || $P{showGuides}]]></printWhenExpression>
+                </reportElement>
+
+                <rectangle>
+                    <reportElement x="0" y="0" width="501" height="251" forecolor="#CC0000"/>
+                    <graphicElement>
+                        <pen lineWidth="0.5"/>
+                    </graphicElement>
+                </rectangle>
+
+                <!-- Key baseline guides -->
+                <line>
+                    <reportElement x="0" y="26" width="502" height="1" forecolor="#CC0000"/>
+                    <graphicElement><pen lineWidth="0.4"/></graphicElement>
+                </line>
+                <line>
+                    <reportElement x="0" y="60" width="502" height="1" forecolor="#CC0000"/>
+                    <graphicElement><pen lineWidth="0.4"/></graphicElement>
+                </line>
+                <line>
+                    <reportElement x="0" y="89" width="502" height="1" forecolor="#CC0000"/>
+                    <graphicElement><pen lineWidth="0.4"/></graphicElement>
+                </line>
+                <line>
+                    <reportElement x="0" y="118" width="502" height="1" forecolor="#CC0000"/>
+                    <graphicElement><pen lineWidth="0.4"/></graphicElement>
+                </line>
+                <line>
+                    <reportElement x="0" y="145" width="502" height="1" forecolor="#CC0000"/>
+                    <graphicElement><pen lineWidth="0.4"/></graphicElement>
+                </line>
+
+                <!-- Date box guides -->
+                <line><reportElement x="336" y="0" width="1" height="252" forecolor="#CC0000"/><graphicElement><pen lineWidth="0.4"/></graphicElement></line>
+                <line><reportElement x="352" y="0" width="1" height="252" forecolor="#CC0000"/><graphicElement><pen lineWidth="0.4"/></graphicElement></line>
+                <line><reportElement x="372" y="0" width="1" height="252" forecolor="#CC0000"/><graphicElement><pen lineWidth="0.4"/></graphicElement></line>
+                <line><reportElement x="392" y="0" width="1" height="252" forecolor="#CC0000"/><graphicElement><pen lineWidth="0.4"/></graphicElement></line>
+                <line><reportElement x="410" y="0" width="1" height="252" forecolor="#CC0000"/><graphicElement><pen lineWidth="0.4"/></graphicElement></line>
+                <line><reportElement x="427" y="0" width="1" height="252" forecolor="#CC0000"/><graphicElement><pen lineWidth="0.4"/></graphicElement></line>
+                <line><reportElement x="445" y="0" width="1" height="252" forecolor="#CC0000"/><graphicElement><pen lineWidth="0.4"/></graphicElement></line>
+                <line><reportElement x="463" y="0" width="1" height="252" forecolor="#CC0000"/><graphicElement><pen lineWidth="0.4"/></graphicElement></line>
+                <line><reportElement x="477" y="0" width="1" height="252" forecolor="#CC0000"/><graphicElement><pen lineWidth="0.4"/></graphicElement></line>
+
+                <!-- Amount number box guide -->
+                <rectangle>
+                    <reportElement x="343" y="114" width="138" height="18" forecolor="#CC0000"/>
+                    <graphicElement><pen lineWidth="0.5"/></graphicElement>
+                </rectangle>
+
+                <!-- Labels -->
+                <staticText>
+                    <reportElement x="4" y="4" width="220" height="10" forecolor="#CC0000"/>
+                    <textElement><font size="7" isBold="true"/></textElement>
+                    <text><![CDATA[DEBUG GRID: 177mm x 89mm (page 502 x 252)]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement x="4" y="16" width="220" height="10" forecolor="#CC0000"/>
+                    <textElement><font size="7"/></textElement>
+                    <text><![CDATA[Y=26 Date | Y=60 Payee | Y=89/118/145 Words]]></text>
+                </staticText>
+            </frame>
 
             <!-- Date digits -->
             <textField isBlankWhenNull="true">
-                <reportElement x="336" y="26" width="14" height="18"/>
+                <reportElement x="343" y="22" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -34,7 +117,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="352" y="26" width="14" height="18"/>
+                <reportElement x="360" y="22" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -42,7 +125,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="372" y="26" width="14" height="18"/>
+                <reportElement x="378" y="22" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -50,7 +133,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="392" y="26" width="14" height="18"/>
+                <reportElement x="396" y="22" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -58,7 +141,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="410" y="26" width="14" height="18"/>
+                <reportElement x="414" y="22" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -66,7 +149,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="427" y="26" width="14" height="18"/>
+                <reportElement x="431" y="22" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -74,7 +157,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="445" y="26" width="14" height="18"/>
+                <reportElement x="449" y="22" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -82,7 +165,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="463" y="26" width="14" height="18"/>
+                <reportElement x="466" y="22" width="14" height="18"/>
                 <textElement textAlignment="Center">
                     <font size="11" isBold="true"/>
                 </textElement>
@@ -108,7 +191,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="55" y="118" width="247" height="16"/>
+                <reportElement x="55" y="110" width="247" height="16"/>
                 <textElement>
                     <font size="10" isBold="true"/>
                 </textElement>
@@ -116,7 +199,7 @@
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="55" y="145" width="247" height="16"/>
+                <reportElement x="55" y="135" width="247" height="16"/>
                 <textElement>
                     <font size="10" isBold="true"/>
                 </textElement>
@@ -124,9 +207,9 @@
             </textField>
 
             <!-- Amount in numbers -->
-            <textField isBlankWhenNull="true">
-                <reportElement x="343" y="114" width="138" height="18"/>
-                <textElement textAlignment="Right">
+            <textField isBlankWhenNull="true" textAdjust="ScaleFont">
+                <reportElement x="335" y="108" width="138" height="18"/>
+                <textElement textAlignment="Center">
                     <font size="14" isBold="true"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{amountNumber}]]></textFieldExpression>
