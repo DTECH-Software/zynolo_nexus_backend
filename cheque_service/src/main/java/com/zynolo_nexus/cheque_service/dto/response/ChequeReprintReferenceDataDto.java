@@ -16,5 +16,6 @@ public class ChequeReprintReferenceDataDto {
     private List<ChequeReferenceStatusDto> defaultStatus;
     private List<ChequeReferenceCompanyDto> companies;
     private List<ChequeReferenceBankDto> banks;
+    private List<ChequeReferenceCustomerDto> customers;
     private ChequeVoucherPrivilegesDto privileges;
 }
