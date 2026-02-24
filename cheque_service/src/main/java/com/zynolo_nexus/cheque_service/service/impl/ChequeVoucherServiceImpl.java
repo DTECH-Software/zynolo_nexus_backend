@@ -740,12 +740,21 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         permissionRequest.setPageCode(pageCode);
         ChequeVoucherPrivilegesDto privileges = resolvePrivileges(permissionRequest, pageCode);
 
+        List<ChequeReferenceCompanyDto> companies = chequeCompanyRepository.findAllByStatusOrderByCodeAsc(ChequeCompanyStatus.ACTIVE)
+                .stream()
+                .map(company -> ChequeReferenceCompanyDto.builder()
+                        .code(company.getCode())
+                        .description(company.getDescription())
+                        .build())
+                .toList();
+
         ChequeReprintReferenceDataDto data = ChequeReprintReferenceDataDto.builder()
                 .defaultStatus(List.of(
                         ChequeReferenceStatusDto.builder().code("REPRINT_PENDING").description("Reprint Pending").build(),
                         ChequeReferenceStatusDto.builder().code("REPRINT_APPROVED").description("Reprint Approved").build(),
                         ChequeReferenceStatusDto.builder().code("REPRINT_REJECTED").description("Reprint Rejected").build()
                 ))
+                .companies(companies)
                 .privileges(privileges)
                 .build();
 
