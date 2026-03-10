@@ -21,6 +21,12 @@ Independent microservice scaffold for purchase order module.
 
 ## Starter Endpoints
 - `POST /api/v1/po/health`
+- `POST /api/v1/po/request-create/reference-data`
+- `POST /api/v1/po/request-create`
+- `POST /api/v1/po/request-create/view`
+- `POST /api/v1/po/request-create/update`
+- `POST /api/v1/po/request-create/submit`
+- `POST /api/v1/po/request-create/filter-list`
 
 ## Planned integrations
 - `auth_service` for auth/authorization
