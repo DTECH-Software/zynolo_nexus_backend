@@ -48,6 +48,27 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -p "${SSH_PORT}" "${SSH_HOST}" >> ~/.ssh/known_hosts
 
+      - name: Prepare remote directories
+        run: |
+          ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} "
+            mkdir -p ${APP_DIR}/auth_service &&
+            mkdir -p ${APP_DIR}/setting_service &&
+            mkdir -p ${APP_DIR}/api-gateway &&
+            mkdir -p ${APP_DIR}/cheque_service &&
+            mkdir -p ${APP_DIR}/po_service
+          "
+
+      - name: Install po_service systemd unit
+        run: |
+          sed "s|/opt/zynolo-nexus|${APP_DIR}|g" deploy/systemd/po_service.service > po_service.service
+          rsync -avz -e "ssh -p ${SSH_PORT}" \
+            po_service.service \
+            ${SSH_USER}@${SSH_HOST}:/tmp/po_service.service
+          ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} "
+            sudo mv /tmp/po_service.service /etc/systemd/system/po_service.service &&
+            sudo chmod 644 /etc/systemd/system/po_service.service
+          "
+
       - name: Upload JARs
         run: |
           rsync -avz -e "ssh -p ${SSH_PORT}" \
