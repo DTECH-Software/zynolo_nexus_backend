@@ -1,0 +1,56 @@
+@startuml
+title 09 - Cheque Service Blocks (Overview)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Cheque Service :8093" as CHQ
+database "Cheque DB" as CDB
+participant "Auth Service :8091" as AUTH
+
+group 1) Master Data (CHCM / CHCU / CHBM)
+  FE -> GW: POST /api/v1/cheque/companies/*
+  FE -> GW: POST /api/v1/cheque/customers/*
+  FE -> GW: POST /api/v1/cheque/banks/*
+  GW -> CHQ: Forward
+  CHQ -> CDB: CRUD + filter + status
+  CHQ -> AUTH: /internal/role-page-tasks/{roleCode}/get\n(reference-data privileges)
+  CHQ --> FE: response
+end
+
+group 2) Voucher Create + Approval (CHVC / CHVM / CHAM)
+  FE -> GW: POST /api/v1/cheque/voucher-create
+  FE -> GW: POST /api/v1/cheque/vouchers/*
+  GW -> CHQ: Forward
+  CHQ -> CDB: Save voucher + invoice lines
+  CHQ -> CDB: DRAFT -> PENDING_APPROVAL -> APPROVED/REJECTED
+  CHQ --> FE: response + PDF export
+end
+
+group 3) Cheque Print + Reprint Request (CHCP)
+  FE -> GW: POST /api/v1/cheque/cheques/*
+  GW -> CHQ: Forward
+  CHQ -> CDB: Load APPROVED/CHEQUE_CREATED voucher
+  CHQ -> CDB: Update printCount + printStatus
+  CHQ -> CDB: Save reprint request when needed
+  CHQ --> FE: cheque PDF / download
+end
+
+group 4) Reprint Approval (CHAP)
+  FE -> GW: POST /api/v1/cheque/cheque-approvals/*
+  GW -> CHQ: Forward
+  CHQ -> CDB: REPRINT_PENDING -> REPRINT_APPROVED/REPRINT_REJECTED
+  CHQ --> FE: response
+end
+
+note over FE,CHQ
+Detailed split diagrams:
+- 09a-cheque-company-management.puml
+- 09b-cheque-customer-management.puml
+- 09c-cheque-bank-management.puml
+- 09d-cheque-voucher-management.puml
+- 09e-cheque-print-reprint.puml
+- 09f-cheque-reprint-approval.puml
+end note
+
+@enduml

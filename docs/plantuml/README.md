@@ -35,6 +35,13 @@ These diagrams split the full backend flow into small, readable blocks.
 - `07g-user-company-management.puml`
 - `07h-company-module-subscription.puml`
 - `08-security-audit.puml`
+- `09-cheque-service.puml` (overview)
+- `09a-cheque-company-management.puml`
+- `09b-cheque-customer-management.puml`
+- `09c-cheque-bank-management.puml`
+- `09d-cheque-voucher-management.puml`
+- `09e-cheque-print-reprint.puml`
+- `09f-cheque-reprint-approval.puml`
 
 ## Render
 

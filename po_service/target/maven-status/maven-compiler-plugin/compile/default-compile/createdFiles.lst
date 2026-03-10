@@ -1,0 +1,4 @@
+com\zynolo_nexus\po_service\dto\api\MessageResponseDTO$MessageResponseDTOBuilder.class
+com\zynolo_nexus\po_service\dto\api\MessageResponseDTO.class
+com\zynolo_nexus\po_service\PoServiceApplication.class
+com\zynolo_nexus\po_service\controller\PoHealthController.class
