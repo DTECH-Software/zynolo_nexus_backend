@@ -58,16 +58,12 @@ jobs:
             mkdir -p ${APP_DIR}/po_service
           "
 
-      - name: Install po_service systemd unit
+      - name: Upload po_service systemd unit template
         run: |
           sed "s|/opt/zynolo-nexus|${APP_DIR}|g" deploy/systemd/po_service.service > po_service.service
           rsync -avz -e "ssh -p ${SSH_PORT}" \
             po_service.service \
-            ${SSH_USER}@${SSH_HOST}:/tmp/po_service.service
-          ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} "
-            sudo mv /tmp/po_service.service /etc/systemd/system/po_service.service &&
-            sudo chmod 644 /etc/systemd/system/po_service.service
-          "
+            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/po_service/po_service.service
 
       - name: Upload JARs
         run: |
@@ -94,6 +90,21 @@ jobs:
             sudo systemctl restart auth_service &&
             sudo systemctl restart setting_service &&
             sudo systemctl restart api-gateway &&
-            sudo systemctl restart cheque_service &&
-            sudo systemctl restart po_service
+            sudo systemctl restart cheque_service
+          "
+
+      - name: Restart po_service if unit exists
+        run: |
+          ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} "
+            if systemctl list-unit-files | grep -q '^po_service.service'; then
+              sudo systemctl daemon-reload &&
+              sudo systemctl restart po_service
+            else
+              echo 'po_service.service is not installed yet.'
+              echo 'Install once on server with:'
+              echo 'sudo cp ${APP_DIR}/po_service/po_service.service /etc/systemd/system/po_service.service'
+              echo 'sudo systemctl daemon-reload'
+              echo 'sudo systemctl enable po_service'
+              echo 'sudo systemctl start po_service'
+            fi
           "
