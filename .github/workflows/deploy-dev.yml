@@ -57,14 +57,6 @@ jobs:
             mkdir -p ${APP_DIR}/cheque_service &&
             mkdir -p ${APP_DIR}/po_service
           "
-
-      - name: Upload po_service systemd unit template
-        run: |
-          sed "s|/opt/zynolo-nexus|${APP_DIR}|g" deploy/systemd/po_service.service > po_service.service
-          rsync -avz -e "ssh -p ${SSH_PORT}" \
-            po_service.service \
-            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/po_service/po_service.service
-
       - name: Upload JARs
         run: |
           rsync -avz -e "ssh -p ${SSH_PORT}" \
