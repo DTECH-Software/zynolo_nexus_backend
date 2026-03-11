@@ -21,10 +21,12 @@ import com.zynolo_nexus.po_service.exception.BadRequestException;
 import com.zynolo_nexus.po_service.exception.ResourceNotFoundException;
 import com.zynolo_nexus.po_service.model.Company;
 import com.zynolo_nexus.po_service.model.Currency;
+import com.zynolo_nexus.po_service.model.Department;
 import com.zynolo_nexus.po_service.model.PoRequest;
 import com.zynolo_nexus.po_service.model.PoRequestItem;
 import com.zynolo_nexus.po_service.repository.CompanyRepository;
 import com.zynolo_nexus.po_service.repository.CurrencyRepository;
+import com.zynolo_nexus.po_service.repository.DepartmentRepository;
 import com.zynolo_nexus.po_service.repository.PoRequestRepository;
 import com.zynolo_nexus.po_service.service.PoRequestService;
 import jakarta.persistence.criteria.Predicate;
@@ -54,6 +56,7 @@ public class PoRequestServiceImpl implements PoRequestService {
 
     private final CompanyRepository companyRepository;
     private final CurrencyRepository currencyRepository;
+    private final DepartmentRepository departmentRepository;
     private final PoRequestRepository poRequestRepository;
 
     @Override
@@ -61,6 +64,9 @@ public class PoRequestServiceImpl implements PoRequestService {
         return PoRequestReferenceDataDto.builder()
                 .companies(companyRepository.findAllByStatusOrderByCodeAsc(MasterStatus.ACTIVE).stream()
                         .map(company -> option(company.getCode(), company.getDescription()))
+                        .toList())
+                .departments(departmentRepository.findAllByStatusOrderByCodeAsc(MasterStatus.ACTIVE).stream()
+                        .map(department -> option(department.getCode(), department.getDescription()))
                         .toList())
                 .requestTypes(List.of(
                         option("GOODS", "Goods"),
@@ -170,7 +176,7 @@ public class PoRequestServiceImpl implements PoRequestService {
                                  String companyCode,
                                  String companyName,
                                  String requestType,
-                                 String department,
+                                 String departmentValue,
                                  String costCenter,
                                  String currencyCode,
                                  String vendorCode,
@@ -182,11 +188,12 @@ public class PoRequestServiceImpl implements PoRequestService {
                 .orElseThrow(() -> new BadRequestException("Active company not found for code: " + companyCode));
         Currency currency = currencyRepository.findByCodeIgnoreCaseAndStatus(currencyCode, MasterStatus.ACTIVE)
                 .orElseThrow(() -> new BadRequestException("Active currency not found for code: " + currencyCode));
+        Department resolvedDepartment = resolveDepartment(departmentValue);
 
         poRequest.setCompanyCode(company.getCode());
         poRequest.setCompanyName(company.getDescription());
         poRequest.setRequestType(trim(requestType));
-        poRequest.setDepartment(trim(department));
+        poRequest.setDepartment(resolvedDepartment != null ? resolvedDepartment.getDescription() : null);
         poRequest.setCostCenter(trim(costCenter));
         poRequest.setCurrencyCode(currency.getCode());
         poRequest.setVendorCode(trim(vendorCode));
@@ -348,6 +355,16 @@ public class PoRequestServiceImpl implements PoRequestService {
             case APPROVED -> "Approved";
             case REJECTED -> "Rejected";
         };
+    }
+
+    private Department resolveDepartment(String departmentValue) {
+        if (!hasText(departmentValue)) {
+            return null;
+        }
+
+        return departmentRepository.findByCodeIgnoreCaseAndStatus(departmentValue, MasterStatus.ACTIVE)
+                .or(() -> departmentRepository.findByDescriptionIgnoreCaseAndStatus(departmentValue, MasterStatus.ACTIVE))
+                .orElseThrow(() -> new BadRequestException("Active department not found for value: " + departmentValue));
     }
 
     private boolean hasText(String value) {

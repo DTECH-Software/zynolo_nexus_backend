@@ -11,11 +11,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PoRequestReferenceDataDto {
-    private List<ReferenceOptionDto> companies;
-    private List<ReferenceOptionDto> departments;
-    private List<ReferenceOptionDto> requestTypes;
-    private List<ReferenceOptionDto> currencies;
+public class DepartmentReferenceDataDto {
     private List<ReferenceOptionDto> defaultStatus;
-    private PoRequestPrivilegesDto privileges;
+    private DepartmentPrivilegesDto privileges;
 }
