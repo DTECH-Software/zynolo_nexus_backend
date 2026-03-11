@@ -15,11 +15,14 @@ import com.zynolo_nexus.po_service.dto.response.PoRequestListItemDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestPrivilegesDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestReferenceDataDto;
 import com.zynolo_nexus.po_service.dto.response.ReferenceOptionDto;
+import com.zynolo_nexus.po_service.enums.MasterStatus;
 import com.zynolo_nexus.po_service.enums.PoRequestStatus;
 import com.zynolo_nexus.po_service.exception.BadRequestException;
 import com.zynolo_nexus.po_service.exception.ResourceNotFoundException;
+import com.zynolo_nexus.po_service.model.Currency;
 import com.zynolo_nexus.po_service.model.PoRequest;
 import com.zynolo_nexus.po_service.model.PoRequestItem;
+import com.zynolo_nexus.po_service.repository.CurrencyRepository;
 import com.zynolo_nexus.po_service.repository.PoRequestRepository;
 import com.zynolo_nexus.po_service.service.PoRequestService;
 import jakarta.persistence.criteria.Predicate;
@@ -47,6 +50,7 @@ public class PoRequestServiceImpl implements PoRequestService {
 
     private static final DateTimeFormatter REQUEST_NO_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
+    private final CurrencyRepository currencyRepository;
     private final PoRequestRepository poRequestRepository;
 
     @Override
@@ -61,10 +65,9 @@ public class PoRequestServiceImpl implements PoRequestService {
                         option("SERVICE", "Service"),
                         option("CAPEX", "Capital Expenditure")
                 ))
-                .currencies(List.of(
-                        option("LKR", "Sri Lankan Rupee"),
-                        option("USD", "US Dollar")
-                ))
+                .currencies(currencyRepository.findAllByStatusOrderByCodeAsc(MasterStatus.ACTIVE).stream()
+                        .map(currency -> option(currency.getCode(), currency.getDescription()))
+                        .toList())
                 .defaultStatus(List.of(
                         option(PoRequestStatus.DRAFT.name(), "Draft"),
                         option(PoRequestStatus.SUBMITTED.name(), "Submitted"),
@@ -173,12 +176,15 @@ public class PoRequestServiceImpl implements PoRequestService {
                                  LocalDate requiredDate,
                                  String justification,
                                  List<PoRequestItemRequest> items) {
+        Currency currency = currencyRepository.findByCodeIgnoreCaseAndStatus(currencyCode, MasterStatus.ACTIVE)
+                .orElseThrow(() -> new BadRequestException("Active currency not found for code: " + currencyCode));
+
         poRequest.setCompanyCode(trim(companyCode));
         poRequest.setCompanyName(trim(companyName));
         poRequest.setRequestType(trim(requestType));
         poRequest.setDepartment(trim(department));
         poRequest.setCostCenter(trim(costCenter));
-        poRequest.setCurrencyCode(trim(currencyCode));
+        poRequest.setCurrencyCode(currency.getCode());
         poRequest.setVendorCode(trim(vendorCode));
         poRequest.setVendorName(trim(vendorName));
         poRequest.setRequiredDate(requiredDate);

@@ -21,6 +21,12 @@ Independent microservice scaffold for purchase order module.
 
 ## Starter Endpoints
 - `POST /api/v1/po/health`
+- `POST /api/v1/po/currencies/reference-data`
+- `POST /api/v1/po/currencies`
+- `POST /api/v1/po/currencies/view`
+- `POST /api/v1/po/currencies/update`
+- `POST /api/v1/po/currencies/status`
+- `POST /api/v1/po/currencies/filter-list`
 - `POST /api/v1/po/request-create/reference-data`
 - `POST /api/v1/po/request-create`
 - `POST /api/v1/po/request-create/view`
