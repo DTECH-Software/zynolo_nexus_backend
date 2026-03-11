@@ -36,10 +36,12 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\exception\GlobalExceptionHandler.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\exception\ResourceNotFoundException.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\BaseAuditEntity.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\Company.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\Currency.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\PoRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\PoRequestItem.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\PoServiceApplication.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\CompanyRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\CurrencyRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\PoRequestRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\CurrencyService.java
