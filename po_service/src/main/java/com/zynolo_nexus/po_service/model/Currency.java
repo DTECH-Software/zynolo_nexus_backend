@@ -15,7 +15,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "po_currencies")
+@Table(name = "currencies")
 public class Currency extends BaseAuditEntity {
 
     @Id
