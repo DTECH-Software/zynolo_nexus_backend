@@ -14,6 +14,7 @@ import java.util.List;
 public class PoRequestReferenceDataDto {
     private List<ReferenceOptionDto> companies;
     private List<ReferenceOptionDto> departments;
+    private List<ReferenceOptionDto> costCenters;
     private List<ReferenceOptionDto> vendors;
     private List<ReferenceOptionDto> requestTypes;
     private List<ReferenceOptionDto> currencies;

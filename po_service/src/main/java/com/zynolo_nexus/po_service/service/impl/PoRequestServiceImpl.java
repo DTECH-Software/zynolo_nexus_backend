@@ -20,12 +20,14 @@ import com.zynolo_nexus.po_service.enums.PoRequestStatus;
 import com.zynolo_nexus.po_service.exception.BadRequestException;
 import com.zynolo_nexus.po_service.exception.ResourceNotFoundException;
 import com.zynolo_nexus.po_service.model.Company;
+import com.zynolo_nexus.po_service.model.CostCenter;
 import com.zynolo_nexus.po_service.model.Currency;
 import com.zynolo_nexus.po_service.model.Department;
 import com.zynolo_nexus.po_service.model.PoRequest;
 import com.zynolo_nexus.po_service.model.PoRequestItem;
 import com.zynolo_nexus.po_service.model.Vendor;
 import com.zynolo_nexus.po_service.repository.CompanyRepository;
+import com.zynolo_nexus.po_service.repository.CostCenterRepository;
 import com.zynolo_nexus.po_service.repository.CurrencyRepository;
 import com.zynolo_nexus.po_service.repository.DepartmentRepository;
 import com.zynolo_nexus.po_service.repository.PoRequestRepository;
@@ -47,8 +49,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -57,8 +61,16 @@ public class PoRequestServiceImpl implements PoRequestService {
 
     private static final String PAGE_CODE = "PORC";
     private static final DateTimeFormatter REQUEST_NO_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    private static final Map<String, String> REQUEST_TYPES = new LinkedHashMap<>();
+
+    static {
+        REQUEST_TYPES.put("GOODS", "Goods");
+        REQUEST_TYPES.put("SERVICES", "Services");
+        REQUEST_TYPES.put("COMBINED", "Combined");
+    }
 
     private final CompanyRepository companyRepository;
+    private final CostCenterRepository costCenterRepository;
     private final CurrencyRepository currencyRepository;
     private final DepartmentRepository departmentRepository;
     private final VendorRepository vendorRepository;
@@ -75,14 +87,15 @@ public class PoRequestServiceImpl implements PoRequestService {
                 .departments(departmentRepository.findAllByStatusOrderByCodeAsc(MasterStatus.ACTIVE).stream()
                         .map(department -> option(department.getCode(), department.getDescription()))
                         .toList())
+                .costCenters(costCenterRepository.findAllByStatusOrderByCodeAsc(MasterStatus.ACTIVE).stream()
+                        .map(costCenter -> option(costCenter.getCode(), costCenter.getDescription()))
+                        .toList())
                 .vendors(vendorRepository.findAllByStatusOrderByCodeAsc("ACTIVE").stream()
                         .map(vendor -> option(vendor.getCode(), vendor.getDescription()))
                         .toList())
-                .requestTypes(List.of(
-                        option("GOODS", "Goods"),
-                        option("SERVICE", "Service"),
-                        option("CAPEX", "Capital Expenditure")
-                ))
+                .requestTypes(REQUEST_TYPES.entrySet().stream()
+                        .map(entry -> option(entry.getKey(), entry.getValue()))
+                        .toList())
                 .currencies(currencyRepository.findAllByStatusOrderByCodeAsc(MasterStatus.ACTIVE).stream()
                         .map(currency -> option(currency.getCode(), currency.getDescription()))
                         .toList())
@@ -199,13 +212,14 @@ public class PoRequestServiceImpl implements PoRequestService {
         Currency currency = currencyRepository.findByCodeIgnoreCaseAndStatus(currencyCode, MasterStatus.ACTIVE)
                 .orElseThrow(() -> new BadRequestException("Active currency not found for code: " + currencyCode));
         Department resolvedDepartment = resolveDepartment(departmentValue);
+        CostCenter resolvedCostCenter = resolveCostCenter(costCenter);
         Vendor resolvedVendor = resolveVendor(vendorCode);
 
         poRequest.setCompanyCode(company.getCode());
         poRequest.setCompanyName(company.getDescription());
-        poRequest.setRequestType(trim(requestType));
+        poRequest.setRequestType(parseRequestType(requestType));
         poRequest.setDepartment(resolvedDepartment != null ? resolvedDepartment.getDescription() : null);
-        poRequest.setCostCenter(trim(costCenter));
+        poRequest.setCostCenter(resolvedCostCenter != null ? resolvedCostCenter.getCode() : null);
         poRequest.setCurrencyCode(currency.getCode());
         poRequest.setVendorCode(resolvedVendor != null ? resolvedVendor.getCode() : null);
         poRequest.setVendorName(resolvedVendor != null ? resolvedVendor.getDescription() : null);
@@ -368,6 +382,17 @@ public class PoRequestServiceImpl implements PoRequestService {
         };
     }
 
+    private String parseRequestType(String requestType) {
+        if (!hasText(requestType)) {
+            throw new BadRequestException("requestType is required");
+        }
+        String normalized = requestType.trim().toUpperCase(Locale.ROOT);
+        if (!REQUEST_TYPES.containsKey(normalized)) {
+            throw new BadRequestException("Invalid request type: " + requestType);
+        }
+        return normalized;
+    }
+
     private Department resolveDepartment(String departmentValue) {
         if (!hasText(departmentValue)) {
             return null;
@@ -376,6 +401,16 @@ public class PoRequestServiceImpl implements PoRequestService {
         return departmentRepository.findByCodeIgnoreCaseAndStatus(departmentValue, MasterStatus.ACTIVE)
                 .or(() -> departmentRepository.findByDescriptionIgnoreCaseAndStatus(departmentValue, MasterStatus.ACTIVE))
                 .orElseThrow(() -> new BadRequestException("Active department not found for value: " + departmentValue));
+    }
+
+    private CostCenter resolveCostCenter(String costCenterValue) {
+        if (!hasText(costCenterValue)) {
+            return null;
+        }
+
+        return costCenterRepository.findByCodeIgnoreCaseAndStatus(costCenterValue, MasterStatus.ACTIVE)
+                .or(() -> costCenterRepository.findByDescriptionIgnoreCaseAndStatus(costCenterValue, MasterStatus.ACTIVE))
+                .orElseThrow(() -> new BadRequestException("Active cost center not found for value: " + costCenterValue));
     }
 
     private Vendor resolveVendor(String vendorCode) {
