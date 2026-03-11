@@ -17,4 +17,6 @@ public class DepartmentUpdateRequest extends AuditRequest {
 
     @NotBlank(message = "description is required")
     private String description;
+
+    private String status;
 }

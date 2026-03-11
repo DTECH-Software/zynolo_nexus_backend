@@ -98,6 +98,9 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         department.setCode(code);
         department.setDescription(trim(request.getDescription()));
+        if (hasText(request.getStatus())) {
+            department.setStatus(parseStatus(request.getStatus()));
+        }
         applyAudit(department, request.getUsername(), false);
 
         return toDto(departmentRepository.save(department));

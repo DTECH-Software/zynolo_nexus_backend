@@ -24,10 +24,12 @@ import com.zynolo_nexus.po_service.model.Currency;
 import com.zynolo_nexus.po_service.model.Department;
 import com.zynolo_nexus.po_service.model.PoRequest;
 import com.zynolo_nexus.po_service.model.PoRequestItem;
+import com.zynolo_nexus.po_service.model.Vendor;
 import com.zynolo_nexus.po_service.repository.CompanyRepository;
 import com.zynolo_nexus.po_service.repository.CurrencyRepository;
 import com.zynolo_nexus.po_service.repository.DepartmentRepository;
 import com.zynolo_nexus.po_service.repository.PoRequestRepository;
+import com.zynolo_nexus.po_service.repository.VendorRepository;
 import com.zynolo_nexus.po_service.service.PoRequestService;
 import com.zynolo_nexus.po_service.service.support.PagePrivilegeResolver;
 import jakarta.persistence.criteria.Predicate;
@@ -59,6 +61,7 @@ public class PoRequestServiceImpl implements PoRequestService {
     private final CompanyRepository companyRepository;
     private final CurrencyRepository currencyRepository;
     private final DepartmentRepository departmentRepository;
+    private final VendorRepository vendorRepository;
     private final PoRequestRepository poRequestRepository;
     private final PagePrivilegeResolver pagePrivilegeResolver;
 
@@ -71,6 +74,9 @@ public class PoRequestServiceImpl implements PoRequestService {
                         .toList())
                 .departments(departmentRepository.findAllByStatusOrderByCodeAsc(MasterStatus.ACTIVE).stream()
                         .map(department -> option(department.getCode(), department.getDescription()))
+                        .toList())
+                .vendors(vendorRepository.findAllByStatusOrderByCodeAsc("ACTIVE").stream()
+                        .map(vendor -> option(vendor.getCode(), vendor.getDescription()))
                         .toList())
                 .requestTypes(List.of(
                         option("GOODS", "Goods"),
@@ -193,6 +199,7 @@ public class PoRequestServiceImpl implements PoRequestService {
         Currency currency = currencyRepository.findByCodeIgnoreCaseAndStatus(currencyCode, MasterStatus.ACTIVE)
                 .orElseThrow(() -> new BadRequestException("Active currency not found for code: " + currencyCode));
         Department resolvedDepartment = resolveDepartment(departmentValue);
+        Vendor resolvedVendor = resolveVendor(vendorCode);
 
         poRequest.setCompanyCode(company.getCode());
         poRequest.setCompanyName(company.getDescription());
@@ -200,8 +207,8 @@ public class PoRequestServiceImpl implements PoRequestService {
         poRequest.setDepartment(resolvedDepartment != null ? resolvedDepartment.getDescription() : null);
         poRequest.setCostCenter(trim(costCenter));
         poRequest.setCurrencyCode(currency.getCode());
-        poRequest.setVendorCode(trim(vendorCode));
-        poRequest.setVendorName(trim(vendorName));
+        poRequest.setVendorCode(resolvedVendor != null ? resolvedVendor.getCode() : null);
+        poRequest.setVendorName(resolvedVendor != null ? resolvedVendor.getDescription() : null);
         poRequest.setRequiredDate(requiredDate);
         poRequest.setJustification(trim(justification));
 
@@ -369,6 +376,14 @@ public class PoRequestServiceImpl implements PoRequestService {
         return departmentRepository.findByCodeIgnoreCaseAndStatus(departmentValue, MasterStatus.ACTIVE)
                 .or(() -> departmentRepository.findByDescriptionIgnoreCaseAndStatus(departmentValue, MasterStatus.ACTIVE))
                 .orElseThrow(() -> new BadRequestException("Active department not found for value: " + departmentValue));
+    }
+
+    private Vendor resolveVendor(String vendorCode) {
+        if (!hasText(vendorCode)) {
+            return null;
+        }
+        return vendorRepository.findByCodeIgnoreCaseAndStatus(vendorCode, "ACTIVE")
+                .orElseThrow(() -> new BadRequestException("Active vendor not found for code: " + vendorCode));
     }
 
     private boolean hasText(String value) {
