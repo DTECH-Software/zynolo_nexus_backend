@@ -19,6 +19,7 @@ import com.zynolo_nexus.po_service.exception.ResourceNotFoundException;
 import com.zynolo_nexus.po_service.model.Department;
 import com.zynolo_nexus.po_service.repository.DepartmentRepository;
 import com.zynolo_nexus.po_service.service.DepartmentService;
+import com.zynolo_nexus.po_service.service.support.PagePrivilegeResolver;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -38,21 +39,25 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
 
+    private static final String PAGE_CODE = "DEPM";
+
     private final DepartmentRepository departmentRepository;
+    private final PagePrivilegeResolver pagePrivilegeResolver;
 
     @Override
     public DepartmentReferenceDataDto getReferenceData(DepartmentReferenceDataRequest request) {
+        var privileges = pagePrivilegeResolver.resolve(request != null ? request.getUsername() : null, PAGE_CODE);
         return DepartmentReferenceDataDto.builder()
                 .defaultStatus(List.of(
                         option(MasterStatus.ACTIVE.name(), "Active"),
                         option(MasterStatus.INACTIVE.name(), "Inactive")
                 ))
                 .privileges(DepartmentPrivilegesDto.builder()
-                        .add(true)
-                        .update(true)
-                        .view(true)
-                        .search(true)
-                        .delete(false)
+                        .add(privileges.isAdd())
+                        .update(privileges.isUpdate())
+                        .view(privileges.isView())
+                        .search(privileges.isSearch())
+                        .delete(privileges.isDelete())
                         .build())
                 .build();
     }

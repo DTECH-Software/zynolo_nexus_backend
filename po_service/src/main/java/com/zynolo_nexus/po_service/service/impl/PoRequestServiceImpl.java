@@ -29,6 +29,7 @@ import com.zynolo_nexus.po_service.repository.CurrencyRepository;
 import com.zynolo_nexus.po_service.repository.DepartmentRepository;
 import com.zynolo_nexus.po_service.repository.PoRequestRepository;
 import com.zynolo_nexus.po_service.service.PoRequestService;
+import com.zynolo_nexus.po_service.service.support.PagePrivilegeResolver;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -52,15 +53,18 @@ import java.util.concurrent.ThreadLocalRandom;
 @RequiredArgsConstructor
 public class PoRequestServiceImpl implements PoRequestService {
 
+    private static final String PAGE_CODE = "PORC";
     private static final DateTimeFormatter REQUEST_NO_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final CompanyRepository companyRepository;
     private final CurrencyRepository currencyRepository;
     private final DepartmentRepository departmentRepository;
     private final PoRequestRepository poRequestRepository;
+    private final PagePrivilegeResolver pagePrivilegeResolver;
 
     @Override
     public PoRequestReferenceDataDto getReferenceData(PoReferenceDataRequest request) {
+        var privileges = pagePrivilegeResolver.resolve(request != null ? request.getUsername() : null, PAGE_CODE);
         return PoRequestReferenceDataDto.builder()
                 .companies(companyRepository.findAllByStatusOrderByCodeAsc(MasterStatus.ACTIVE).stream()
                         .map(company -> option(company.getCode(), company.getDescription()))
@@ -83,12 +87,12 @@ public class PoRequestServiceImpl implements PoRequestService {
                         option(PoRequestStatus.APPROVED.name(), "Approved")
                 ))
                 .privileges(PoRequestPrivilegesDto.builder()
-                        .add(true)
-                        .update(true)
-                        .view(true)
-                        .search(true)
-                        .submit(true)
-                        .delete(false)
+                        .add(privileges.isAdd())
+                        .update(privileges.isUpdate())
+                        .view(privileges.isView())
+                        .search(privileges.isSearch())
+                        .submit(privileges.isSubmit())
+                        .delete(privileges.isDelete())
                         .build())
                 .build();
     }

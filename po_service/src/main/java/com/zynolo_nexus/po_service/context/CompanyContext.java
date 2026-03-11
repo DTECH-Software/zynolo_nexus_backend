@@ -1,0 +1,21 @@
+package com.zynolo_nexus.po_service.context;
+
+public final class CompanyContext {
+
+    private static final ThreadLocal<Long> COMPANY_ID = new ThreadLocal<>();
+
+    private CompanyContext() {
+    }
+
+    public static void setCompanyId(Long companyId) {
+        COMPANY_ID.set(companyId);
+    }
+
+    public static Long getCompanyId() {
+        return COMPANY_ID.get();
+    }
+
+    public static void clear() {
+        COMPANY_ID.remove();
+    }
+}
