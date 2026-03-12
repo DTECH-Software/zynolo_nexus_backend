@@ -12,12 +12,8 @@ import java.math.BigDecimal;
 @Setter
 public class PoRequestItemRequest {
 
+    @NotBlank(message = "itemCode is required")
     private String itemCode;
-
-    @NotBlank(message = "itemDescription is required")
-    private String itemDescription;
-
-    private String uom;
 
     @NotNull(message = "quantity is required")
     @DecimalMin(value = "0.01", message = "quantity must be greater than zero")

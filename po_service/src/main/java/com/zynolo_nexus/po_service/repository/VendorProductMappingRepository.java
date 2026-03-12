@@ -14,5 +14,7 @@ public interface VendorProductMappingRepository extends JpaRepository<VendorProd
 
     Optional<VendorProductMapping> findByVendorAndProduct(Vendor vendor, Product product);
 
+    Optional<VendorProductMapping> findByVendorAndProductAndStatus(Vendor vendor, Product product, MasterStatus status);
+
     List<VendorProductMapping> findAllByVendorAndStatusOrderByIdAsc(Vendor vendor, MasterStatus status);
 }

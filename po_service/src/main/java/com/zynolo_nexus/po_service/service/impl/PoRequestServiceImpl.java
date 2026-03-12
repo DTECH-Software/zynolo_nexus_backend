@@ -8,12 +8,14 @@ import com.zynolo_nexus.po_service.dto.request.PoRequestItemRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestSubmitRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestUpdateRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestViewRequest;
+import com.zynolo_nexus.po_service.dto.request.PoVendorProductsRequest;
 import com.zynolo_nexus.po_service.dto.response.PoRequestDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestFilterResultDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestItemDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestListItemDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestPrivilegesDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestReferenceDataDto;
+import com.zynolo_nexus.po_service.dto.response.PoVendorProductOptionDto;
 import com.zynolo_nexus.po_service.dto.response.ReferenceOptionDto;
 import com.zynolo_nexus.po_service.enums.MasterStatus;
 import com.zynolo_nexus.po_service.enums.PoRequestStatus;
@@ -25,13 +27,17 @@ import com.zynolo_nexus.po_service.model.Currency;
 import com.zynolo_nexus.po_service.model.Department;
 import com.zynolo_nexus.po_service.model.PoRequest;
 import com.zynolo_nexus.po_service.model.PoRequestItem;
+import com.zynolo_nexus.po_service.model.Product;
 import com.zynolo_nexus.po_service.model.Vendor;
+import com.zynolo_nexus.po_service.model.VendorProductMapping;
 import com.zynolo_nexus.po_service.repository.CompanyRepository;
 import com.zynolo_nexus.po_service.repository.CostCenterRepository;
 import com.zynolo_nexus.po_service.repository.CurrencyRepository;
 import com.zynolo_nexus.po_service.repository.DepartmentRepository;
 import com.zynolo_nexus.po_service.repository.PoRequestRepository;
+import com.zynolo_nexus.po_service.repository.ProductRepository;
 import com.zynolo_nexus.po_service.repository.VendorRepository;
+import com.zynolo_nexus.po_service.repository.VendorProductMappingRepository;
 import com.zynolo_nexus.po_service.service.PoRequestService;
 import com.zynolo_nexus.po_service.service.support.PagePrivilegeResolver;
 import jakarta.persistence.criteria.Predicate;
@@ -73,7 +79,9 @@ public class PoRequestServiceImpl implements PoRequestService {
     private final CostCenterRepository costCenterRepository;
     private final CurrencyRepository currencyRepository;
     private final DepartmentRepository departmentRepository;
+    private final ProductRepository productRepository;
     private final VendorRepository vendorRepository;
+    private final VendorProductMappingRepository vendorProductMappingRepository;
     private final PoRequestRepository poRequestRepository;
     private final PagePrivilegeResolver pagePrivilegeResolver;
 
@@ -117,14 +125,23 @@ public class PoRequestServiceImpl implements PoRequestService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<PoVendorProductOptionDto> getVendorProducts(PoVendorProductsRequest request) {
+        Vendor vendor = resolveVendor(request.getVendorCode());
+        return vendorProductMappingRepository.findAllByVendorAndStatusOrderByIdAsc(vendor, MasterStatus.ACTIVE).stream()
+                .map(this::toVendorProductOption)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public PoRequestDto create(PoRequestCreateRequest request) {
         PoRequest poRequest = new PoRequest();
         poRequest.setRequestNo(generateRequestNo());
         poRequest.setStatus(PoRequestStatus.DRAFT);
-        populateRequest(poRequest, request.getCompanyCode(), request.getCompanyName(), request.getRequestType(),
+        populateRequest(poRequest, request.getCompanyCode(), request.getRequestType(),
                 request.getDepartment(), request.getCostCenter(), request.getCurrencyCode(), request.getVendorCode(),
-                request.getVendorName(), request.getRequiredDate(), request.getJustification(), request.getItems());
+                request.getRequiredDate(), request.getJustification(), request.getItems());
         applyAudit(poRequest, request.getUsername(), true);
 
         return toDto(poRequestRepository.save(poRequest));
@@ -142,9 +159,9 @@ public class PoRequestServiceImpl implements PoRequestService {
         PoRequest poRequest = getById(request.getId());
         validateEditable(poRequest.getStatus());
 
-        populateRequest(poRequest, request.getCompanyCode(), request.getCompanyName(), request.getRequestType(),
+        populateRequest(poRequest, request.getCompanyCode(), request.getRequestType(),
                 request.getDepartment(), request.getCostCenter(), request.getCurrencyCode(), request.getVendorCode(),
-                request.getVendorName(), request.getRequiredDate(), request.getJustification(), request.getItems());
+                request.getRequiredDate(), request.getJustification(), request.getItems());
         applyAudit(poRequest, request.getUsername(), false);
 
         return toDto(poRequestRepository.save(poRequest));
@@ -197,13 +214,11 @@ public class PoRequestServiceImpl implements PoRequestService {
 
     private void populateRequest(PoRequest poRequest,
                                  String companyCode,
-                                 String companyName,
                                  String requestType,
                                  String departmentValue,
                                  String costCenter,
                                  String currencyCode,
                                  String vendorCode,
-                                 String vendorName,
                                  LocalDate requiredDate,
                                  String justification,
                                  List<PoRequestItemRequest> items) {
@@ -221,8 +236,8 @@ public class PoRequestServiceImpl implements PoRequestService {
         poRequest.setDepartment(resolvedDepartment != null ? resolvedDepartment.getDescription() : null);
         poRequest.setCostCenter(resolvedCostCenter != null ? resolvedCostCenter.getCode() : null);
         poRequest.setCurrencyCode(currency.getCode());
-        poRequest.setVendorCode(resolvedVendor != null ? resolvedVendor.getCode() : null);
-        poRequest.setVendorName(resolvedVendor != null ? resolvedVendor.getDescription() : null);
+        poRequest.setVendorCode(resolvedVendor.getCode());
+        poRequest.setVendorName(resolvedVendor.getDescription());
         poRequest.setRequiredDate(requiredDate);
         poRequest.setJustification(trim(justification));
 
@@ -230,10 +245,12 @@ public class PoRequestServiceImpl implements PoRequestService {
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         for (PoRequestItemRequest itemRequest : items) {
+            VendorProductMapping mapping = resolveVendorProductMapping(resolvedVendor, itemRequest.getItemCode());
+            Product product = mapping.getProduct();
             PoRequestItem item = new PoRequestItem();
-            item.setItemCode(trim(itemRequest.getItemCode()));
-            item.setItemDescription(trim(itemRequest.getItemDescription()));
-            item.setUom(trim(itemRequest.getUom()));
+            item.setItemCode(product.getCode());
+            item.setItemDescription(product.getDescription());
+            item.setUom(product.getUom());
             item.setQuantity(itemRequest.getQuantity());
             item.setUnitPrice(itemRequest.getUnitPrice());
             item.setLineAmount(itemRequest.getQuantity().multiply(itemRequest.getUnitPrice()));
@@ -373,6 +390,18 @@ public class PoRequestServiceImpl implements PoRequestService {
                 .build();
     }
 
+    private PoVendorProductOptionDto toVendorProductOption(VendorProductMapping mapping) {
+        return PoVendorProductOptionDto.builder()
+                .code(mapping.getProduct().getCode())
+                .description(mapping.getProduct().getDescription())
+                .uom(mapping.getProduct().getUom())
+                .vendorProductCode(mapping.getVendorProductCode())
+                .defaultPrice(mapping.getProduct().getDefaultPrice())
+                .lastPrice(mapping.getLastPrice())
+                .leadTimeDays(mapping.getLeadTimeDays())
+                .build();
+    }
+
     private String toStatusDescription(PoRequestStatus status) {
         return switch (status) {
             case DRAFT -> "Draft";
@@ -414,11 +443,18 @@ public class PoRequestServiceImpl implements PoRequestService {
     }
 
     private Vendor resolveVendor(String vendorCode) {
-        if (!hasText(vendorCode)) {
-            return null;
-        }
         return vendorRepository.findByCodeIgnoreCaseAndStatus(vendorCode, "ACTIVE")
                 .orElseThrow(() -> new BadRequestException("Active vendor not found for code: " + vendorCode));
+    }
+
+    private VendorProductMapping resolveVendorProductMapping(Vendor vendor, String itemCode) {
+        Product product = productRepository.findByCodeIgnoreCaseAndStatus(itemCode, MasterStatus.ACTIVE)
+                .orElseThrow(() -> new BadRequestException("Active product not found for code: " + itemCode));
+
+        return vendorProductMappingRepository.findByVendorAndProductAndStatus(vendor, product, MasterStatus.ACTIVE)
+                .orElseThrow(() -> new BadRequestException(
+                        "Active vendor product mapping not found for vendor: " + vendor.getCode() + " and product: " + itemCode
+                ));
     }
 
     private boolean hasText(String value) {

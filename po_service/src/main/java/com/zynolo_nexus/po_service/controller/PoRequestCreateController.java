@@ -7,9 +7,11 @@ import com.zynolo_nexus.po_service.dto.request.PoRequestFilterRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestSubmitRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestUpdateRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestViewRequest;
+import com.zynolo_nexus.po_service.dto.request.PoVendorProductsRequest;
 import com.zynolo_nexus.po_service.dto.response.PoRequestDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestFilterResultDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestReferenceDataDto;
+import com.zynolo_nexus.po_service.dto.response.PoVendorProductOptionDto;
 import com.zynolo_nexus.po_service.service.PoRequestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,6 +33,11 @@ public class PoRequestCreateController {
     @PostMapping("/reference-data")
     public MessageResponseDTO<PoRequestReferenceDataDto> referenceData(@Valid @RequestBody PoReferenceDataRequest request) {
         return success("Reference data PORC retrieved successfully", poRequestService.getReferenceData(request));
+    }
+
+    @PostMapping("/vendor-products")
+    public MessageResponseDTO<List<PoVendorProductOptionDto>> vendorProducts(@Valid @RequestBody PoVendorProductsRequest request) {
+        return success("Vendor products retrieved successfully", poRequestService.getVendorProducts(request));
     }
 
     @PostMapping
