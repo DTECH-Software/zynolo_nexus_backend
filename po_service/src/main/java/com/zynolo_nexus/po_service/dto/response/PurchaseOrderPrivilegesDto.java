@@ -1,4 +1,4 @@
-package com.zynolo_nexus.po_service.service.support;
+package com.zynolo_nexus.po_service.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,14 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PageTaskPrivileges {
+public class PurchaseOrderPrivilegesDto {
     private boolean add;
     private boolean update;
     private boolean view;
     private boolean search;
-    private boolean delete;
-    private boolean submit;
     private boolean send;
-    private boolean approve;
-    private boolean reject;
 }
