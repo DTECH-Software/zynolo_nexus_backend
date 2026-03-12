@@ -28,10 +28,12 @@ import com.zynolo_nexus.po_service.exception.BadRequestException;
 import com.zynolo_nexus.po_service.exception.ResourceNotFoundException;
 import com.zynolo_nexus.po_service.model.PoRequest;
 import com.zynolo_nexus.po_service.model.PoRequestItem;
+import com.zynolo_nexus.po_service.model.Department;
 import com.zynolo_nexus.po_service.model.PurchaseOrder;
 import com.zynolo_nexus.po_service.model.PurchaseOrderItem;
 import com.zynolo_nexus.po_service.repository.CompanyRepository;
 import com.zynolo_nexus.po_service.repository.CurrencyRepository;
+import com.zynolo_nexus.po_service.repository.DepartmentRepository;
 import com.zynolo_nexus.po_service.repository.PoRequestRepository;
 import com.zynolo_nexus.po_service.repository.PurchaseOrderRepository;
 import com.zynolo_nexus.po_service.repository.VendorRepository;
@@ -76,6 +78,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
 
     private final CompanyRepository companyRepository;
     private final CurrencyRepository currencyRepository;
+    private final DepartmentRepository departmentRepository;
     private final VendorRepository vendorRepository;
     private final PoRequestRepository poRequestRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
@@ -522,13 +525,15 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
     }
 
     private PoRequestDto toPoRequestDto(PoRequest poRequest) {
+        Department department = resolveDepartmentForResponse(poRequest.getDepartment());
         return PoRequestDto.builder()
                 .id(poRequest.getId())
                 .requestNo(poRequest.getRequestNo())
                 .companyCode(poRequest.getCompanyCode())
                 .companyName(poRequest.getCompanyName())
                 .requestType(poRequest.getRequestType())
-                .department(poRequest.getDepartment())
+                .departmentCode(department != null ? department.getCode() : null)
+                .departmentDescription(poRequest.getDepartment())
                 .costCenter(poRequest.getCostCenter())
                 .currencyCode(poRequest.getCurrencyCode())
                 .vendorCode(poRequest.getVendorCode())
@@ -548,6 +553,13 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
                 .lastModifiedBy(poRequest.getLastModifiedBy())
                 .items(poRequest.getItems().stream().map(this::toPoRequestItemDto).toList())
                 .build();
+    }
+
+    private Department resolveDepartmentForResponse(String departmentDescription) {
+        if (!hasText(departmentDescription)) {
+            return null;
+        }
+        return departmentRepository.findByDescriptionIgnoreCase(departmentDescription.trim()).orElse(null);
     }
 
     private PoRequestListItemDto toPoRequestListItemDto(PoRequest poRequest) {

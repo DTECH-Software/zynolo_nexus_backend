@@ -15,9 +15,11 @@ import com.zynolo_nexus.po_service.enums.MasterStatus;
 import com.zynolo_nexus.po_service.enums.PoRequestStatus;
 import com.zynolo_nexus.po_service.exception.BadRequestException;
 import com.zynolo_nexus.po_service.exception.ResourceNotFoundException;
+import com.zynolo_nexus.po_service.model.Department;
 import com.zynolo_nexus.po_service.model.PoRequest;
 import com.zynolo_nexus.po_service.model.PoRequestItem;
 import com.zynolo_nexus.po_service.repository.CompanyRepository;
+import com.zynolo_nexus.po_service.repository.DepartmentRepository;
 import com.zynolo_nexus.po_service.repository.PoRequestRepository;
 import com.zynolo_nexus.po_service.repository.VendorRepository;
 import com.zynolo_nexus.po_service.service.PoRequestManagementService;
@@ -52,6 +54,7 @@ public class PoRequestManagementServiceImpl implements PoRequestManagementServic
     }
 
     private final CompanyRepository companyRepository;
+    private final DepartmentRepository departmentRepository;
     private final VendorRepository vendorRepository;
     private final PoRequestRepository poRequestRepository;
     private final PagePrivilegeResolver pagePrivilegeResolver;
@@ -173,13 +176,15 @@ public class PoRequestManagementServiceImpl implements PoRequestManagementServic
     }
 
     private PoRequestDto toDto(PoRequest poRequest) {
+        Department department = resolveDepartmentForResponse(poRequest.getDepartment());
         return PoRequestDto.builder()
                 .id(poRequest.getId())
                 .requestNo(poRequest.getRequestNo())
                 .companyCode(poRequest.getCompanyCode())
                 .companyName(poRequest.getCompanyName())
                 .requestType(poRequest.getRequestType())
-                .department(poRequest.getDepartment())
+                .departmentCode(department != null ? department.getCode() : null)
+                .departmentDescription(poRequest.getDepartment())
                 .costCenter(poRequest.getCostCenter())
                 .currencyCode(poRequest.getCurrencyCode())
                 .vendorCode(poRequest.getVendorCode())
@@ -199,6 +204,13 @@ public class PoRequestManagementServiceImpl implements PoRequestManagementServic
                 .lastModifiedBy(poRequest.getLastModifiedBy())
                 .items(poRequest.getItems().stream().map(this::toItemDto).toList())
                 .build();
+    }
+
+    private Department resolveDepartmentForResponse(String departmentDescription) {
+        if (!hasText(departmentDescription)) {
+            return null;
+        }
+        return departmentRepository.findByDescriptionIgnoreCase(departmentDescription.trim()).orElse(null);
     }
 
     private PoRequestListItemDto toListItemDto(PoRequest poRequest) {

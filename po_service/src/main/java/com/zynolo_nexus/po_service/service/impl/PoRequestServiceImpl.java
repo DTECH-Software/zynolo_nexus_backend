@@ -331,13 +331,15 @@ public class PoRequestServiceImpl implements PoRequestService {
     }
 
     private PoRequestDto toDto(PoRequest poRequest) {
+        Department department = resolveDepartmentForResponse(poRequest.getDepartment());
         return PoRequestDto.builder()
                 .id(poRequest.getId())
                 .requestNo(poRequest.getRequestNo())
                 .companyCode(poRequest.getCompanyCode())
                 .companyName(poRequest.getCompanyName())
                 .requestType(poRequest.getRequestType())
-                .department(poRequest.getDepartment())
+                .departmentCode(department != null ? department.getCode() : null)
+                .departmentDescription(poRequest.getDepartment())
                 .costCenter(poRequest.getCostCenter())
                 .currencyCode(poRequest.getCurrencyCode())
                 .vendorCode(poRequest.getVendorCode())
@@ -357,6 +359,13 @@ public class PoRequestServiceImpl implements PoRequestService {
                 .lastModifiedBy(poRequest.getLastModifiedBy())
                 .items(poRequest.getItems().stream().map(this::toItemDto).toList())
                 .build();
+    }
+
+    private Department resolveDepartmentForResponse(String departmentDescription) {
+        if (!hasText(departmentDescription)) {
+            return null;
+        }
+        return departmentRepository.findByDescriptionIgnoreCase(departmentDescription.trim()).orElse(null);
     }
 
     private PoRequestListItemDto toListItemDto(PoRequest poRequest) {

@@ -14,6 +14,8 @@ public interface DepartmentRepository extends JpaRepository<Department, Long>, J
 
     List<Department> findAllByStatusOrderByCodeAsc(MasterStatus status);
 
+    Optional<Department> findByDescriptionIgnoreCase(String description);
+
     Optional<Department> findByCodeIgnoreCaseAndStatus(String code, MasterStatus status);
 
     Optional<Department> findByDescriptionIgnoreCaseAndStatus(String description, MasterStatus status);
