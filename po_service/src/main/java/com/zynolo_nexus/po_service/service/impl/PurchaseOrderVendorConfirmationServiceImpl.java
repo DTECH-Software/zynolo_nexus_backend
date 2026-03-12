@@ -3,6 +3,7 @@ package com.zynolo_nexus.po_service.service.impl;
 import com.zynolo_nexus.po_service.dto.request.PurchaseOrderFilterRequest;
 import com.zynolo_nexus.po_service.dto.request.PurchaseOrderFilterSearch;
 import com.zynolo_nexus.po_service.dto.request.PurchaseOrderReferenceDataRequest;
+import com.zynolo_nexus.po_service.dto.request.PurchaseOrderVendorConfirmItemRequest;
 import com.zynolo_nexus.po_service.dto.request.PurchaseOrderVendorConfirmRequest;
 import com.zynolo_nexus.po_service.dto.request.PurchaseOrderViewRequest;
 import com.zynolo_nexus.po_service.dto.response.PurchaseOrderDto;
@@ -36,10 +37,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -82,6 +85,7 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
                         option(PurchaseOrderStatus.SENT.name(), "Sent"),
                         option(PurchaseOrderStatus.VENDOR_CONFIRMED.name(), "Vendor Confirmed"),
                         option(PurchaseOrderStatus.PARTIALLY_CONFIRMED.name(), "Partially Confirmed"),
+                        option(PurchaseOrderStatus.PARTIALLY_APPROVED.name(), "Partially Approved"),
                         option(PurchaseOrderStatus.VENDOR_REJECTED.name(), "Vendor Rejected")
                 ))
                 .privileges(PurchaseOrderPrivilegesDto.builder()
@@ -131,6 +135,7 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
         }
 
         PurchaseOrderStatus confirmationStatus = parseConfirmationStatus(request.getStatus());
+        applyApprovedQuantities(purchaseOrder, confirmationStatus, request.getItems());
         purchaseOrder.setStatus(confirmationStatus);
         purchaseOrder.setVendorConfirmationDate(LocalDateTime.now());
         purchaseOrder.setVendorConfirmationBy(request.getUsername());
@@ -141,6 +146,68 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
         purchaseOrder.setLastModifiedBy(request.getUsername());
 
         return toDto(purchaseOrderRepository.save(purchaseOrder));
+    }
+
+    private void applyApprovedQuantities(PurchaseOrder purchaseOrder,
+                                         PurchaseOrderStatus confirmationStatus,
+                                         List<PurchaseOrderVendorConfirmItemRequest> items) {
+        if (confirmationStatus == PurchaseOrderStatus.VENDOR_CONFIRMED) {
+            purchaseOrder.getItems().forEach(item -> item.setApprovedQuantity(item.getQuantity()));
+            return;
+        }
+
+        if (confirmationStatus == PurchaseOrderStatus.VENDOR_REJECTED) {
+            purchaseOrder.getItems().forEach(item -> item.setApprovedQuantity(java.math.BigDecimal.ZERO));
+            return;
+        }
+
+        if (items == null || items.isEmpty()) {
+            throw new BadRequestException("items are required for partially approved/confirmed purchase orders");
+        }
+
+        Map<String, PurchaseOrderItem> purchaseOrderItems = new LinkedHashMap<>();
+        purchaseOrder.getItems().forEach(item -> purchaseOrderItems.put(normalize(item.getItemCode()), item));
+
+        Set<String> payloadCodes = new LinkedHashSet<>();
+        boolean anyPartial = false;
+        boolean anyPositive = false;
+
+        for (PurchaseOrderVendorConfirmItemRequest itemRequest : items) {
+            String normalized = normalize(itemRequest.getItemCode());
+            if (!payloadCodes.add(normalized)) {
+                throw new BadRequestException("Duplicate item code found in vendor confirmation payload: " + itemRequest.getItemCode());
+            }
+
+            PurchaseOrderItem purchaseOrderItem = purchaseOrderItems.get(normalized);
+            if (purchaseOrderItem == null) {
+                throw new BadRequestException("Purchase order item not found for code: " + itemRequest.getItemCode());
+            }
+
+            if (itemRequest.getApprovedQuantity().compareTo(purchaseOrderItem.getQuantity()) > 0) {
+                throw new BadRequestException("Approved quantity exceeds ordered quantity for item code: " + itemRequest.getItemCode());
+            }
+
+            if (itemRequest.getApprovedQuantity().compareTo(java.math.BigDecimal.ZERO) < 0) {
+                throw new BadRequestException("Approved quantity cannot be negative for item code: " + itemRequest.getItemCode());
+            }
+
+            if (itemRequest.getApprovedQuantity().compareTo(java.math.BigDecimal.ZERO) > 0) {
+                anyPositive = true;
+            }
+            if (itemRequest.getApprovedQuantity().compareTo(purchaseOrderItem.getQuantity()) < 0) {
+                anyPartial = true;
+            }
+
+            purchaseOrderItem.setApprovedQuantity(itemRequest.getApprovedQuantity());
+        }
+
+        if (!payloadCodes.equals(purchaseOrderItems.keySet())) {
+            throw new BadRequestException("All purchase order item codes must be included for partial approval");
+        }
+
+        if (!anyPositive || !anyPartial) {
+            throw new BadRequestException("Partial approval requires at least one approved quantity and at least one partially approved line");
+        }
     }
 
     private Specification<PurchaseOrder> buildSpecification(PurchaseOrderFilterSearch search) {
@@ -176,6 +243,7 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
                             PurchaseOrderStatus.SENT,
                             PurchaseOrderStatus.VENDOR_CONFIRMED,
                             PurchaseOrderStatus.PARTIALLY_CONFIRMED,
+                            PurchaseOrderStatus.PARTIALLY_APPROVED,
                             PurchaseOrderStatus.VENDOR_REJECTED
                     ));
                 }
@@ -184,6 +252,7 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
                         PurchaseOrderStatus.SENT,
                         PurchaseOrderStatus.VENDOR_CONFIRMED,
                         PurchaseOrderStatus.PARTIALLY_CONFIRMED,
+                        PurchaseOrderStatus.PARTIALLY_APPROVED,
                         PurchaseOrderStatus.VENDOR_REJECTED
                 ));
             }
@@ -262,6 +331,7 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
                 .itemDescription(item.getItemDescription())
                 .uom(item.getUom())
                 .quantity(item.getQuantity())
+                .approvedQuantity(effectiveApprovedQuantity(item))
                 .unitPrice(item.getUnitPrice())
                 .lineAmount(item.getLineAmount())
                 .build();
@@ -279,6 +349,7 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
         PurchaseOrderStatus parsed = parseStatus(status);
         if (parsed != PurchaseOrderStatus.VENDOR_CONFIRMED
                 && parsed != PurchaseOrderStatus.PARTIALLY_CONFIRMED
+                && parsed != PurchaseOrderStatus.PARTIALLY_APPROVED
                 && parsed != PurchaseOrderStatus.VENDOR_REJECTED) {
             throw new BadRequestException("Invalid vendor confirmation status: " + status);
         }
@@ -291,6 +362,7 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
             case SENT -> "Sent";
             case VENDOR_CONFIRMED -> "Vendor Confirmed";
             case PARTIALLY_CONFIRMED -> "Partially Confirmed";
+            case PARTIALLY_APPROVED -> "Partially Approved";
             case VENDOR_REJECTED -> "Vendor Rejected";
             case PARTIALLY_RECEIVED -> "Partially Received";
             case RECEIVED -> "Received";
@@ -329,5 +401,13 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
 
     private String trim(String value) {
         return value == null ? null : value.trim();
+    }
+
+    private String normalize(String value) {
+        return value == null ? null : value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private java.math.BigDecimal effectiveApprovedQuantity(PurchaseOrderItem item) {
+        return item.getApprovedQuantity() != null ? item.getApprovedQuantity() : item.getQuantity();
     }
 }

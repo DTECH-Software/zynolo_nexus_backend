@@ -44,6 +44,9 @@ public class GoodsReceiptItem {
     @Column(name = "ordered_quantity", nullable = false, precision = 18, scale = 2)
     private BigDecimal orderedQuantity;
 
+    @Column(name = "approved_quantity", precision = 18, scale = 2)
+    private BigDecimal approvedQuantity;
+
     @Column(name = "received_quantity", nullable = false, precision = 18, scale = 2)
     private BigDecimal receivedQuantity;
 }

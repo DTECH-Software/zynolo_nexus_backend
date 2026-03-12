@@ -76,6 +76,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
                 .defaultStatus(List.of(
                         option(PurchaseOrderStatus.VENDOR_CONFIRMED.name(), "Vendor Confirmed"),
                         option(PurchaseOrderStatus.PARTIALLY_CONFIRMED.name(), "Partially Confirmed"),
+                        option(PurchaseOrderStatus.PARTIALLY_APPROVED.name(), "Partially Approved"),
                         option(PurchaseOrderStatus.PARTIALLY_RECEIVED.name(), "Partially Received"),
                         option(PurchaseOrderStatus.RECEIVED.name(), "Received")
                 ))
@@ -145,8 +146,9 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
                 throw new BadRequestException("Purchase order item not found for code: " + item.getItemCode());
             }
 
+            BigDecimal approvedQuantity = effectiveApprovedQuantity(purchaseOrderItem);
             BigDecimal alreadyReceived = receivedQuantities.getOrDefault(purchaseOrderItem.getId(), BigDecimal.ZERO);
-            BigDecimal balance = purchaseOrderItem.getQuantity().subtract(alreadyReceived);
+            BigDecimal balance = approvedQuantity.subtract(alreadyReceived);
             if (item.getReceivedQuantity().compareTo(balance) > 0) {
                 throw new BadRequestException("Received quantity exceeds balance for item code: " + item.getItemCode());
             }
@@ -157,6 +159,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
             receiptItem.setItemDescription(purchaseOrderItem.getItemDescription());
             receiptItem.setUom(purchaseOrderItem.getUom());
             receiptItem.setOrderedQuantity(purchaseOrderItem.getQuantity());
+            receiptItem.setApprovedQuantity(approvedQuantity);
             receiptItem.setReceivedQuantity(item.getReceivedQuantity());
             goodsReceipt.addItem(receiptItem);
 
@@ -220,6 +223,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
                     predicates.add(root.get("status").in(
                             PurchaseOrderStatus.VENDOR_CONFIRMED,
                             PurchaseOrderStatus.PARTIALLY_CONFIRMED,
+                            PurchaseOrderStatus.PARTIALLY_APPROVED,
                             PurchaseOrderStatus.PARTIALLY_RECEIVED,
                             PurchaseOrderStatus.RECEIVED
                     ));
@@ -228,6 +232,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
                 predicates.add(root.get("status").in(
                         PurchaseOrderStatus.VENDOR_CONFIRMED,
                         PurchaseOrderStatus.PARTIALLY_CONFIRMED,
+                        PurchaseOrderStatus.PARTIALLY_APPROVED,
                         PurchaseOrderStatus.PARTIALLY_RECEIVED,
                         PurchaseOrderStatus.RECEIVED
                 ));
@@ -245,6 +250,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     private void validateVisible(PurchaseOrder purchaseOrder) {
         if (!(purchaseOrder.getStatus() == PurchaseOrderStatus.VENDOR_CONFIRMED
                 || purchaseOrder.getStatus() == PurchaseOrderStatus.PARTIALLY_CONFIRMED
+                || purchaseOrder.getStatus() == PurchaseOrderStatus.PARTIALLY_APPROVED
                 || purchaseOrder.getStatus() == PurchaseOrderStatus.PARTIALLY_RECEIVED
                 || purchaseOrder.getStatus() == PurchaseOrderStatus.RECEIVED)) {
             throw new BadRequestException("Goods receipt is not available for purchase order status: " + purchaseOrder.getStatus().name());
@@ -254,6 +260,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     private void validateReceivable(PurchaseOrder purchaseOrder) {
         if (!(purchaseOrder.getStatus() == PurchaseOrderStatus.VENDOR_CONFIRMED
                 || purchaseOrder.getStatus() == PurchaseOrderStatus.PARTIALLY_CONFIRMED
+                || purchaseOrder.getStatus() == PurchaseOrderStatus.PARTIALLY_APPROVED
                 || purchaseOrder.getStatus() == PurchaseOrderStatus.PARTIALLY_RECEIVED)) {
             throw new BadRequestException("Only confirmed purchase orders can record receipt");
         }
@@ -283,7 +290,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     private PurchaseOrderStatus resolveReceiptStatus(PurchaseOrder purchaseOrder, Map<Long, BigDecimal> receivedQuantities) {
         boolean allReceived = purchaseOrder.getItems().stream()
                 .allMatch(item -> receivedQuantities.getOrDefault(item.getId(), BigDecimal.ZERO)
-                        .compareTo(item.getQuantity()) >= 0);
+                        .compareTo(effectiveApprovedQuantity(item)) >= 0);
         return allReceived ? PurchaseOrderStatus.RECEIVED : PurchaseOrderStatus.PARTIALLY_RECEIVED;
     }
 
@@ -358,8 +365,9 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
                 .itemDescription(item.getItemDescription())
                 .uom(item.getUom())
                 .orderedQuantity(item.getQuantity())
+                .approvedQuantity(effectiveApprovedQuantity(item))
                 .receivedQuantity(receivedQuantity)
-                .balanceQuantity(item.getQuantity().subtract(receivedQuantity))
+                .balanceQuantity(effectiveApprovedQuantity(item).subtract(receivedQuantity))
                 .unitPrice(item.getUnitPrice())
                 .lineAmount(item.getLineAmount())
                 .build();
@@ -386,6 +394,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
                 .itemDescription(item.getItemDescription())
                 .uom(item.getUom())
                 .orderedQuantity(item.getOrderedQuantity())
+                .approvedQuantity(item.getApprovedQuantity())
                 .receivedQuantity(item.getReceivedQuantity())
                 .build();
     }
@@ -411,6 +420,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
             case SENT -> "Sent";
             case VENDOR_CONFIRMED -> "Vendor Confirmed";
             case PARTIALLY_CONFIRMED -> "Partially Confirmed";
+            case PARTIALLY_APPROVED -> "Partially Approved";
             case VENDOR_REJECTED -> "Vendor Rejected";
             case PARTIALLY_RECEIVED -> "Partially Received";
             case RECEIVED -> "Received";
@@ -454,5 +464,9 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
 
     private String normalize(String value) {
         return value == null ? null : value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private BigDecimal effectiveApprovedQuantity(PurchaseOrderItem item) {
+        return item.getApprovedQuantity() != null ? item.getApprovedQuantity() : item.getQuantity();
     }
 }

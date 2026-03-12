@@ -17,6 +17,7 @@ public class GoodsReceiptItemBalanceDto {
     private String itemDescription;
     private String uom;
     private BigDecimal orderedQuantity;
+    private BigDecimal approvedQuantity;
     private BigDecimal receivedQuantity;
     private BigDecimal balanceQuantity;
     private BigDecimal unitPrice;

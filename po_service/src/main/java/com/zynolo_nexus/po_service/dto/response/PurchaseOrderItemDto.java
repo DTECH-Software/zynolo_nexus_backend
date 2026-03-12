@@ -17,6 +17,7 @@ public class PurchaseOrderItemDto {
     private String itemDescription;
     private String uom;
     private BigDecimal quantity;
+    private BigDecimal approvedQuantity;
     private BigDecimal unitPrice;
     private BigDecimal lineAmount;
 }

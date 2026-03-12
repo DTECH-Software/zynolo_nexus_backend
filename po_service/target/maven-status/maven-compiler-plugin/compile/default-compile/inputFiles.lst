@@ -72,6 +72,7 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PurchaseOrderRequestViewRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PurchaseOrderSendRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PurchaseOrderUpdateRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PurchaseOrderVendorConfirmItemRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PurchaseOrderVendorConfirmRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PurchaseOrderViewRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\VendorCreateRequest.java

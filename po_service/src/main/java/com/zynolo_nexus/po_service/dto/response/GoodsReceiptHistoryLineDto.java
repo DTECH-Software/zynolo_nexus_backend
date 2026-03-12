@@ -17,5 +17,6 @@ public class GoodsReceiptHistoryLineDto {
     private String itemDescription;
     private String uom;
     private BigDecimal orderedQuantity;
+    private BigDecimal approvedQuantity;
     private BigDecimal receivedQuantity;
 }

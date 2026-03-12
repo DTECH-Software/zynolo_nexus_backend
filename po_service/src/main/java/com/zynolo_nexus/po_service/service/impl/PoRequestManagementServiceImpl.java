@@ -183,7 +183,7 @@ public class PoRequestManagementServiceImpl implements PoRequestManagementServic
                 .companyCode(poRequest.getCompanyCode())
                 .companyName(poRequest.getCompanyName())
                 .requestType(poRequest.getRequestType())
-                .departmentCode(department != null ? department.getCode() : null)
+                .department(department != null ? department.getCode() : null)
                 .departmentDescription(poRequest.getDepartment())
                 .costCenter(poRequest.getCostCenter())
                 .currencyCode(poRequest.getCurrencyCode())

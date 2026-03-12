@@ -20,7 +20,7 @@ public class PoRequestDto {
     private String companyCode;
     private String companyName;
     private String requestType;
-    private String departmentCode;
+    private String department;
     private String departmentDescription;
     private String costCenter;
     private String currencyCode;

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -20,4 +21,5 @@ public class PurchaseOrderVendorConfirmRequest extends AuditRequest {
     private String vendorReferenceNo;
     private LocalDate expectedDeliveryDate;
     private String vendorConfirmationRemark;
+    private List<PurchaseOrderVendorConfirmItemRequest> items;
 }

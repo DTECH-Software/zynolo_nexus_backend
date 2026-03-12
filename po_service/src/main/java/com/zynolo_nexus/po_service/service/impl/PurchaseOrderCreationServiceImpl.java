@@ -107,6 +107,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
                         option(PurchaseOrderStatus.SENT.name(), "Sent"),
                         option(PurchaseOrderStatus.VENDOR_CONFIRMED.name(), "Vendor Confirmed"),
                         option(PurchaseOrderStatus.PARTIALLY_CONFIRMED.name(), "Partially Confirmed"),
+                        option(PurchaseOrderStatus.PARTIALLY_APPROVED.name(), "Partially Approved"),
                         option(PurchaseOrderStatus.VENDOR_REJECTED.name(), "Vendor Rejected"),
                         option(PurchaseOrderStatus.PARTIALLY_RECEIVED.name(), "Partially Received"),
                         option(PurchaseOrderStatus.RECEIVED.name(), "Received")
@@ -340,6 +341,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
             orderItem.setItemDescription(requestItem.getItemDescription());
             orderItem.setUom(requestItem.getUom());
             orderItem.setQuantity(requestItem.getQuantity());
+            orderItem.setApprovedQuantity(requestItem.getQuantity());
             orderItem.setUnitPrice(requestItem.getUnitPrice());
             orderItem.setLineAmount(requestItem.getLineAmount());
             purchaseOrder.addItem(orderItem);
@@ -379,6 +381,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
             updatedItem.setItemDescription(existingItem.getItemDescription());
             updatedItem.setUom(existingItem.getUom());
             updatedItem.setQuantity(itemRequest.getQuantity());
+            updatedItem.setApprovedQuantity(itemRequest.getQuantity());
             updatedItem.setUnitPrice(itemRequest.getUnitPrice());
             updatedItem.setLineAmount(itemRequest.getQuantity().multiply(itemRequest.getUnitPrice()));
             purchaseOrder.addItem(updatedItem);
@@ -519,6 +522,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
                 .itemDescription(item.getItemDescription())
                 .uom(item.getUom())
                 .quantity(item.getQuantity())
+                .approvedQuantity(effectiveApprovedQuantity(item))
                 .unitPrice(item.getUnitPrice())
                 .lineAmount(item.getLineAmount())
                 .build();
@@ -532,7 +536,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
                 .companyCode(poRequest.getCompanyCode())
                 .companyName(poRequest.getCompanyName())
                 .requestType(poRequest.getRequestType())
-                .departmentCode(department != null ? department.getCode() : null)
+                .department(department != null ? department.getCode() : null)
                 .departmentDescription(poRequest.getDepartment())
                 .costCenter(poRequest.getCostCenter())
                 .currencyCode(poRequest.getCurrencyCode())
@@ -609,6 +613,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
             case SENT -> "Sent";
             case VENDOR_CONFIRMED -> "Vendor Confirmed";
             case PARTIALLY_CONFIRMED -> "Partially Confirmed";
+            case PARTIALLY_APPROVED -> "Partially Approved";
             case VENDOR_REJECTED -> "Vendor Rejected";
             case PARTIALLY_RECEIVED -> "Partially Received";
             case RECEIVED -> "Received";
@@ -636,5 +641,9 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
 
     private String normalize(String value) {
         return value == null ? null : value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private BigDecimal effectiveApprovedQuantity(PurchaseOrderItem item) {
+        return item.getApprovedQuantity() != null ? item.getApprovedQuantity() : item.getQuantity();
     }
 }

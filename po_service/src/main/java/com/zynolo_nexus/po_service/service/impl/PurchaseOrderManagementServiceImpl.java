@@ -68,6 +68,7 @@ public class PurchaseOrderManagementServiceImpl implements PurchaseOrderManageme
                         option(PurchaseOrderStatus.SENT.name(), "Sent"),
                         option(PurchaseOrderStatus.VENDOR_CONFIRMED.name(), "Vendor Confirmed"),
                         option(PurchaseOrderStatus.PARTIALLY_CONFIRMED.name(), "Partially Confirmed"),
+                        option(PurchaseOrderStatus.PARTIALLY_APPROVED.name(), "Partially Approved"),
                         option(PurchaseOrderStatus.VENDOR_REJECTED.name(), "Vendor Rejected"),
                         option(PurchaseOrderStatus.PARTIALLY_RECEIVED.name(), "Partially Received"),
                         option(PurchaseOrderStatus.RECEIVED.name(), "Received")
