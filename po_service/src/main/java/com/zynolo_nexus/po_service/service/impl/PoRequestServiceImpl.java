@@ -120,6 +120,8 @@ public class PoRequestServiceImpl implements PoRequestService {
                         .search(privileges.isSearch())
                         .submit(privileges.isSubmit())
                         .delete(privileges.isDelete())
+                        .approve(privileges.isApprove())
+                        .reject(privileges.isReject())
                         .build())
                 .build();
     }
@@ -175,6 +177,9 @@ public class PoRequestServiceImpl implements PoRequestService {
 
         poRequest.setStatus(PoRequestStatus.SUBMITTED);
         poRequest.setSubmittedDate(LocalDateTime.now());
+        poRequest.setReviewedDate(null);
+        poRequest.setReviewedBy(null);
+        poRequest.setReviewRemark(null);
         applyAudit(poRequest, request.getUsername(), false);
 
         return toDto(poRequestRepository.save(poRequest));
@@ -343,6 +348,9 @@ public class PoRequestServiceImpl implements PoRequestService {
                 .statusDescription(toStatusDescription(poRequest.getStatus()))
                 .totalAmount(poRequest.getTotalAmount())
                 .submittedDate(poRequest.getSubmittedDate())
+                .reviewedDate(poRequest.getReviewedDate())
+                .reviewedBy(poRequest.getReviewedBy())
+                .reviewRemark(poRequest.getReviewRemark())
                 .createdDate(poRequest.getCreatedDate())
                 .lastModifiedDate(poRequest.getLastModifiedDate())
                 .createdBy(poRequest.getCreatedBy())

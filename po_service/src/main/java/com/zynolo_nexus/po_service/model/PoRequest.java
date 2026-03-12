@@ -74,6 +74,15 @@ public class PoRequest extends BaseAuditEntity {
     @Column(name = "submitted_date")
     private LocalDateTime submittedDate;
 
+    @Column(name = "reviewed_date")
+    private LocalDateTime reviewedDate;
+
+    @Column(name = "reviewed_by", length = 100)
+    private String reviewedBy;
+
+    @Column(name = "review_remark", length = 1000)
+    private String reviewRemark;
+
     @OneToMany(mappedBy = "poRequest", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PoRequestItem> items = new ArrayList<>();
 

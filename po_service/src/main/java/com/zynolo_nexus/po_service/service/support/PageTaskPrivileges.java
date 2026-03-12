@@ -16,4 +16,6 @@ public class PageTaskPrivileges {
     private boolean search;
     private boolean delete;
     private boolean submit;
+    private boolean approve;
+    private boolean reject;
 }

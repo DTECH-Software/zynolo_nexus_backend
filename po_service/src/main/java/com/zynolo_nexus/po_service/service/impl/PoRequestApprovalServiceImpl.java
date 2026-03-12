@@ -1,8 +1,10 @@
 package com.zynolo_nexus.po_service.service.impl;
 
 import com.zynolo_nexus.po_service.dto.request.PoReferenceDataRequest;
+import com.zynolo_nexus.po_service.dto.request.PoRequestApproveRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestFilterRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestFilterSearch;
+import com.zynolo_nexus.po_service.dto.request.PoRequestRejectRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestViewRequest;
 import com.zynolo_nexus.po_service.dto.response.PoRequestDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestFilterResultDto;
@@ -20,7 +22,7 @@ import com.zynolo_nexus.po_service.model.PoRequestItem;
 import com.zynolo_nexus.po_service.repository.CompanyRepository;
 import com.zynolo_nexus.po_service.repository.PoRequestRepository;
 import com.zynolo_nexus.po_service.repository.VendorRepository;
-import com.zynolo_nexus.po_service.service.PoRequestManagementService;
+import com.zynolo_nexus.po_service.service.PoRequestApprovalService;
 import com.zynolo_nexus.po_service.service.support.PagePrivilegeResolver;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,9 +43,9 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class PoRequestManagementServiceImpl implements PoRequestManagementService {
+public class PoRequestApprovalServiceImpl implements PoRequestApprovalService {
 
-    private static final String PAGE_CODE = "PORM";
+    private static final String PAGE_CODE = "PORA";
     private static final Map<String, String> REQUEST_TYPES = new LinkedHashMap<>();
 
     static {
@@ -73,10 +76,9 @@ public class PoRequestManagementServiceImpl implements PoRequestManagementServic
                         .toList())
                 .currencies(List.of())
                 .defaultStatus(List.of(
-                        option(PoRequestStatus.DRAFT.name(), "Draft"),
                         option(PoRequestStatus.SUBMITTED.name(), "Submitted"),
-                        option(PoRequestStatus.REJECTED.name(), "Rejected"),
-                        option(PoRequestStatus.APPROVED.name(), "Approved")
+                        option(PoRequestStatus.APPROVED.name(), "Approved"),
+                        option(PoRequestStatus.REJECTED.name(), "Rejected")
                 ))
                 .privileges(PoRequestPrivilegesDto.builder()
                         .add(privileges.isAdd())
@@ -89,12 +91,6 @@ public class PoRequestManagementServiceImpl implements PoRequestManagementServic
                         .reject(privileges.isReject())
                         .build())
                 .build();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PoRequestDto view(PoRequestViewRequest request) {
-        return toDto(getById(request.getId()));
     }
 
     @Override
@@ -118,9 +114,56 @@ public class PoRequestManagementServiceImpl implements PoRequestManagementServic
                 .build();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PoRequestDto view(PoRequestViewRequest request) {
+        return toDto(getById(request.getId()));
+    }
+
+    @Override
+    @Transactional
+    public PoRequestDto approve(PoRequestApproveRequest request) {
+        PoRequest poRequest = getById(request.getId());
+        validateSubmitted(poRequest);
+
+        poRequest.setStatus(PoRequestStatus.APPROVED);
+        poRequest.setReviewedDate(LocalDateTime.now());
+        poRequest.setReviewedBy(request.getUsername());
+        poRequest.setReviewRemark(trim(request.getReviewRemark()));
+        applyAudit(poRequest, request.getUsername());
+
+        return toDto(poRequestRepository.save(poRequest));
+    }
+
+    @Override
+    @Transactional
+    public PoRequestDto reject(PoRequestRejectRequest request) {
+        PoRequest poRequest = getById(request.getId());
+        validateSubmitted(poRequest);
+
+        poRequest.setStatus(PoRequestStatus.REJECTED);
+        poRequest.setReviewedDate(LocalDateTime.now());
+        poRequest.setReviewedBy(request.getUsername());
+        poRequest.setReviewRemark(trim(request.getReviewRemark()));
+        applyAudit(poRequest, request.getUsername());
+
+        return toDto(poRequestRepository.save(poRequest));
+    }
+
     private PoRequest getById(Long id) {
         return poRequestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("PO request not found with ID: " + id));
+    }
+
+    private void validateSubmitted(PoRequest poRequest) {
+        if (poRequest.getStatus() != PoRequestStatus.SUBMITTED) {
+            throw new BadRequestException("Only SUBMITTED requests can be approved or rejected");
+        }
+    }
+
+    private void applyAudit(PoRequest poRequest, String username) {
+        poRequest.setLastModifiedDate(LocalDateTime.now());
+        poRequest.setLastModifiedBy(username);
     }
 
     private Specification<PoRequest> buildSpecification(PoRequestFilterSearch search) {
@@ -151,6 +194,8 @@ public class PoRequestManagementServiceImpl implements PoRequestManagementServic
                 } catch (IllegalArgumentException ex) {
                     throw new BadRequestException("Invalid status: " + search.getStatus());
                 }
+            } else {
+                predicates.add(root.get("status").in(PoRequestStatus.SUBMITTED, PoRequestStatus.APPROVED, PoRequestStatus.REJECTED));
             }
 
             return cb.and(predicates.toArray(Predicate[]::new));
@@ -167,7 +212,7 @@ public class PoRequestManagementServiceImpl implements PoRequestManagementServic
         }
         return switch (sortColumn) {
             case "requestNo", "companyCode", "vendorCode", "requestType", "status",
-                 "createdDate", "lastModifiedDate", "requiredDate", "totalAmount", "createdBy" -> sortColumn;
+                    "createdDate", "lastModifiedDate", "requiredDate", "totalAmount", "createdBy", "reviewedDate", "reviewedBy" -> sortColumn;
             default -> "lastModifiedDate";
         };
     }
@@ -255,5 +300,9 @@ public class PoRequestManagementServiceImpl implements PoRequestManagementServic
 
     private String like(String value) {
         return "%" + value.trim().toLowerCase(Locale.ROOT) + "%";
+    }
+
+    private String trim(String value) {
+        return value == null ? null : value.trim();
     }
 }

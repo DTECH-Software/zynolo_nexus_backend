@@ -31,6 +31,9 @@ public class PoRequestDto {
     private String statusDescription;
     private BigDecimal totalAmount;
     private LocalDateTime submittedDate;
+    private LocalDateTime reviewedDate;
+    private String reviewedBy;
+    private String reviewRemark;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
     private String createdBy;

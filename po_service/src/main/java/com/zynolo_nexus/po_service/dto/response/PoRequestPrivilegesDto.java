@@ -16,4 +16,6 @@ public class PoRequestPrivilegesDto {
     private boolean search;
     private boolean submit;
     private boolean delete;
+    private boolean approve;
+    private boolean reject;
 }
