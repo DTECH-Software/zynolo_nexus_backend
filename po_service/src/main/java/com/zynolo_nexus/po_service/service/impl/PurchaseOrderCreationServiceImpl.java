@@ -101,7 +101,9 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
                         .toList())
                 .defaultStatus(List.of(
                         option(PurchaseOrderStatus.DRAFT.name(), "Draft"),
-                        option(PurchaseOrderStatus.SENT.name(), "Sent")
+                        option(PurchaseOrderStatus.SENT.name(), "Sent"),
+                        option(PurchaseOrderStatus.PARTIALLY_RECEIVED.name(), "Partially Received"),
+                        option(PurchaseOrderStatus.RECEIVED.name(), "Received")
                 ))
                 .privileges(PurchaseOrderPrivilegesDto.builder()
                         .add(privileges.isAdd())
@@ -573,6 +575,8 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
         return switch (status) {
             case DRAFT -> "Draft";
             case SENT -> "Sent";
+            case PARTIALLY_RECEIVED -> "Partially Received";
+            case RECEIVED -> "Received";
         };
     }
 

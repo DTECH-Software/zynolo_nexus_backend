@@ -65,7 +65,9 @@ public class PurchaseOrderManagementServiceImpl implements PurchaseOrderManageme
                         .toList())
                 .defaultStatus(List.of(
                         option(PurchaseOrderStatus.DRAFT.name(), "Draft"),
-                        option(PurchaseOrderStatus.SENT.name(), "Sent")
+                        option(PurchaseOrderStatus.SENT.name(), "Sent"),
+                        option(PurchaseOrderStatus.PARTIALLY_RECEIVED.name(), "Partially Received"),
+                        option(PurchaseOrderStatus.RECEIVED.name(), "Received")
                 ))
                 .privileges(PurchaseOrderPrivilegesDto.builder()
                         .add(false)

@@ -61,6 +61,7 @@ public class PagePrivilegeResolver {
                     .delete(hasTask(taskAccess, "DELETE", "REMOVE", "DEACTIVATE"))
                     .submit(hasTask(taskAccess, "SUBMIT", "SEND"))
                     .send(hasTask(taskAccess, "SEND", "DISPATCH"))
+                    .receive(hasTask(taskAccess, "RECEIVE", "RECIPT", "RECEIPT", "GRN"))
                     .approve(hasTask(taskAccess, "APPROVE", "AUTHORIZE"))
                     .reject(hasTask(taskAccess, "REJECT", "DECLINE"))
                     .build();
@@ -78,6 +79,7 @@ public class PagePrivilegeResolver {
                 .delete(false)
                 .submit(false)
                 .send(false)
+                .receive(false)
                 .approve(false)
                 .reject(false)
                 .build();

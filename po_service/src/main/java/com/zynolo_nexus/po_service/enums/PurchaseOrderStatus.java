@@ -2,5 +2,7 @@ package com.zynolo_nexus.po_service.enums;
 
 public enum PurchaseOrderStatus {
     DRAFT,
-    SENT
+    SENT,
+    PARTIALLY_RECEIVED,
+    RECEIVED
 }

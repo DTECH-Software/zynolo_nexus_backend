@@ -4,6 +4,7 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\CostCenterController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\CurrencyController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\DepartmentController.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\GoodsReceiptController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\PoHealthController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\PoRequestApprovalController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\PoRequestCreateController.java
@@ -37,6 +38,13 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\DepartmentStatusRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\DepartmentUpdateRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\DepartmentViewRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\GoodsReceiptFilterRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\GoodsReceiptFilterSearch.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\GoodsReceiptHistoryRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\GoodsReceiptReceiveItemRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\GoodsReceiptReceiveRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\GoodsReceiptReferenceDataRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\GoodsReceiptViewRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PoReferenceDataRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PoRequestApproveRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PoRequestCreateRequest.java
@@ -93,6 +101,15 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\DepartmentListItemDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\DepartmentPrivilegesDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\DepartmentReferenceDataDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\GoodsReceiptFilterResultDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\GoodsReceiptHistoryDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\GoodsReceiptHistoryEntryDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\GoodsReceiptHistoryLineDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\GoodsReceiptItemBalanceDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\GoodsReceiptListItemDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\GoodsReceiptPrivilegesDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\GoodsReceiptReferenceDataDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\GoodsReceiptViewDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PoRequestDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PoRequestFilterResultDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PoRequestItemDto.java
@@ -134,6 +151,8 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\CostCenter.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\Currency.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\Department.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\GoodsReceipt.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\GoodsReceiptItem.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\PoRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\PoRequestItem.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\Product.java
@@ -148,6 +167,7 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\CostCenterRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\CurrencyRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\DepartmentRepository.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\GoodsReceiptRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\PoRequestRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\ProductRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\PurchaseOrderRepository.java
@@ -157,9 +177,11 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\CostCenterService.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\CurrencyService.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\DepartmentService.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\GoodsReceiptService.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\CostCenterServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\CurrencyServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\DepartmentServiceImpl.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\GoodsReceiptServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\PoRequestApprovalServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\PoRequestManagementServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\PoRequestServiceImpl.java
