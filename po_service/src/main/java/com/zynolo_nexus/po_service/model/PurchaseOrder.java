@@ -93,6 +93,21 @@ public class PurchaseOrder extends BaseAuditEntity {
     @Column(name = "send_remark", length = 1000)
     private String sendRemark;
 
+    @Column(name = "vendor_confirmation_date")
+    private LocalDateTime vendorConfirmationDate;
+
+    @Column(name = "vendor_confirmation_by", length = 100)
+    private String vendorConfirmationBy;
+
+    @Column(name = "vendor_reference_no", length = 100)
+    private String vendorReferenceNo;
+
+    @Column(name = "expected_delivery_date")
+    private LocalDate expectedDeliveryDate;
+
+    @Column(name = "vendor_confirmation_remark", length = 1000)
+    private String vendorConfirmationRemark;
+
     @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PurchaseOrderItem> items = new ArrayList<>();
 

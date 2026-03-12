@@ -66,6 +66,9 @@ public class PurchaseOrderManagementServiceImpl implements PurchaseOrderManageme
                 .defaultStatus(List.of(
                         option(PurchaseOrderStatus.DRAFT.name(), "Draft"),
                         option(PurchaseOrderStatus.SENT.name(), "Sent"),
+                        option(PurchaseOrderStatus.VENDOR_CONFIRMED.name(), "Vendor Confirmed"),
+                        option(PurchaseOrderStatus.PARTIALLY_CONFIRMED.name(), "Partially Confirmed"),
+                        option(PurchaseOrderStatus.VENDOR_REJECTED.name(), "Vendor Rejected"),
                         option(PurchaseOrderStatus.PARTIALLY_RECEIVED.name(), "Partially Received"),
                         option(PurchaseOrderStatus.RECEIVED.name(), "Received")
                 ))
@@ -75,6 +78,7 @@ public class PurchaseOrderManagementServiceImpl implements PurchaseOrderManageme
                         .view(privileges.isView())
                         .search(privileges.isSearch())
                         .send(privileges.isSend())
+                        .confirm(privileges.isConfirm())
                         .build())
                 .build();
     }

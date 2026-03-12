@@ -102,6 +102,9 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
                 .defaultStatus(List.of(
                         option(PurchaseOrderStatus.DRAFT.name(), "Draft"),
                         option(PurchaseOrderStatus.SENT.name(), "Sent"),
+                        option(PurchaseOrderStatus.VENDOR_CONFIRMED.name(), "Vendor Confirmed"),
+                        option(PurchaseOrderStatus.PARTIALLY_CONFIRMED.name(), "Partially Confirmed"),
+                        option(PurchaseOrderStatus.VENDOR_REJECTED.name(), "Vendor Rejected"),
                         option(PurchaseOrderStatus.PARTIALLY_RECEIVED.name(), "Partially Received"),
                         option(PurchaseOrderStatus.RECEIVED.name(), "Received")
                 ))
@@ -111,6 +114,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
                         .view(privileges.isView())
                         .search(privileges.isSearch())
                         .send(privileges.isSend())
+                        .confirm(privileges.isConfirm())
                         .build())
                 .build();
     }
@@ -162,6 +166,11 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
         purchaseOrder.setSentDate(null);
         purchaseOrder.setSentBy(null);
         purchaseOrder.setSendRemark(null);
+        purchaseOrder.setVendorConfirmationDate(null);
+        purchaseOrder.setVendorConfirmationBy(null);
+        purchaseOrder.setVendorReferenceNo(null);
+        purchaseOrder.setExpectedDeliveryDate(null);
+        purchaseOrder.setVendorConfirmationRemark(null);
         copyItemsFromRequest(poRequest, purchaseOrder);
         applyAudit(purchaseOrder, request.getUsername(), true);
 
@@ -199,6 +208,11 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
         purchaseOrder.setSentDate(LocalDateTime.now());
         purchaseOrder.setSentBy(request.getUsername());
         purchaseOrder.setSendRemark(trim(request.getSendRemark()));
+        purchaseOrder.setVendorConfirmationDate(null);
+        purchaseOrder.setVendorConfirmationBy(null);
+        purchaseOrder.setVendorReferenceNo(null);
+        purchaseOrder.setExpectedDeliveryDate(null);
+        purchaseOrder.setVendorConfirmationRemark(null);
         applyAudit(purchaseOrder, request.getUsername(), false);
 
         return toPurchaseOrderDto(purchaseOrderRepository.save(purchaseOrder));
@@ -459,6 +473,11 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
                 .sentDate(purchaseOrder.getSentDate())
                 .sentBy(purchaseOrder.getSentBy())
                 .sendRemark(purchaseOrder.getSendRemark())
+                .vendorConfirmationDate(purchaseOrder.getVendorConfirmationDate())
+                .vendorConfirmationBy(purchaseOrder.getVendorConfirmationBy())
+                .vendorReferenceNo(purchaseOrder.getVendorReferenceNo())
+                .expectedDeliveryDate(purchaseOrder.getExpectedDeliveryDate())
+                .vendorConfirmationRemark(purchaseOrder.getVendorConfirmationRemark())
                 .createdDate(purchaseOrder.getCreatedDate())
                 .lastModifiedDate(purchaseOrder.getLastModifiedDate())
                 .createdBy(purchaseOrder.getCreatedBy())
@@ -481,6 +500,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
                 .statusDescription(toPurchaseOrderStatusDescription(purchaseOrder.getStatus()))
                 .totalAmount(purchaseOrder.getTotalAmount())
                 .requiredDate(purchaseOrder.getRequiredDate())
+                .expectedDeliveryDate(purchaseOrder.getExpectedDeliveryDate())
                 .sentDate(purchaseOrder.getSentDate())
                 .createdDate(purchaseOrder.getCreatedDate())
                 .lastModifiedDate(purchaseOrder.getLastModifiedDate())
@@ -575,6 +595,9 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
         return switch (status) {
             case DRAFT -> "Draft";
             case SENT -> "Sent";
+            case VENDOR_CONFIRMED -> "Vendor Confirmed";
+            case PARTIALLY_CONFIRMED -> "Partially Confirmed";
+            case VENDOR_REJECTED -> "Vendor Rejected";
             case PARTIALLY_RECEIVED -> "Partially Received";
             case RECEIVED -> "Received";
         };

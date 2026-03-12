@@ -35,6 +35,11 @@ public class PurchaseOrderDto {
     private LocalDateTime sentDate;
     private String sentBy;
     private String sendRemark;
+    private LocalDateTime vendorConfirmationDate;
+    private String vendorConfirmationBy;
+    private String vendorReferenceNo;
+    private LocalDate expectedDeliveryDate;
+    private String vendorConfirmationRemark;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
     private String createdBy;

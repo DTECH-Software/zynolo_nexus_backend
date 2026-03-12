@@ -74,7 +74,8 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
                         .map(vendor -> option(vendor.getCode(), vendor.getDescription()))
                         .toList())
                 .defaultStatus(List.of(
-                        option(PurchaseOrderStatus.SENT.name(), "Sent"),
+                        option(PurchaseOrderStatus.VENDOR_CONFIRMED.name(), "Vendor Confirmed"),
+                        option(PurchaseOrderStatus.PARTIALLY_CONFIRMED.name(), "Partially Confirmed"),
                         option(PurchaseOrderStatus.PARTIALLY_RECEIVED.name(), "Partially Received"),
                         option(PurchaseOrderStatus.RECEIVED.name(), "Received")
                 ))
@@ -217,14 +218,16 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
                     predicates.add(cb.equal(root.get("status"), parseStatus(search.getStatus())));
                 } else {
                     predicates.add(root.get("status").in(
-                            PurchaseOrderStatus.SENT,
+                            PurchaseOrderStatus.VENDOR_CONFIRMED,
+                            PurchaseOrderStatus.PARTIALLY_CONFIRMED,
                             PurchaseOrderStatus.PARTIALLY_RECEIVED,
                             PurchaseOrderStatus.RECEIVED
                     ));
                 }
             } else {
                 predicates.add(root.get("status").in(
-                        PurchaseOrderStatus.SENT,
+                        PurchaseOrderStatus.VENDOR_CONFIRMED,
+                        PurchaseOrderStatus.PARTIALLY_CONFIRMED,
                         PurchaseOrderStatus.PARTIALLY_RECEIVED,
                         PurchaseOrderStatus.RECEIVED
                 ));
@@ -240,7 +243,8 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     }
 
     private void validateVisible(PurchaseOrder purchaseOrder) {
-        if (!(purchaseOrder.getStatus() == PurchaseOrderStatus.SENT
+        if (!(purchaseOrder.getStatus() == PurchaseOrderStatus.VENDOR_CONFIRMED
+                || purchaseOrder.getStatus() == PurchaseOrderStatus.PARTIALLY_CONFIRMED
                 || purchaseOrder.getStatus() == PurchaseOrderStatus.PARTIALLY_RECEIVED
                 || purchaseOrder.getStatus() == PurchaseOrderStatus.RECEIVED)) {
             throw new BadRequestException("Goods receipt is not available for purchase order status: " + purchaseOrder.getStatus().name());
@@ -248,9 +252,10 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     }
 
     private void validateReceivable(PurchaseOrder purchaseOrder) {
-        if (!(purchaseOrder.getStatus() == PurchaseOrderStatus.SENT
+        if (!(purchaseOrder.getStatus() == PurchaseOrderStatus.VENDOR_CONFIRMED
+                || purchaseOrder.getStatus() == PurchaseOrderStatus.PARTIALLY_CONFIRMED
                 || purchaseOrder.getStatus() == PurchaseOrderStatus.PARTIALLY_RECEIVED)) {
-            throw new BadRequestException("Only SENT or PARTIALLY_RECEIVED purchase orders can record receipt");
+            throw new BadRequestException("Only confirmed purchase orders can record receipt");
         }
     }
 
@@ -404,6 +409,9 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
         return switch (status) {
             case DRAFT -> "Draft";
             case SENT -> "Sent";
+            case VENDOR_CONFIRMED -> "Vendor Confirmed";
+            case PARTIALLY_CONFIRMED -> "Partially Confirmed";
+            case VENDOR_REJECTED -> "Vendor Rejected";
             case PARTIALLY_RECEIVED -> "Partially Received";
             case RECEIVED -> "Received";
         };

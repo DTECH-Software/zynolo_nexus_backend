@@ -15,4 +15,5 @@ public class PurchaseOrderPrivilegesDto {
     private boolean view;
     private boolean search;
     private boolean send;
+    private boolean confirm;
 }

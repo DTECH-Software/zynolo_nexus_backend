@@ -26,6 +26,7 @@ public class PurchaseOrderListItemDto {
     private String statusDescription;
     private BigDecimal totalAmount;
     private LocalDate requiredDate;
+    private LocalDate expectedDeliveryDate;
     private LocalDateTime sentDate;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
