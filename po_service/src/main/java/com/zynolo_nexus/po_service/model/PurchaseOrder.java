@@ -120,6 +120,15 @@ public class PurchaseOrder extends BaseAuditEntity {
     @Column(name = "match_remark", length = 1000)
     private String matchRemark;
 
+    @Column(name = "closed_date")
+    private LocalDateTime closedDate;
+
+    @Column(name = "closed_by", length = 100)
+    private String closedBy;
+
+    @Column(name = "close_remark", length = 1000)
+    private String closeRemark;
+
     @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<PurchaseOrderItem> items = new ArrayList<>();
 

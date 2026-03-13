@@ -110,7 +110,8 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
                         option(PurchaseOrderStatus.PARTIALLY_APPROVED.name(), "Partially Approved"),
                         option(PurchaseOrderStatus.VENDOR_REJECTED.name(), "Vendor Rejected"),
                         option(PurchaseOrderStatus.PARTIALLY_RECEIVED.name(), "Partially Received"),
-                        option(PurchaseOrderStatus.RECEIVED.name(), "Received")
+                        option(PurchaseOrderStatus.RECEIVED.name(), "Received"),
+                        option(PurchaseOrderStatus.CLOSED.name(), "Closed")
                 ))
                 .privileges(PurchaseOrderPrivilegesDto.builder()
                         .add(privileges.isAdd())
@@ -617,6 +618,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
             case VENDOR_REJECTED -> "Vendor Rejected";
             case PARTIALLY_RECEIVED -> "Partially Received";
             case RECEIVED -> "Received";
+            case CLOSED -> "Closed";
         };
     }
 

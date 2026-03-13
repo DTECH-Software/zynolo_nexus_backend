@@ -366,6 +366,7 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
             case VENDOR_REJECTED -> "Vendor Rejected";
             case PARTIALLY_RECEIVED -> "Partially Received";
             case RECEIVED -> "Received";
+            case CLOSED -> "Closed";
         };
     }
 

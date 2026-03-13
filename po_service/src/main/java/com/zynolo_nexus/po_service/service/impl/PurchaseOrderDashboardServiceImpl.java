@@ -155,7 +155,8 @@ public class PurchaseOrderDashboardServiceImpl implements PurchaseOrderDashboard
                 statusCount(PurchaseOrderStatus.PARTIALLY_APPROVED.name(), "Partially Approved", countPurchaseOrders(data.purchaseOrders, PurchaseOrderStatus.PARTIALLY_APPROVED)),
                 statusCount(PurchaseOrderStatus.VENDOR_REJECTED.name(), "Vendor Rejected", countPurchaseOrders(data.purchaseOrders, PurchaseOrderStatus.VENDOR_REJECTED)),
                 statusCount(PurchaseOrderStatus.PARTIALLY_RECEIVED.name(), "Partially Received", countPurchaseOrders(data.purchaseOrders, PurchaseOrderStatus.PARTIALLY_RECEIVED)),
-                statusCount(PurchaseOrderStatus.RECEIVED.name(), "Received", countPurchaseOrders(data.purchaseOrders, PurchaseOrderStatus.RECEIVED))
+                statusCount(PurchaseOrderStatus.RECEIVED.name(), "Received", countPurchaseOrders(data.purchaseOrders, PurchaseOrderStatus.RECEIVED)),
+                statusCount(PurchaseOrderStatus.CLOSED.name(), "Closed", countPurchaseOrders(data.purchaseOrders, PurchaseOrderStatus.CLOSED))
         );
 
         List<DashboardStatusCountDto> matchStatuses = List.of(

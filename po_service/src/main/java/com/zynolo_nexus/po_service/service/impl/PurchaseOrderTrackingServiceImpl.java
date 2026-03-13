@@ -93,7 +93,8 @@ public class PurchaseOrderTrackingServiceImpl implements PurchaseOrderTrackingSe
                         option(PurchaseOrderStatus.PARTIALLY_APPROVED.name(), "Partially Approved"),
                         option(PurchaseOrderStatus.VENDOR_REJECTED.name(), "Vendor Rejected"),
                         option(PurchaseOrderStatus.PARTIALLY_RECEIVED.name(), "Partially Received"),
-                        option(PurchaseOrderStatus.RECEIVED.name(), "Received")
+                        option(PurchaseOrderStatus.RECEIVED.name(), "Received"),
+                        option(PurchaseOrderStatus.CLOSED.name(), "Closed")
                 ))
                 .matchStatuses(List.of(
                         option(PENDING_MATCH, "Pending Match"),
@@ -476,6 +477,16 @@ public class PurchaseOrderTrackingServiceImpl implements PurchaseOrderTrackingSe
                 hasText(payment.getPaymentReferenceNo()) ? payment.getPaymentReferenceNo() : payment.getChequeNo(),
                 payment.getPaymentRemark())));
 
+        if (purchaseOrder.getClosedDate() != null) {
+            entries.add(timelineEntry("PO_CLOSED",
+                    PurchaseOrderStatus.CLOSED.name(),
+                    toPurchaseOrderStatusDescription(PurchaseOrderStatus.CLOSED),
+                    purchaseOrder.getClosedDate(),
+                    purchaseOrder.getClosedBy(),
+                    purchaseOrder.getPoNo(),
+                    purchaseOrder.getCloseRemark()));
+        }
+
         return entries;
     }
 
@@ -611,6 +622,7 @@ public class PurchaseOrderTrackingServiceImpl implements PurchaseOrderTrackingSe
             case VENDOR_REJECTED -> "Vendor Rejected";
             case PARTIALLY_RECEIVED -> "Partially Received";
             case RECEIVED -> "Received";
+            case CLOSED -> "Closed";
         };
     }
 
