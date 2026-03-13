@@ -14,6 +14,7 @@ public class PageTaskPrivileges {
     private boolean update;
     private boolean view;
     private boolean search;
+    private boolean export;
     private boolean delete;
     private boolean submit;
     private boolean send;
