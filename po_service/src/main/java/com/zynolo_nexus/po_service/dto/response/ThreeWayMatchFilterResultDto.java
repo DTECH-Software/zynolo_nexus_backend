@@ -11,8 +11,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GoodsReceiptHistoryDto {
-    private Long id;
-    private String poNo;
-    private List<GoodsReceiptHistoryEntryDto> entries;
+public class ThreeWayMatchFilterResultDto {
+    private List<ThreeWayMatchListItemDto> content;
+    private int size;
+    private long totalRecords;
 }

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GoodsReceiptListItemDto {
+public class ThreeWayMatchListItemDto {
     private Long id;
     private String poNo;
     private String requestNo;
@@ -21,13 +21,13 @@ public class GoodsReceiptListItemDto {
     private String companyName;
     private String vendorCode;
     private String vendorName;
-    private String requestType;
     private String status;
     private String statusDescription;
+    private String matchStatus;
+    private String matchStatusDescription;
     private BigDecimal totalAmount;
-    private LocalDate requiredDate;
-    private LocalDateTime sentDate;
-    private LocalDate lastReceiptDate;
+    private String lastInvoiceNo;
+    private LocalDate lastInvoiceDate;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
     private String createdBy;

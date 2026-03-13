@@ -8,12 +8,13 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GoodsReceiptListItemDto {
+public class ThreeWayMatchViewDto {
     private Long id;
     private String poNo;
     private String requestNo;
@@ -21,15 +22,20 @@ public class GoodsReceiptListItemDto {
     private String companyName;
     private String vendorCode;
     private String vendorName;
-    private String requestType;
+    private String currencyCode;
     private String status;
     private String statusDescription;
+    private String matchStatus;
+    private String matchStatusDescription;
     private BigDecimal totalAmount;
-    private LocalDate requiredDate;
-    private LocalDateTime sentDate;
-    private LocalDate lastReceiptDate;
+    private String lastInvoiceNo;
+    private LocalDate lastInvoiceDate;
+    private LocalDateTime matchedDate;
+    private String matchedBy;
+    private String matchRemark;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
     private String createdBy;
     private String lastModifiedBy;
+    private List<ThreeWayMatchLineDto> items;
 }

@@ -14,6 +14,7 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\PurchaseOrderCreationController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\PurchaseOrderManagementController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\PurchaseOrderVendorConfirmationController.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\ThreeWayMatchController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\VendorController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\VendorProductMappingController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\api\MessageResponseDTO.java
@@ -83,6 +84,11 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PurchaseOrderVendorConfirmItemRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PurchaseOrderVendorConfirmRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PurchaseOrderViewRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\ThreeWayMatchExecuteRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\ThreeWayMatchFilterRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\ThreeWayMatchFilterSearch.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\ThreeWayMatchReferenceDataRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\ThreeWayMatchViewRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\VendorCreateRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\VendorFilterRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\VendorFilterSearch.java
@@ -149,6 +155,12 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PurchaseOrderPrivilegesDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PurchaseOrderReferenceDataDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\ReferenceOptionDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\ThreeWayMatchFilterResultDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\ThreeWayMatchLineDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\ThreeWayMatchListItemDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\ThreeWayMatchPrivilegesDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\ThreeWayMatchReferenceDataDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\ThreeWayMatchViewDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\VendorDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\VendorFilterResultDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\VendorListItemDto.java
@@ -213,6 +225,7 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\PurchaseOrderCreationServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\PurchaseOrderManagementServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\PurchaseOrderVendorConfirmationServiceImpl.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\ThreeWayMatchServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\VendorProductMappingServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\VendorServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\InvoiceReceiptService.java
@@ -225,5 +238,6 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\PurchaseOrderVendorConfirmationService.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\support\PagePrivilegeResolver.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\support\PageTaskPrivileges.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\ThreeWayMatchService.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\VendorProductMappingService.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\VendorService.java

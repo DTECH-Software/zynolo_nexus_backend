@@ -185,7 +185,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
                 .toList();
 
         return GoodsReceiptHistoryDto.builder()
-                .poId(purchaseOrder.getId())
+                .id(purchaseOrder.getId())
                 .poNo(purchaseOrder.getPoNo())
                 .entries(entries)
                 .build();
@@ -300,7 +300,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
                 .orElse(null);
 
         return GoodsReceiptViewDto.builder()
-                .poId(purchaseOrder.getId())
+                .id(purchaseOrder.getId())
                 .poNo(purchaseOrder.getPoNo())
                 .requestNo(purchaseOrder.getRequestNo())
                 .companyCode(purchaseOrder.getCompanyCode())
@@ -337,7 +337,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
         GoodsReceipt latestReceipt = goodsReceiptRepository.findTopByPurchaseOrder_IdOrderByReceiptDateDescIdDesc(purchaseOrder.getId())
                 .orElse(null);
         return GoodsReceiptListItemDto.builder()
-                .poId(purchaseOrder.getId())
+                .id(purchaseOrder.getId())
                 .poNo(purchaseOrder.getPoNo())
                 .requestNo(purchaseOrder.getRequestNo())
                 .companyCode(purchaseOrder.getCompanyCode())

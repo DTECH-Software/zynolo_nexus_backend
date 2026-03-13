@@ -5,14 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GoodsReceiptHistoryDto {
-    private Long id;
-    private String poNo;
-    private List<GoodsReceiptHistoryEntryDto> entries;
+public class ThreeWayMatchPrivilegesDto {
+    private boolean view;
+    private boolean search;
+    private boolean match;
 }

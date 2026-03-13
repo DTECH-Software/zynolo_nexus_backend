@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GoodsReceiptViewDto {
-    private Long poId;
+    private Long id;
     private String poNo;
     private String requestNo;
     private String companyCode;
