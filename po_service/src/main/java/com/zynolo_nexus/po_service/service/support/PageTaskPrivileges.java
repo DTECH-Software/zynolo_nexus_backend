@@ -22,4 +22,5 @@ public class PageTaskPrivileges {
     private boolean approve;
     private boolean reject;
     private boolean match;
+    private boolean pay;
 }

@@ -13,6 +13,7 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\ProductController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\PurchaseOrderCreationController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\PurchaseOrderManagementController.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\PurchaseOrderPaymentController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\PurchaseOrderVendorConfirmationController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\ThreeWayMatchController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\controller\VendorController.java
@@ -55,6 +56,12 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\InvoiceReceiptReceiveRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\InvoiceReceiptReferenceDataRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\InvoiceReceiptViewRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PaymentFilterRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PaymentFilterSearch.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PaymentHistoryRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PaymentPayRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PaymentReferenceDataRequest.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PaymentViewRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PoReferenceDataRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PoRequestApproveRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\request\PoRequestCreateRequest.java
@@ -136,6 +143,14 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\InvoiceReceiptPrivilegesDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\InvoiceReceiptReferenceDataDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\InvoiceReceiptViewDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PaymentFilterResultDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PaymentHistoryDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PaymentHistoryEntryDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PaymentItemBalanceDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PaymentListItemDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PaymentPrivilegesDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PaymentReferenceDataDto.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PaymentViewDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PoRequestDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PoRequestFilterResultDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\dto\response\PoRequestItemDto.java
@@ -192,6 +207,7 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\Product.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\PurchaseOrder.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\PurchaseOrderItem.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\PurchaseOrderPayment.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\Role.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\User.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\model\Vendor.java
@@ -205,6 +221,7 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\InvoiceReceiptRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\PoRequestRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\ProductRepository.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\PurchaseOrderPaymentRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\PurchaseOrderRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\UserRepository.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\repository\VendorProductMappingRepository.java
@@ -224,6 +241,7 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\ProductServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\PurchaseOrderCreationServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\PurchaseOrderManagementServiceImpl.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\PurchaseOrderPaymentServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\PurchaseOrderVendorConfirmationServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\ThreeWayMatchServiceImpl.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\impl\VendorProductMappingServiceImpl.java
@@ -235,6 +253,7 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\ProductService.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\PurchaseOrderCreationService.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\PurchaseOrderManagementService.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\PurchaseOrderPaymentService.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\PurchaseOrderVendorConfirmationService.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\support\PagePrivilegeResolver.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\po_service\src\main\java\com\zynolo_nexus\po_service\service\support\PageTaskPrivileges.java

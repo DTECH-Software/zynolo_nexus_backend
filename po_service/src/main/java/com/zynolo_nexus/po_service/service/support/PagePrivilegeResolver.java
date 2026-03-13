@@ -66,6 +66,7 @@ public class PagePrivilegeResolver {
                     .approve(hasTask(taskAccess, "APPROVE", "AUTHORIZE"))
                     .reject(hasTask(taskAccess, "REJECT", "DECLINE"))
                     .match(hasTask(taskAccess, "MATCH", "THREEWAYMATCH"))
+                    .pay(hasTask(taskAccess, "PAY", "PAYMENT"))
                     .build();
         } catch (Exception ex) {
             return empty();
@@ -86,6 +87,7 @@ public class PagePrivilegeResolver {
                 .approve(false)
                 .reject(false)
                 .match(false)
+                .pay(false)
                 .build();
     }
 
