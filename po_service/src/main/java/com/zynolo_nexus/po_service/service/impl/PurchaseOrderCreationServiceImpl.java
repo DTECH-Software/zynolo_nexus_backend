@@ -147,7 +147,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
     @Override
     @Transactional(readOnly = true)
     public PoRequestDto requestView(PurchaseOrderRequestViewRequest request) {
-        PoRequest poRequest = getPoRequest(request.getRequestId());
+        PoRequest poRequest = getPoRequest(request.getId());
         validateApproved(poRequest, "Only APPROVED requests can be used for PO creation");
         return toPoRequestDto(poRequest);
     }
@@ -155,7 +155,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
     @Override
     @Transactional
     public PurchaseOrderDto create(PurchaseOrderCreateRequest request) {
-        PoRequest poRequest = getPoRequest(request.getRequestId());
+        PoRequest poRequest = getPoRequest(request.getId());
         validateApproved(poRequest, "Only APPROVED requests can be converted to a purchase order");
 
         if (purchaseOrderRepository.existsByRequest_Id(poRequest.getId())) {

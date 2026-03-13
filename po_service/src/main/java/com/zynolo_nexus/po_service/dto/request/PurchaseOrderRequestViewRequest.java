@@ -8,6 +8,6 @@ import lombok.Setter;
 @Setter
 public class PurchaseOrderRequestViewRequest extends AuditRequest {
 
-    @NotNull(message = "requestId is required")
-    private Long requestId;
+    @NotNull(message = "id is required")
+    private Long id;
 }
