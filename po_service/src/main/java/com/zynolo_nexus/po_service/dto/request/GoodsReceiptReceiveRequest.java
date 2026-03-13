@@ -13,8 +13,8 @@ import java.util.List;
 @Setter
 public class GoodsReceiptReceiveRequest extends AuditRequest {
 
-    @NotNull(message = "poId is required")
-    private Long poId;
+    @NotNull(message = "id is required")
+    private Long id;
 
     @NotNull(message = "receiptDate is required")
     private LocalDate receiptDate;

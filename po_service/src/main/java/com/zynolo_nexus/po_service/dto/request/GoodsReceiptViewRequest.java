@@ -8,6 +8,6 @@ import lombok.Setter;
 @Setter
 public class GoodsReceiptViewRequest extends AuditRequest {
 
-    @NotNull(message = "poId is required")
-    private Long poId;
+    @NotNull(message = "id is required")
+    private Long id;
 }

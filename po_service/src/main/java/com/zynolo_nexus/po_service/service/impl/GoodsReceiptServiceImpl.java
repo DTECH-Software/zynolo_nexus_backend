@@ -112,7 +112,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     @Override
     @Transactional(readOnly = true)
     public GoodsReceiptViewDto view(GoodsReceiptViewRequest request) {
-        PurchaseOrder purchaseOrder = getPurchaseOrder(request.getPoId());
+        PurchaseOrder purchaseOrder = getPurchaseOrder(request.getId());
         validateVisible(purchaseOrder);
         return toViewDto(purchaseOrder);
     }
@@ -120,7 +120,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     @Override
     @Transactional
     public GoodsReceiptViewDto receive(GoodsReceiptReceiveRequest request) {
-        PurchaseOrder purchaseOrder = getPurchaseOrder(request.getPoId());
+        PurchaseOrder purchaseOrder = getPurchaseOrder(request.getId());
         validateReceivable(purchaseOrder);
 
         Map<Long, BigDecimal> receivedQuantities = calculateReceivedQuantities(purchaseOrder);
@@ -179,7 +179,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     @Override
     @Transactional(readOnly = true)
     public GoodsReceiptHistoryDto history(GoodsReceiptHistoryRequest request) {
-        PurchaseOrder purchaseOrder = getPurchaseOrder(request.getPoId());
+        PurchaseOrder purchaseOrder = getPurchaseOrder(request.getId());
         List<GoodsReceiptHistoryEntryDto> entries = goodsReceiptRepository.findAllByPurchaseOrder_IdOrderByReceiptDateDescIdDesc(purchaseOrder.getId()).stream()
                 .map(this::toHistoryEntryDto)
                 .toList();
