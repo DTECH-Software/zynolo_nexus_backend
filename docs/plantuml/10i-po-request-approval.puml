@@ -1,0 +1,30 @@
+@startuml
+title 10i - PO Request Approval (PORA)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Queue + View
+  FE -> GW: POST /api/v1/po/request-approval/reference-data
+  FE -> GW: POST /api/v1/po/request-approval/filter-list
+  FE -> GW: POST /api/v1/po/request-approval/view
+  GW -> PO: Forward
+  PO -> PDB: Read SUBMITTED + reviewed requests
+  PO -> AUTH: Load PORA privileges
+  PO --> FE: queue + details
+end
+
+group Approve / Reject
+  FE -> GW: POST /api/v1/po/request-approval/approve
+  FE -> GW: POST /api/v1/po/request-approval/reject
+  GW -> PO: Forward
+  PO -> PDB: SUBMITTED -> APPROVED or REJECTED
+  PO -> PDB: Save reviewedBy / reviewedDate / reviewRemark
+  PO --> FE: review result
+end
+
+@enduml

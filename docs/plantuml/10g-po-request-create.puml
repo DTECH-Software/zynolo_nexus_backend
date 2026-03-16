@@ -1,0 +1,40 @@
+@startuml
+title 10g - PO Request Create (PORC)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Reference + Vendor Products
+  FE -> GW: POST /api/v1/po/request-create/reference-data
+  FE -> GW: POST /api/v1/po/request-create/vendor-products
+  GW -> PO: Forward
+  PO -> PDB: Load companies / vendors / products / departments / cost-centers
+  PO -> PDB: Load vendor-product mappings
+  PO -> AUTH: Load PORC privileges
+  PO --> FE: reference-data + product choices
+end
+
+group Create + Maintain Draft
+  FE -> GW: POST /api/v1/po/request-create
+  FE -> GW: POST /api/v1/po/request-create/view
+  FE -> GW: POST /api/v1/po/request-create/update
+  FE -> GW: POST /api/v1/po/request-create/filter-list
+  GW -> PO: Forward
+  PO -> PDB: Insert or update po_requests + po_request_items[]
+  PO -> PDB: Keep status in DRAFT/REJECTED
+  PO --> FE: request response
+end
+
+group Submit
+  FE -> GW: POST /api/v1/po/request-create/submit
+  GW -> PO: Forward
+  PO -> PDB: DRAFT/REJECTED -> SUBMITTED
+  PO -> PDB: Clear previous review fields
+  PO --> FE: submitted request
+end
+
+@enduml

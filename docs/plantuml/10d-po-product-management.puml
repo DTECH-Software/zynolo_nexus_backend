@@ -1,0 +1,30 @@
+@startuml
+title 10d - Product Management (PRDM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Reference + Create
+  FE -> GW: POST /api/v1/po/products/reference-data
+  FE -> GW: POST /api/v1/po/products
+  GW -> PO: Forward
+  PO -> PDB: Load statuses / validate item code / insert product
+  PO -> AUTH: Load PRDM privileges
+  PO --> FE: reference-data or created product
+end
+
+group View + Update + Status + Filter
+  FE -> GW: POST /api/v1/po/products/view
+  FE -> GW: POST /api/v1/po/products/update
+  FE -> GW: POST /api/v1/po/products/status
+  FE -> GW: POST /api/v1/po/products/filter-list
+  GW -> PO: Forward
+  PO -> PDB: Read / update / ACTIVE<->INACTIVE / page filter
+  PO --> FE: response
+end
+
+@enduml

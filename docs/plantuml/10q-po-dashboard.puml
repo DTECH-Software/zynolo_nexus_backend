@@ -1,0 +1,29 @@
+@startuml
+title 10q - PO Dashboard (PODB)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Reference + Summary
+  FE -> GW: POST /api/v1/po/dashboard/reference-data
+  FE -> GW: POST /api/v1/po/dashboard/summary
+  GW -> PO: Forward
+  PO -> PDB: Aggregate request + PO + finance counts and amounts
+  PO -> AUTH: Load PODB privileges
+  PO --> FE: filters + top cards
+end
+
+group Breakdown + Trend + Actions
+  FE -> GW: POST /api/v1/po/dashboard/status-breakdown
+  FE -> GW: POST /api/v1/po/dashboard/trend
+  FE -> GW: POST /api/v1/po/dashboard/action-items
+  GW -> PO: Forward
+  PO -> PDB: Aggregate statuses / monthly trends / pending work items
+  PO --> FE: charts + action items
+end
+
+@enduml

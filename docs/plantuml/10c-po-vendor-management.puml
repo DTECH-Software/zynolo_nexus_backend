@@ -1,0 +1,30 @@
+@startuml
+title 10c - Vendor Management (POVM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Reference + Create
+  FE -> GW: POST /api/v1/po/vendors/reference-data
+  FE -> GW: POST /api/v1/po/vendors
+  GW -> PO: Forward
+  PO -> PDB: Load statuses / validate vendor code / insert vendor
+  PO -> AUTH: Load POVM privileges
+  PO --> FE: reference-data or created vendor
+end
+
+group View + Update + Status + Filter
+  FE -> GW: POST /api/v1/po/vendors/view
+  FE -> GW: POST /api/v1/po/vendors/update
+  FE -> GW: POST /api/v1/po/vendors/status
+  FE -> GW: POST /api/v1/po/vendors/filter-list
+  GW -> PO: Forward
+  PO -> PDB: Read / update / ACTIVE<->INACTIVE / page filter
+  PO --> FE: response
+end
+
+@enduml

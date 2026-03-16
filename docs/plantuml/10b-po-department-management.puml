@@ -1,0 +1,30 @@
+@startuml
+title 10b - Department Management (DEPM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Reference + Create
+  FE -> GW: POST /api/v1/po/departments/reference-data
+  FE -> GW: POST /api/v1/po/departments
+  GW -> PO: Forward
+  PO -> PDB: Load statuses / validate code / insert department
+  PO -> AUTH: Load DEPM privileges
+  PO --> FE: reference-data or created department
+end
+
+group View + Update + Status + Filter
+  FE -> GW: POST /api/v1/po/departments/view
+  FE -> GW: POST /api/v1/po/departments/update
+  FE -> GW: POST /api/v1/po/departments/status
+  FE -> GW: POST /api/v1/po/departments/filter-list
+  GW -> PO: Forward
+  PO -> PDB: Read / update / ACTIVE<->INACTIVE / page filter
+  PO --> FE: response
+end
+
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+title 10e - Vendor Product Mapping (VPMP)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Reference + Create
+  FE -> GW: POST /api/v1/po/vendor-products/reference-data
+  FE -> GW: POST /api/v1/po/vendor-products
+  GW -> PO: Forward
+  PO -> PDB: Load active vendors + products
+  PO -> PDB: Insert vendor-product mapping
+  PO -> AUTH: Load VPMP privileges
+  PO --> FE: reference-data or created mapping
+end
+
+group View + Update + Status + Filter
+  FE -> GW: POST /api/v1/po/vendor-products/view
+  FE -> GW: POST /api/v1/po/vendor-products/update
+  FE -> GW: POST /api/v1/po/vendor-products/status
+  FE -> GW: POST /api/v1/po/vendor-products/filter-list
+  GW -> PO: Forward
+  PO -> PDB: Read / update / ACTIVE<->INACTIVE / page filter
+  PO --> FE: response
+end
+
+@enduml

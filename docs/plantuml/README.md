@@ -42,6 +42,26 @@ These diagrams split the full backend flow into small, readable blocks.
 - `09d-cheque-voucher-management.puml`
 - `09e-cheque-print-reprint.puml`
 - `09f-cheque-reprint-approval.puml`
+- `10-po-service.puml` (overview)
+- `10a-po-currency-management.puml`
+- `10b-po-department-management.puml`
+- `10c-po-vendor-management.puml`
+- `10d-po-product-management.puml`
+- `10e-po-vendor-product-mapping.puml`
+- `10f-po-cost-center-management.puml`
+- `10g-po-request-create.puml`
+- `10h-po-request-management.puml`
+- `10i-po-request-approval.puml`
+- `10j-po-creation.puml`
+- `10k-po-management.puml`
+- `10l-po-vendor-confirmation.puml`
+- `10m-po-goods-receipt.puml`
+- `10n-po-invoice-receipt.puml`
+- `10o-po-three-way-match.puml`
+- `10p-po-payment.puml`
+- `10q-po-dashboard.puml`
+- `10r-po-tracking.puml`
+- `10s-po-closure.puml`
 
 ## Render
 

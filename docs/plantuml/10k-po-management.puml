@@ -1,0 +1,30 @@
+@startuml
+title 10k - Purchase Order Management (POMG)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Reference + Filter + View
+  FE -> GW: POST /api/v1/po/po-management/reference-data
+  FE -> GW: POST /api/v1/po/po-management/filter-list
+  FE -> GW: POST /api/v1/po/po-management/view
+  GW -> PO: Forward
+  PO -> PDB: Read created POs
+  PO -> AUTH: Load POMG privileges
+  PO --> FE: grid + PO details
+end
+
+group Update + Send
+  FE -> GW: POST /api/v1/po/po-management/update
+  FE -> GW: POST /api/v1/po/po-management/send-to-vendor
+  GW -> PO: Forward
+  PO -> PDB: Update DRAFT PO
+  PO -> PDB: DRAFT -> SENT with sentDate / sentBy / sendRemark
+  PO --> FE: operation result
+end
+
+@enduml

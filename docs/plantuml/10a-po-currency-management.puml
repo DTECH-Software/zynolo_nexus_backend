@@ -1,0 +1,30 @@
+@startuml
+title 10a - Currency Management (CURM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Reference + Create
+  FE -> GW: POST /api/v1/po/currencies/reference-data
+  FE -> GW: POST /api/v1/po/currencies
+  GW -> PO: Forward
+  PO -> PDB: Load statuses / validate code / insert currency
+  PO -> AUTH: Load CURM privileges
+  PO --> FE: reference-data or created currency
+end
+
+group View + Update + Status + Filter
+  FE -> GW: POST /api/v1/po/currencies/view
+  FE -> GW: POST /api/v1/po/currencies/update
+  FE -> GW: POST /api/v1/po/currencies/status
+  FE -> GW: POST /api/v1/po/currencies/filter-list
+  GW -> PO: Forward
+  PO -> PDB: Read / update / ACTIVE<->INACTIVE / page filter
+  PO --> FE: response
+end
+
+@enduml

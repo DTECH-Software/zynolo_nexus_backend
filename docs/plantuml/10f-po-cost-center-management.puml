@@ -1,0 +1,30 @@
+@startuml
+title 10f - Cost Center Management (CCEM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Reference + Create
+  FE -> GW: POST /api/v1/po/cost-centers/reference-data
+  FE -> GW: POST /api/v1/po/cost-centers
+  GW -> PO: Forward
+  PO -> PDB: Load statuses / validate code / insert cost center
+  PO -> AUTH: Load CCEM privileges
+  PO --> FE: reference-data or created cost center
+end
+
+group View + Update + Status + Filter
+  FE -> GW: POST /api/v1/po/cost-centers/view
+  FE -> GW: POST /api/v1/po/cost-centers/update
+  FE -> GW: POST /api/v1/po/cost-centers/status
+  FE -> GW: POST /api/v1/po/cost-centers/filter-list
+  GW -> PO: Forward
+  PO -> PDB: Read / update / ACTIVE<->INACTIVE / page filter
+  PO --> FE: response
+end
+
+@enduml
