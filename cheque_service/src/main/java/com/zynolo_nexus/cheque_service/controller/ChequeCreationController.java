@@ -58,7 +58,7 @@ public class ChequeCreationController {
 
     @PostMapping("/print")
     public MessageResponseDTO<ChequeVoucherPdfDto> print(@RequestBody ChequePrintRequest request) {
-        return chequeVoucherService.printCheque(request);
+        return chequeVoucherService.previewCheque(request);
     }
 
     @PostMapping("/print-download")

@@ -49,6 +49,8 @@ public interface ChequeVoucherService {
 
     MessageResponseDTO<ChequeVoucherPdfDto> exportPdf(ChequeVoucherExportPdfRequest request);
 
+    MessageResponseDTO<ChequeVoucherPdfDto> previewCheque(ChequePrintRequest request);
+
     MessageResponseDTO<ChequeVoucherPdfDto> printCheque(ChequePrintRequest request);
 
     MessageResponseDTO<ChequeReprintRequestDto> requestReprint(ChequeReprintCreateRequest request);

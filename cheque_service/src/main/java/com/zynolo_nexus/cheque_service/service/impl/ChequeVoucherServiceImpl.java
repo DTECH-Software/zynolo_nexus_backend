@@ -619,6 +619,51 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public MessageResponseDTO<ChequeVoucherPdfDto> previewCheque(ChequePrintRequest request) {
+        Long voucherId = resolveVoucherId(request);
+        if (voucherId == null) {
+            return pdfError("Invalid cheque print request", 400);
+        }
+
+        ChequeVoucher voucher = chequeVoucherRepository.findById(voucherId).orElse(null);
+        if (voucher == null) {
+            return pdfError("Voucher not found", 404);
+        }
+        if (voucher.getStatus() != ChequeVoucherStatus.APPROVED
+                && voucher.getStatus() != ChequeVoucherStatus.CHEQUE_CREATED) {
+            return pdfError("Cheque can be printed only for APPROVED or CHEQUE_CREATED vouchers", 400);
+        }
+
+        int existingPrintCount = voucher.getPrintCount() != null ? voucher.getPrintCount() : 0;
+        if (existingPrintCount > 0) {
+            ChequeReprintRequest approvedReprint = chequeReprintRequestRepository
+                    .findFirstByVoucherIdAndStatusAndUsedForPrintFalseOrderByApprovedDateDesc(
+                            voucher.getId(), ChequeReprintStatus.REPRINT_APPROVED)
+                    .orElse(null);
+            if (approvedReprint == null) {
+                return pdfError("Reprint approval is required before printing again", 400);
+            }
+        }
+
+        MessageResponseDTO<ChequeVoucherPdfDto> exported = exportChequePdfForVoucher(voucher);
+        if (exported == null || !exported.isSuccess() || exported.getData() == null) {
+            return exported != null ? exported : pdfError("Unable to preview cheque", 500);
+        }
+
+        return MessageResponseDTO.<ChequeVoucherPdfDto>builder()
+                .success(true)
+                .message(existingPrintCount == 0
+                        ? "Cheque preview generated successfully"
+                        : "Cheque reprint preview generated successfully")
+                .data(exported.getData())
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
+    @Override
     @Transactional
     public MessageResponseDTO<ChequeVoucherPdfDto> printCheque(ChequePrintRequest request) {
         Long voucherId = resolveVoucherId(request);
