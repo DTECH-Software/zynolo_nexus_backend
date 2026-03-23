@@ -458,8 +458,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .filter(voucher -> matches(bankCode, voucher.getBankCode()))
                 .filter(voucher -> matchesChequeType(chequeType, voucher.getChequeType()))
                 .filter(voucher -> statuses == null || statuses.isEmpty() || statuses.contains(voucher.getStatus()))
-                .filter(voucher -> matchesStatus(status, voucher.getStatus()))
-                .filter(voucher -> matchesPrintStatus(printStatus, voucher.getPrintStatus()))
+                .filter(voucher -> matchesStatus(status, resolveEffectiveVoucherStatus(voucher)))
+                .filter(voucher -> matchesPrintStatus(printStatus, resolveEffectivePrintStatus(voucher)))
                 .map(voucher -> toListItem(
                         voucher,
                         companyDescriptions.get(voucher.getCompanyCode()),
@@ -1675,7 +1675,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             ChequeCompany company,
             ChequeCustomer customer,
             ChequeBank bank) {
-        ChequeVoucherStatus status = voucher.getStatus() != null ? voucher.getStatus() : ChequeVoucherStatus.DRAFT;
+        ChequeVoucherStatus status = resolveEffectiveVoucherStatus(voucher);
+        ChequePrintStatus printStatus = resolveEffectivePrintStatus(voucher);
         boolean canPrint = canPrintVoucher(voucher);
         boolean requiresReprintApproval = requiresReprintApproval(voucher);
         boolean hasPendingReprintRequest = hasPendingReprintRequest(voucher);
@@ -1705,8 +1706,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .rejectedDate(voucher.getRejectedDate())
                 .rejectionReason(voucher.getRejectionReason())
                 .approvalRemark(voucher.getApprovalRemark())
-                .printStatus(resolvePrintStatus(voucher).name())
-                .printStatusDescription(formatPrintStatus(resolvePrintStatus(voucher)))
+                .printStatus(printStatus.name())
+                .printStatusDescription(formatPrintStatus(printStatus))
                 .printCount(voucher.getPrintCount() != null ? voucher.getPrintCount() : 0)
                 .canPrint(canPrint)
                 .requiresReprintApproval(requiresReprintApproval)
@@ -1738,8 +1739,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             String companyDescription,
             String customerDescription,
             String bankName) {
-        ChequeVoucherStatus status = voucher.getStatus() != null ? voucher.getStatus() : ChequeVoucherStatus.DRAFT;
-        ChequePrintStatus printStatus = resolvePrintStatus(voucher);
+        ChequeVoucherStatus status = resolveEffectiveVoucherStatus(voucher);
+        ChequePrintStatus printStatus = resolveEffectivePrintStatus(voucher);
         boolean canPrint = canPrintVoucher(voucher);
         boolean requiresReprintApproval = requiresReprintApproval(voucher);
         boolean hasPendingReprintRequest = hasPendingReprintRequest(voucher);
@@ -1797,6 +1798,24 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
         int count = voucher != null && voucher.getPrintCount() != null ? voucher.getPrintCount() : 0;
         return count > 0 ? ChequePrintStatus.PRINTED : ChequePrintStatus.NOT_PRINTED;
+    }
+
+    private ChequeVoucherStatus resolveEffectiveVoucherStatus(ChequeVoucher voucher) {
+        ChequeVoucherStatus current = voucher != null && voucher.getStatus() != null
+                ? voucher.getStatus()
+                : ChequeVoucherStatus.DRAFT;
+        if (current == ChequeVoucherStatus.CHEQUE_CREATED && hasApprovedReprintRequest(voucher)) {
+            return ChequeVoucherStatus.APPROVED;
+        }
+        return current;
+    }
+
+    private ChequePrintStatus resolveEffectivePrintStatus(ChequeVoucher voucher) {
+        ChequePrintStatus current = resolvePrintStatus(voucher);
+        if (current == ChequePrintStatus.PRINTED && hasApprovedReprintRequest(voucher)) {
+            return ChequePrintStatus.NOT_PRINTED;
+        }
+        return current;
     }
 
     private boolean canPrintVoucher(ChequeVoucher voucher) {
