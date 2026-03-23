@@ -11,6 +11,8 @@ public interface ChequeReprintRequestRepository extends JpaRepository<ChequeRepr
 
     boolean existsByVoucherIdAndStatus(Long voucherId, ChequeReprintStatus status);
 
+    boolean existsByVoucherIdAndStatusAndUsedForPrintFalse(Long voucherId, ChequeReprintStatus status);
+
     Optional<ChequeReprintRequest> findFirstByVoucherIdAndStatusAndUsedForPrintFalseOrderByApprovedDateDesc(
             Long voucherId,
             ChequeReprintStatus status

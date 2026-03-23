@@ -1676,6 +1676,10 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             ChequeCustomer customer,
             ChequeBank bank) {
         ChequeVoucherStatus status = voucher.getStatus() != null ? voucher.getStatus() : ChequeVoucherStatus.DRAFT;
+        boolean canPrint = canPrintVoucher(voucher);
+        boolean requiresReprintApproval = requiresReprintApproval(voucher);
+        boolean hasPendingReprintRequest = hasPendingReprintRequest(voucher);
+        boolean hasApprovedReprintRequest = hasApprovedReprintRequest(voucher);
         return ChequeVoucherDto.builder()
                 .id(voucher.getId())
                 .voucherNo(voucher.getVoucherNo())
@@ -1704,6 +1708,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .printStatus(resolvePrintStatus(voucher).name())
                 .printStatusDescription(formatPrintStatus(resolvePrintStatus(voucher)))
                 .printCount(voucher.getPrintCount() != null ? voucher.getPrintCount() : 0)
+                .canPrint(canPrint)
+                .requiresReprintApproval(requiresReprintApproval)
+                .hasPendingReprintRequest(hasPendingReprintRequest)
+                .hasApprovedReprintRequest(hasApprovedReprintRequest)
+                .nextPrintAction(resolveNextPrintAction(voucher, canPrint, hasPendingReprintRequest, hasApprovedReprintRequest))
                 .lastPrintedBy(voucher.getLastPrintedBy())
                 .lastPrintedDate(voucher.getLastPrintedDate())
                 .invoices(voucher.getInvoices() != null ? voucher.getInvoices().stream().map(this::toInvoiceDto).toList() : List.of())
@@ -1731,6 +1740,10 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             String bankName) {
         ChequeVoucherStatus status = voucher.getStatus() != null ? voucher.getStatus() : ChequeVoucherStatus.DRAFT;
         ChequePrintStatus printStatus = resolvePrintStatus(voucher);
+        boolean canPrint = canPrintVoucher(voucher);
+        boolean requiresReprintApproval = requiresReprintApproval(voucher);
+        boolean hasPendingReprintRequest = hasPendingReprintRequest(voucher);
+        boolean hasApprovedReprintRequest = hasApprovedReprintRequest(voucher);
         return ChequeVoucherListItemDto.builder()
                 .id(voucher.getId())
                 .voucherNo(voucher.getVoucherNo())
@@ -1750,6 +1763,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .printStatus(printStatus.name())
                 .printStatusDescription(formatPrintStatus(printStatus))
                 .printCount(voucher.getPrintCount() != null ? voucher.getPrintCount() : 0)
+                .canPrint(canPrint)
+                .requiresReprintApproval(requiresReprintApproval)
+                .hasPendingReprintRequest(hasPendingReprintRequest)
+                .hasApprovedReprintRequest(hasApprovedReprintRequest)
+                .nextPrintAction(resolveNextPrintAction(voucher, canPrint, hasPendingReprintRequest, hasApprovedReprintRequest))
                 .lastPrintedBy(voucher.getLastPrintedBy())
                 .lastPrintedDate(voucher.getLastPrintedDate())
                 .submittedDate(voucher.getSubmittedDate())
@@ -1779,6 +1797,70 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
         int count = voucher != null && voucher.getPrintCount() != null ? voucher.getPrintCount() : 0;
         return count > 0 ? ChequePrintStatus.PRINTED : ChequePrintStatus.NOT_PRINTED;
+    }
+
+    private boolean canPrintVoucher(ChequeVoucher voucher) {
+        if (!isPrintableVoucher(voucher)) {
+            return false;
+        }
+        int count = voucher.getPrintCount() != null ? voucher.getPrintCount() : 0;
+        if (count <= 0) {
+            return true;
+        }
+        return hasApprovedReprintRequest(voucher);
+    }
+
+    private boolean requiresReprintApproval(ChequeVoucher voucher) {
+        if (!isPrintableVoucher(voucher)) {
+            return false;
+        }
+        int count = voucher.getPrintCount() != null ? voucher.getPrintCount() : 0;
+        return count > 0 && !hasApprovedReprintRequest(voucher);
+    }
+
+    private boolean hasPendingReprintRequest(ChequeVoucher voucher) {
+        if (voucher == null || voucher.getId() == null) {
+            return false;
+        }
+        return chequeReprintRequestRepository.existsByVoucherIdAndStatus(
+                voucher.getId(), ChequeReprintStatus.REPRINT_PENDING);
+    }
+
+    private boolean hasApprovedReprintRequest(ChequeVoucher voucher) {
+        if (voucher == null || voucher.getId() == null) {
+            return false;
+        }
+        return chequeReprintRequestRepository.existsByVoucherIdAndStatusAndUsedForPrintFalse(
+                voucher.getId(), ChequeReprintStatus.REPRINT_APPROVED);
+    }
+
+    private String resolveNextPrintAction(
+            ChequeVoucher voucher,
+            boolean canPrint,
+            boolean hasPendingReprintRequest,
+            boolean hasApprovedReprintRequest) {
+        if (!isPrintableVoucher(voucher)) {
+            return "NONE";
+        }
+        int count = voucher.getPrintCount() != null ? voucher.getPrintCount() : 0;
+        if (count <= 0) {
+            return "PRINT";
+        }
+        if (canPrint && hasApprovedReprintRequest) {
+            return "REPRINT";
+        }
+        if (hasPendingReprintRequest) {
+            return "WAIT_REPRINT_APPROVAL";
+        }
+        return "REQUEST_REPRINT";
+    }
+
+    private boolean isPrintableVoucher(ChequeVoucher voucher) {
+        if (voucher == null) {
+            return false;
+        }
+        return voucher.getStatus() == ChequeVoucherStatus.APPROVED
+                || voucher.getStatus() == ChequeVoucherStatus.CHEQUE_CREATED;
     }
 
     private String formatPrintStatus(ChequePrintStatus status) {

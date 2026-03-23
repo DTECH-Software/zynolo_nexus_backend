@@ -44,6 +44,11 @@ public class ChequeVoucherDto {
     private String printStatus;
     private String printStatusDescription;
     private Integer printCount;
+    private boolean canPrint;
+    private boolean requiresReprintApproval;
+    private boolean hasPendingReprintRequest;
+    private boolean hasApprovedReprintRequest;
+    private String nextPrintAction;
     private String lastPrintedBy;
     private LocalDateTime lastPrintedDate;
     private List<ChequeVoucherInvoiceDto> invoices;
