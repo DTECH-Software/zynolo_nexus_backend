@@ -371,7 +371,7 @@ public class CompanyModuleSubscriptionServiceImpl implements CompanyModuleSubscr
         Set<String> seenModuleCodes = new HashSet<>();
 
         for (CompanyModuleBulkUpdateRequest.ModuleAccess item : request.getModules()) {
-            if (item == null || !StringUtils.hasText(item.getModuleCode())) {
+            if (item == null || !StringUtils.hasText(item.getModuleCode()) || item.getAllowed() == null) {
                 throw new BadRequestException("company.module.invalid");
             }
 
@@ -412,7 +412,7 @@ public class CompanyModuleSubscriptionServiceImpl implements CompanyModuleSubscr
     }
 
     private Company resolveActiveCompany(String companyCode) {
-        Company company = companyRepository.findByCodeIgnoreCase(companyCode)
+        Company company = companyRepository.findByCodeIgnoreCase(companyCode.trim())
                 .orElseThrow(() -> new BadRequestException("company.notfound"));
         if (company.getStatus() != null && company.getStatus() != CompanyStatus.ACTIVE) {
             throw new BadRequestException("company.notfound");
@@ -428,7 +428,7 @@ public class CompanyModuleSubscriptionServiceImpl implements CompanyModuleSubscr
         if (!StringUtils.hasText(companyCode)) {
             throw new BadRequestException("company.module.invalid");
         }
-        return companyRepository.findByCodeIgnoreCase(companyCode)
+        return companyRepository.findByCodeIgnoreCase(companyCode.trim())
                 .orElseThrow(() -> new NotFoundException("company.notfound"));
     }
 
