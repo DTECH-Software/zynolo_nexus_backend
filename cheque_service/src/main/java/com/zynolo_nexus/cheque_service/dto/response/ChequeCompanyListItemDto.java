@@ -27,6 +27,7 @@ public class ChequeCompanyListItemDto {
     private String email;
     private String website;
     private String taxId;
+    private String logo;
     private String status;
     private String statusDescription;
     private LocalDateTime createdDate;

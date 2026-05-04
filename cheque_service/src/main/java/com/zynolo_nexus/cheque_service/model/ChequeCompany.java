@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -68,6 +69,10 @@ public class ChequeCompany {
 
     @Column(name = "tax_id", length = 100)
     private String taxId;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String logo;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

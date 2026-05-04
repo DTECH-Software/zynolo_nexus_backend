@@ -27,6 +27,7 @@ public class CompanyDto {
     private String email;
     private String website;
     private String taxId;
+    private String logo;
     private CompanyStatus status;
     private String statusDescription;
     private LocalDateTime createdDate;

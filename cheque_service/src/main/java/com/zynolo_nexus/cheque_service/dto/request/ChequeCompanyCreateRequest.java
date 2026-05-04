@@ -25,5 +25,6 @@ public class ChequeCompanyCreateRequest {
     private String email;
     private String website;
     private String taxId;
+    private String logo;
     private ChequeCompanyStatus status;
 }

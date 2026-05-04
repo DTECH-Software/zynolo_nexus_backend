@@ -24,5 +24,6 @@ public class CompanyCreateRequest {
     private String email;
     private String website;
     private String taxId;
+    private String logo;
     private CompanyStatus status;
 }

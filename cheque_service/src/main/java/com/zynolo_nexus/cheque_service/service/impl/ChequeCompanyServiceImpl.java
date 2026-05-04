@@ -75,6 +75,7 @@ public class ChequeCompanyServiceImpl implements ChequeCompanyService {
                 .email(trimToNull(request.getEmail()))
                 .website(trimToNull(request.getWebsite()))
                 .taxId(trimToNull(request.getTaxId()))
+                .logo(trimToNull(request.getLogo()))
                 .status(request.getStatus() != null ? request.getStatus() : ChequeCompanyStatus.ACTIVE)
                 .createdBy(actor)
                 .lastModifiedBy(actor)
@@ -139,6 +140,9 @@ public class ChequeCompanyServiceImpl implements ChequeCompanyService {
         }
         if (request.getTaxId() != null) {
             company.setTaxId(trimToNull(request.getTaxId()));
+        }
+        if (request.getLogo() != null) {
+            company.setLogo(trimToNull(request.getLogo()));
         }
 
         if (!StringUtils.hasText(company.getStreet1())
@@ -366,6 +370,7 @@ public class ChequeCompanyServiceImpl implements ChequeCompanyService {
                 .email(company.getEmail())
                 .website(company.getWebsite())
                 .taxId(company.getTaxId())
+                .logo(company.getLogo())
                 .status(status)
                 .statusDescription(status == ChequeCompanyStatus.ACTIVE ? "Active" : "Inactive")
                 .createdDate(company.getCreatedDate())
@@ -392,6 +397,7 @@ public class ChequeCompanyServiceImpl implements ChequeCompanyService {
                 .email(company.getEmail())
                 .website(company.getWebsite())
                 .taxId(company.getTaxId())
+                .logo(company.getLogo())
                 .status(status.name())
                 .statusDescription(status == ChequeCompanyStatus.ACTIVE ? "Active" : "Inactive")
                 .createdDate(company.getCreatedDate())

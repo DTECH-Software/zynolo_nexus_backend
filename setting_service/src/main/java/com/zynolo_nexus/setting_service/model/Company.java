@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -72,6 +73,10 @@ public class Company extends BaseAuditableEntity {
 
     @Column(name = "tax_id", length = 100)
     private String taxId;
+
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
+    private String logo;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
