@@ -140,7 +140,7 @@ public class ThreeWayMatchServiceImpl implements ThreeWayMatchService {
         validateVisible(context);
         List<ThreeWayMatchLineDto> lines = computeLineMatches(purchaseOrder, context.goodsReceipts(), context.invoiceReceipts());
 
-        purchaseOrder.setMatchStatus(effectiveMatchStatus(purchaseOrder, lines));
+        purchaseOrder.setMatchStatus(calculateMatchStatus(lines));
         purchaseOrder.setMatchedDate(LocalDateTime.now());
         purchaseOrder.setMatchedBy(request.getUsername());
         purchaseOrder.setMatchRemark(trim(request.getMatchRemark()));
@@ -220,7 +220,7 @@ public class ThreeWayMatchServiceImpl implements ThreeWayMatchService {
         if (search == null || !hasText(search.getMatchStatus())) {
             return true;
         }
-        return effectiveMatchStatus(purchaseOrder, computeLineMatches(purchaseOrder, goodsReceipts, invoiceReceipts)).equalsIgnoreCase(search.getMatchStatus().trim());
+        return displayMatchStatus(purchaseOrder).equalsIgnoreCase(search.getMatchStatus().trim());
     }
 
     private boolean matchesInvoiceNo(List<InvoiceReceipt> invoiceReceipts, ThreeWayMatchFilterSearch search) {
@@ -242,7 +242,7 @@ public class ThreeWayMatchServiceImpl implements ThreeWayMatchService {
 
     private ThreeWayMatchListItemDto toListItemDto(PurchaseOrder purchaseOrder, List<GoodsReceipt> goodsReceipts, List<InvoiceReceipt> invoiceReceipts) {
         List<ThreeWayMatchLineDto> lines = computeLineMatches(purchaseOrder, goodsReceipts, invoiceReceipts);
-        String matchStatus = effectiveMatchStatus(purchaseOrder, lines);
+        String matchStatus = displayMatchStatus(purchaseOrder);
         InvoiceReceipt latestInvoice = invoiceReceipts.isEmpty() ? null : invoiceReceipts.get(0);
 
         return ThreeWayMatchListItemDto.builder()
@@ -269,7 +269,7 @@ public class ThreeWayMatchServiceImpl implements ThreeWayMatchService {
 
     private ThreeWayMatchViewDto toViewDto(PurchaseOrder purchaseOrder, MatchContext context) {
         List<ThreeWayMatchLineDto> lines = computeLineMatches(purchaseOrder, context.goodsReceipts(), context.invoiceReceipts());
-        String matchStatus = effectiveMatchStatus(purchaseOrder, lines);
+        String matchStatus = displayMatchStatus(purchaseOrder);
         InvoiceReceipt latestInvoice = context.invoiceReceipts().isEmpty() ? null : context.invoiceReceipts().get(0);
 
         return ThreeWayMatchViewDto.builder()
@@ -357,10 +357,14 @@ public class ThreeWayMatchServiceImpl implements ThreeWayMatchService {
         return MISMATCHED;
     }
 
-    private String effectiveMatchStatus(PurchaseOrder purchaseOrder, List<ThreeWayMatchLineDto> lines) {
+    private String displayMatchStatus(PurchaseOrder purchaseOrder) {
         if (hasText(purchaseOrder.getMatchStatus())) {
             return purchaseOrder.getMatchStatus();
         }
+        return PENDING_MATCH;
+    }
+
+    private String calculateMatchStatus(List<ThreeWayMatchLineDto> lines) {
         if (lines.isEmpty()) {
             return PENDING_MATCH;
         }
