@@ -176,6 +176,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
         purchaseOrder.setVendorReferenceNo(null);
         purchaseOrder.setExpectedDeliveryDate(null);
         purchaseOrder.setVendorConfirmationRemark(null);
+        purchaseOrder.setVendorConfirmationStatus(null);
         copyItemsFromRequest(poRequest, purchaseOrder);
         applyAudit(purchaseOrder, request.getUsername(), true);
 
@@ -218,6 +219,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
         purchaseOrder.setVendorReferenceNo(null);
         purchaseOrder.setExpectedDeliveryDate(null);
         purchaseOrder.setVendorConfirmationRemark(null);
+        purchaseOrder.setVendorConfirmationStatus(null);
         applyAudit(purchaseOrder, request.getUsername(), false);
 
         return toPurchaseOrderDto(purchaseOrderRepository.save(purchaseOrder));

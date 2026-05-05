@@ -108,6 +108,10 @@ public class PurchaseOrder extends BaseAuditEntity {
     @Column(name = "vendor_confirmation_remark", length = 1000)
     private String vendorConfirmationRemark;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "vendor_confirmation_status", length = 30)
+    private PurchaseOrderStatus vendorConfirmationStatus;
+
     @Column(name = "match_status", length = 30)
     private String matchStatus;
 

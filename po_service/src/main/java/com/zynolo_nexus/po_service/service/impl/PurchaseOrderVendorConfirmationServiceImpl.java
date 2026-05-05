@@ -27,16 +27,15 @@ import com.zynolo_nexus.po_service.service.PurchaseOrderVendorConfirmationServic
 import com.zynolo_nexus.po_service.service.support.PagePrivilegeResolver;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -102,21 +101,20 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
     @Override
     @Transactional(readOnly = true)
     public PurchaseOrderFilterResultDto filterList(PurchaseOrderFilterRequest request) {
-        Pageable pageable = PageRequest.of(
-                request.getPage(),
-                request.getSize(),
-                Sort.by(resolveDirection(request.getSortDirection()), resolveSortColumn(request.getSortColumn()))
-        );
-
-        Page<PurchaseOrder> page = purchaseOrderRepository.findAll(buildSpecification(request.getSearch()), pageable);
-        List<PurchaseOrderListItemDto> content = page.getContent().stream()
+        List<PurchaseOrderListItemDto> filtered = purchaseOrderRepository.findAll(buildSpecification(request.getSearch())).stream()
+                .filter(purchaseOrder -> matchesEffectiveStatus(purchaseOrder, request.getSearch()))
                 .map(this::toListItemDto)
+                .sorted(resolveComparator(request.getSortColumn(), request.getSortDirection()))
                 .toList();
+
+        int fromIndex = Math.min(request.getPage() * request.getSize(), filtered.size());
+        int toIndex = Math.min(fromIndex + request.getSize(), filtered.size());
+        List<PurchaseOrderListItemDto> content = filtered.subList(fromIndex, toIndex);
 
         return PurchaseOrderFilterResultDto.builder()
                 .content(content)
                 .size(content.size())
-                .totalRecords(page.getTotalElements())
+                .totalRecords(filtered.size())
                 .build();
     }
 
@@ -137,6 +135,7 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
         PurchaseOrderStatus confirmationStatus = parseConfirmationStatus(request.getStatus());
         applyApprovedQuantities(purchaseOrder, confirmationStatus, request.getItems());
         purchaseOrder.setStatus(confirmationStatus);
+        purchaseOrder.setVendorConfirmationStatus(confirmationStatus);
         purchaseOrder.setVendorConfirmationDate(LocalDateTime.now());
         purchaseOrder.setVendorConfirmationBy(request.getUsername());
         purchaseOrder.setVendorReferenceNo(trim(request.getVendorReferenceNo()));
@@ -213,6 +212,16 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
     private Specification<PurchaseOrder> buildSpecification(PurchaseOrderFilterSearch search) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.or(
+                    root.get("status").in(
+                            PurchaseOrderStatus.SENT,
+                            PurchaseOrderStatus.VENDOR_CONFIRMED,
+                            PurchaseOrderStatus.PARTIALLY_CONFIRMED,
+                            PurchaseOrderStatus.PARTIALLY_APPROVED,
+                            PurchaseOrderStatus.VENDOR_REJECTED
+                    ),
+                    cb.isNotNull(root.get("vendorConfirmationDate"))
+            ));
 
             if (search != null) {
                 if (hasText(search.getPoNo())) {
@@ -236,25 +245,6 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
                 if (hasText(search.getCreatedBy())) {
                     predicates.add(cb.like(cb.lower(root.get("createdBy")), like(search.getCreatedBy())));
                 }
-                if (hasText(search.getStatus())) {
-                    predicates.add(cb.equal(root.get("status"), parseStatus(search.getStatus())));
-                } else {
-                    predicates.add(root.get("status").in(
-                            PurchaseOrderStatus.SENT,
-                            PurchaseOrderStatus.VENDOR_CONFIRMED,
-                            PurchaseOrderStatus.PARTIALLY_CONFIRMED,
-                            PurchaseOrderStatus.PARTIALLY_APPROVED,
-                            PurchaseOrderStatus.VENDOR_REJECTED
-                    ));
-                }
-            } else {
-                predicates.add(root.get("status").in(
-                        PurchaseOrderStatus.SENT,
-                        PurchaseOrderStatus.VENDOR_CONFIRMED,
-                        PurchaseOrderStatus.PARTIALLY_CONFIRMED,
-                        PurchaseOrderStatus.PARTIALLY_APPROVED,
-                        PurchaseOrderStatus.VENDOR_REJECTED
-                ));
             }
 
             return cb.and(predicates.toArray(Predicate[]::new));
@@ -267,6 +257,7 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
     }
 
     private PurchaseOrderDto toDto(PurchaseOrder purchaseOrder) {
+        PurchaseOrderStatus displayStatus = effectiveVendorConfirmationStatus(purchaseOrder);
         return PurchaseOrderDto.builder()
                 .id(purchaseOrder.getId())
                 .requestId(purchaseOrder.getRequest().getId())
@@ -282,8 +273,8 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
                 .vendorName(purchaseOrder.getVendorName())
                 .requiredDate(purchaseOrder.getRequiredDate())
                 .justification(purchaseOrder.getJustification())
-                .status(purchaseOrder.getStatus().name())
-                .statusDescription(toStatusDescription(purchaseOrder.getStatus()))
+                .status(displayStatus != null ? displayStatus.name() : purchaseOrder.getStatus().name())
+                .statusDescription(toStatusDescription(displayStatus != null ? displayStatus : purchaseOrder.getStatus()))
                 .totalAmount(purchaseOrder.getTotalAmount())
                 .sentDate(purchaseOrder.getSentDate())
                 .sentBy(purchaseOrder.getSentBy())
@@ -302,6 +293,7 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
     }
 
     private PurchaseOrderListItemDto toListItemDto(PurchaseOrder purchaseOrder) {
+        PurchaseOrderStatus displayStatus = effectiveVendorConfirmationStatus(purchaseOrder);
         return PurchaseOrderListItemDto.builder()
                 .id(purchaseOrder.getId())
                 .poNo(purchaseOrder.getPoNo())
@@ -311,8 +303,8 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
                 .vendorCode(purchaseOrder.getVendorCode())
                 .vendorName(purchaseOrder.getVendorName())
                 .requestType(purchaseOrder.getRequestType())
-                .status(purchaseOrder.getStatus().name())
-                .statusDescription(toStatusDescription(purchaseOrder.getStatus()))
+                .status(displayStatus != null ? displayStatus.name() : purchaseOrder.getStatus().name())
+                .statusDescription(toStatusDescription(displayStatus != null ? displayStatus : purchaseOrder.getStatus()))
                 .totalAmount(purchaseOrder.getTotalAmount())
                 .requiredDate(purchaseOrder.getRequiredDate())
                 .expectedDeliveryDate(purchaseOrder.getExpectedDeliveryDate())
@@ -356,6 +348,42 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
         return parsed;
     }
 
+    private boolean matchesEffectiveStatus(PurchaseOrder purchaseOrder, PurchaseOrderFilterSearch search) {
+        if (search == null || !hasText(search.getStatus())) {
+            return true;
+        }
+        PurchaseOrderStatus requestedStatus = parseStatus(search.getStatus());
+        PurchaseOrderStatus effectiveStatus = effectiveVendorConfirmationStatus(purchaseOrder);
+        return effectiveStatus == requestedStatus;
+    }
+
+    private PurchaseOrderStatus effectiveVendorConfirmationStatus(PurchaseOrder purchaseOrder) {
+        if (purchaseOrder.getVendorConfirmationStatus() != null) {
+            return purchaseOrder.getVendorConfirmationStatus();
+        }
+        if (purchaseOrder.getStatus() == PurchaseOrderStatus.SENT
+                || purchaseOrder.getStatus() == PurchaseOrderStatus.VENDOR_CONFIRMED
+                || purchaseOrder.getStatus() == PurchaseOrderStatus.PARTIALLY_CONFIRMED
+                || purchaseOrder.getStatus() == PurchaseOrderStatus.PARTIALLY_APPROVED
+                || purchaseOrder.getStatus() == PurchaseOrderStatus.VENDOR_REJECTED) {
+            return purchaseOrder.getStatus();
+        }
+        if (purchaseOrder.getVendorConfirmationDate() == null) {
+            return null;
+        }
+
+        boolean anyPositive = purchaseOrder.getItems().stream()
+                .map(this::effectiveApprovedQuantity)
+                .anyMatch(quantity -> quantity.compareTo(BigDecimal.ZERO) > 0);
+        if (!anyPositive) {
+            return PurchaseOrderStatus.VENDOR_REJECTED;
+        }
+
+        boolean anyPartial = purchaseOrder.getItems().stream()
+                .anyMatch(item -> effectiveApprovedQuantity(item).compareTo(item.getQuantity()) < 0);
+        return anyPartial ? PurchaseOrderStatus.PARTIALLY_APPROVED : PurchaseOrderStatus.VENDOR_CONFIRMED;
+    }
+
     private String toStatusDescription(PurchaseOrderStatus status) {
         return switch (status) {
             case DRAFT -> "Draft";
@@ -381,15 +409,25 @@ public class PurchaseOrderVendorConfirmationServiceImpl implements PurchaseOrder
         return "ASC".equalsIgnoreCase(direction) ? Sort.Direction.ASC : Sort.Direction.DESC;
     }
 
-    private String resolveSortColumn(String sortColumn) {
-        if (!hasText(sortColumn)) {
-            return "lastModifiedDate";
-        }
-        return switch (sortColumn) {
-            case "poNo", "requestNo", "companyCode", "vendorCode", "requestType", "status",
-                    "createdDate", "lastModifiedDate", "requiredDate", "totalAmount", "createdBy", "sentDate", "expectedDeliveryDate" -> sortColumn;
-            default -> "lastModifiedDate";
+    private Comparator<PurchaseOrderListItemDto> resolveComparator(String sortColumn, String sortDirection) {
+        Comparator<PurchaseOrderListItemDto> comparator = switch (sortColumn) {
+            case "poNo" -> Comparator.comparing(PurchaseOrderListItemDto::getPoNo, Comparator.nullsLast(String::compareToIgnoreCase));
+            case "requestNo" -> Comparator.comparing(PurchaseOrderListItemDto::getRequestNo, Comparator.nullsLast(String::compareToIgnoreCase));
+            case "companyCode" -> Comparator.comparing(PurchaseOrderListItemDto::getCompanyCode, Comparator.nullsLast(String::compareToIgnoreCase));
+            case "vendorCode" -> Comparator.comparing(PurchaseOrderListItemDto::getVendorCode, Comparator.nullsLast(String::compareToIgnoreCase));
+            case "vendorName" -> Comparator.comparing(PurchaseOrderListItemDto::getVendorName, Comparator.nullsLast(String::compareToIgnoreCase));
+            case "requestType" -> Comparator.comparing(PurchaseOrderListItemDto::getRequestType, Comparator.nullsLast(String::compareToIgnoreCase));
+            case "status" -> Comparator.comparing(PurchaseOrderListItemDto::getStatus, Comparator.nullsLast(String::compareToIgnoreCase));
+            case "totalAmount" -> Comparator.comparing(PurchaseOrderListItemDto::getTotalAmount, Comparator.nullsLast(BigDecimal::compareTo));
+            case "requiredDate" -> Comparator.comparing(PurchaseOrderListItemDto::getRequiredDate, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "expectedDeliveryDate" -> Comparator.comparing(PurchaseOrderListItemDto::getExpectedDeliveryDate, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "sentDate" -> Comparator.comparing(PurchaseOrderListItemDto::getSentDate, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "createdDate" -> Comparator.comparing(PurchaseOrderListItemDto::getCreatedDate, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "lastModifiedDate" -> Comparator.comparing(PurchaseOrderListItemDto::getLastModifiedDate, Comparator.nullsLast(Comparator.naturalOrder()));
+            case "createdBy" -> Comparator.comparing(PurchaseOrderListItemDto::getCreatedBy, Comparator.nullsLast(String::compareToIgnoreCase));
+            default -> Comparator.comparing(PurchaseOrderListItemDto::getLastModifiedDate, Comparator.nullsLast(Comparator.naturalOrder()));
         };
+        return resolveDirection(sortDirection) == Sort.Direction.ASC ? comparator : comparator.reversed();
     }
 
     private boolean hasText(String value) {
