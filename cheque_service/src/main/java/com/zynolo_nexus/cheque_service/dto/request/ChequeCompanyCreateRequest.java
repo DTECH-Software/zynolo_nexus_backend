@@ -1,6 +1,7 @@
 package com.zynolo_nexus.cheque_service.dto.request;
 
 import com.zynolo_nexus.cheque_service.enums.ChequeCompanyStatus;
+import com.zynolo_nexus.cheque_service.dto.common.LogoDocumentDto;
 import lombok.Data;
 
 @Data
@@ -25,6 +26,6 @@ public class ChequeCompanyCreateRequest {
     private String email;
     private String website;
     private String taxId;
-    private String logo;
+    private LogoDocumentDto logo;
     private ChequeCompanyStatus status;
 }

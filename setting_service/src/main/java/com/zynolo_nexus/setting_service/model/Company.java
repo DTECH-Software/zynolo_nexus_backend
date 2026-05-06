@@ -74,9 +74,18 @@ public class Company extends BaseAuditableEntity {
     @Column(name = "tax_id", length = 100)
     private String taxId;
 
+    @Column(name = "logo_type", length = 100)
+    private String logoType;
+
+    @Column(name = "logo_file_name", length = 255)
+    private String logoFileName;
+
+    @Column(name = "logo_file_type", length = 100)
+    private String logoFileType;
+
     @Lob
-    @Column(columnDefinition = "LONGTEXT")
-    private String logo;
+    @Column(name = "logo", columnDefinition = "LONGTEXT")
+    private String logoDoc;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)

@@ -2,6 +2,7 @@ package com.zynolo_nexus.setting_service.service.impl;
 
 import com.zynolo_nexus.setting_service.client.AuthModuleClient;
 import com.zynolo_nexus.setting_service.dto.api.MessageResponseDTO;
+import com.zynolo_nexus.setting_service.dto.common.LogoDocumentDto;
 import com.zynolo_nexus.setting_service.dto.request.CompanyCreateRequest;
 import com.zynolo_nexus.setting_service.dto.request.CompanyFilterRequest;
 import com.zynolo_nexus.setting_service.dto.request.CompanyFilterSearch;
@@ -80,7 +81,10 @@ public class CompanyServiceImpl implements CompanyService {
                 .email(trimToNull(request.getEmail()))
                 .website(trimToNull(request.getWebsite()))
                 .taxId(trimToNull(request.getTaxId()))
-                .logo(trimToNull(request.getLogo()))
+                .logoType(trimToNull(request.getLogo() != null ? request.getLogo().getType() : null))
+                .logoFileName(trimToNull(request.getLogo() != null ? request.getLogo().getFileName() : null))
+                .logoFileType(trimToNull(request.getLogo() != null ? request.getLogo().getFileType() : null))
+                .logoDoc(trimToNull(request.getLogo() != null ? request.getLogo().getDoc() : null))
                 .status(status)
                 .build();
 
@@ -158,7 +162,7 @@ public class CompanyServiceImpl implements CompanyService {
             company.setTaxId(trimToNull(request.getTaxId()));
         }
         if (request.getLogo() != null) {
-            company.setLogo(trimToNull(request.getLogo()));
+            applyLogo(company, request.getLogo());
         }
 
         if (!StringUtils.hasText(company.getStreet1())
@@ -273,7 +277,7 @@ public class CompanyServiceImpl implements CompanyService {
                             .email(company.getEmail())
                             .website(company.getWebsite())
                             .taxId(company.getTaxId())
-                            .logo(company.getLogo())
+                            .logo(toLogoDto(company))
                             .status(current.name())
                             .statusDescription(current == CompanyStatus.DEACTIVE ? "Inactive" : "Active")
                             .createdDate(company.getCreatedDate())
@@ -355,13 +359,35 @@ public class CompanyServiceImpl implements CompanyService {
                 .email(company.getEmail())
                 .website(company.getWebsite())
                 .taxId(company.getTaxId())
-                .logo(company.getLogo())
+                .logo(toLogoDto(company))
                 .status(current)
                 .statusDescription(current == CompanyStatus.DEACTIVE ? "Inactive" : "Active")
                 .createdDate(company.getCreatedDate())
                 .lastModifiedDate(company.getLastModifiedDate())
                 .createdBy(company.getCreatedBy())
                 .lastModifiedBy(company.getLastModifiedBy())
+                .build();
+    }
+
+    private void applyLogo(Company company, LogoDocumentDto logo) {
+        company.setLogoType(trimToNull(logo.getType()));
+        company.setLogoFileName(trimToNull(logo.getFileName()));
+        company.setLogoFileType(trimToNull(logo.getFileType()));
+        company.setLogoDoc(trimToNull(logo.getDoc()));
+    }
+
+    private LogoDocumentDto toLogoDto(Company company) {
+        if (!StringUtils.hasText(company.getLogoType())
+                && !StringUtils.hasText(company.getLogoFileName())
+                && !StringUtils.hasText(company.getLogoFileType())
+                && !StringUtils.hasText(company.getLogoDoc())) {
+            return null;
+        }
+        return LogoDocumentDto.builder()
+                .type(company.getLogoType())
+                .fileName(company.getLogoFileName())
+                .fileType(company.getLogoFileType())
+                .doc(company.getLogoDoc())
                 .build();
     }
 

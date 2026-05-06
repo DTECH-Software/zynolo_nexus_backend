@@ -10,6 +10,7 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\controller\ChequeVoucherController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\controller\ChequeVoucherCreateController.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\dto\api\MessageResponseDTO.java
+C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\dto\common\LogoDocumentDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\dto\request\ChequeBankCreateRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\dto\request\ChequeBankFilterRequest.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\dto\request\ChequeBankFilterSearch.java

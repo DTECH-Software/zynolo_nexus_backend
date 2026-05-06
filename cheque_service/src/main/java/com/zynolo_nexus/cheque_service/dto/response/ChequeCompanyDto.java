@@ -1,6 +1,7 @@
 package com.zynolo_nexus.cheque_service.dto.response;
 
 import com.zynolo_nexus.cheque_service.enums.ChequeCompanyStatus;
+import com.zynolo_nexus.cheque_service.dto.common.LogoDocumentDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +29,7 @@ public class ChequeCompanyDto {
     private String email;
     private String website;
     private String taxId;
-    private String logo;
+    private LogoDocumentDto logo;
     private ChequeCompanyStatus status;
     private String statusDescription;
     private LocalDateTime createdDate;

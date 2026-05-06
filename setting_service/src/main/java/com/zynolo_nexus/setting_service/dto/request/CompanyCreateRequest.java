@@ -1,6 +1,7 @@
 package com.zynolo_nexus.setting_service.dto.request;
 
 import com.zynolo_nexus.setting_service.enums.CompanyStatus;
+import com.zynolo_nexus.setting_service.dto.common.LogoDocumentDto;
 import lombok.Data;
 
 @Data
@@ -24,6 +25,6 @@ public class CompanyCreateRequest {
     private String email;
     private String website;
     private String taxId;
-    private String logo;
+    private LogoDocumentDto logo;
     private CompanyStatus status;
 }

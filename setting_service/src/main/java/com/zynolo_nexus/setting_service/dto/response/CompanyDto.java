@@ -1,6 +1,7 @@
 package com.zynolo_nexus.setting_service.dto.response;
 
 import com.zynolo_nexus.setting_service.enums.CompanyStatus;
+import com.zynolo_nexus.setting_service.dto.common.LogoDocumentDto;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +28,7 @@ public class CompanyDto {
     private String email;
     private String website;
     private String taxId;
-    private String logo;
+    private LogoDocumentDto logo;
     private CompanyStatus status;
     private String statusDescription;
     private LocalDateTime createdDate;
