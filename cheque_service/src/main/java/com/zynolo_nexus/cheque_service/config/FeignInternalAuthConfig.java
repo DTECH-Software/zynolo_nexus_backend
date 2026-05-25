@@ -1,5 +1,6 @@
 package com.zynolo_nexus.cheque_service.config;
 
+import com.zynolo_nexus.cheque_service.context.CompanyContext;
 import feign.RequestInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,10 @@ public class FeignInternalAuthConfig {
         return template -> {
             if (internalToken != null) {
                 template.header("X-Internal-Token", internalToken);
+            }
+            Long companyId = CompanyContext.getCompanyId();
+            if (companyId != null) {
+                template.header("X-Company-Id", String.valueOf(companyId));
             }
         };
     }

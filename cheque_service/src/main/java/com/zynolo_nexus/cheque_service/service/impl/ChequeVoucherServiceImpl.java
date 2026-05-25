@@ -1,6 +1,8 @@
 package com.zynolo_nexus.cheque_service.service.impl;
 
 import com.zynolo_nexus.cheque_service.client.AuthModuleClient;
+import com.zynolo_nexus.cheque_service.client.SettingCompanyClient;
+import com.zynolo_nexus.cheque_service.context.CompanyContext;
 import com.zynolo_nexus.cheque_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.cheque_service.dto.request.ChequePrintRequest;
 import com.zynolo_nexus.cheque_service.dto.request.ChequeReprintApproveRequest;
@@ -33,6 +35,7 @@ import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherListItemDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherPdfDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherPrivilegesDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherReferenceDataDto;
+import com.zynolo_nexus.cheque_service.dto.response.SettingCompanyLookupDto;
 import com.zynolo_nexus.cheque_service.enums.ChequeBankStatus;
 import com.zynolo_nexus.cheque_service.enums.ChequePrintStatus;
 import com.zynolo_nexus.cheque_service.enums.ChequeReprintStatus;
@@ -104,6 +107,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     private final ChequeReprintRequestRepository chequeReprintRequestRepository;
     private final UserAccountRepository userAccountRepository;
     private final AuthModuleClient authModuleClient;
+    private final SettingCompanyClient settingCompanyClient;
 
     private volatile JasperReport voucherReport;
     private volatile JasperReport chequePrintReport;
@@ -115,7 +119,13 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             return error("Invalid voucher create request", 400);
         }
 
-        ChequeCompany company = resolveActiveCompany(request.getCompanyCode());
+        String currentCompanyCode = resolveCurrentCompanyCode();
+        String scopedCompanyCode = resolveScopedCompanyCode(currentCompanyCode, request.getCompanyCode());
+        if (StringUtils.hasText(currentCompanyCode) && !StringUtils.hasText(scopedCompanyCode)) {
+            return error("Voucher company does not match current company context", 403);
+        }
+
+        ChequeCompany company = resolveActiveCompany(scopedCompanyCode != null ? scopedCompanyCode : request.getCompanyCode());
         if (company == null) {
             return error("Company not found or inactive", 400);
         }
@@ -180,7 +190,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
 
         ChequeVoucher voucher = chequeVoucherRepository.findById(id).orElse(null);
-        if (voucher == null) {
+        if (voucher == null || !isVoucherInCurrentCompanyScope(voucher)) {
             return error("Voucher not found", 404);
         }
 
@@ -215,7 +225,17 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             return error("Invalid voucher update request", 400);
         }
 
-        ChequeCompany company = resolveActiveCompany(request.getCompanyCode());
+        if (!isVoucherInCurrentCompanyScope(voucher)) {
+            return error("Voucher not found", 404);
+        }
+
+        String currentCompanyCode = resolveCurrentCompanyCode();
+        String scopedCompanyCode = resolveScopedCompanyCode(currentCompanyCode, request.getCompanyCode());
+        if (StringUtils.hasText(currentCompanyCode) && !StringUtils.hasText(scopedCompanyCode)) {
+            return error("Voucher company does not match current company context", 403);
+        }
+
+        ChequeCompany company = resolveActiveCompany(scopedCompanyCode != null ? scopedCompanyCode : request.getCompanyCode());
         if (company == null) {
             return error("Company not found or inactive", 400);
         }
@@ -300,7 +320,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
 
         ChequeVoucher voucher = chequeVoucherRepository.findById(id).orElse(null);
-        if (voucher == null) {
+        if (voucher == null || !isVoucherInCurrentCompanyScope(voucher)) {
             return error("Cheque record not found", 404);
         }
         if (voucher.getStatus() != ChequeVoucherStatus.APPROVED
@@ -322,7 +342,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
 
         ChequeVoucher voucher = chequeVoucherRepository.findById(request.getId()).orElse(null);
-        if (voucher == null) {
+        if (voucher == null || !isVoucherInCurrentCompanyScope(voucher)) {
             return error("Voucher not found", 404);
         }
         if (voucher.getStatus() != ChequeVoucherStatus.DRAFT && voucher.getStatus() != ChequeVoucherStatus.REJECTED) {
@@ -361,7 +381,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
 
         ChequeVoucher voucher = chequeVoucherRepository.findById(request.getId()).orElse(null);
-        if (voucher == null) {
+        if (voucher == null || !isVoucherInCurrentCompanyScope(voucher)) {
             return error("Voucher not found", 404);
         }
         if (voucher.getStatus() != ChequeVoucherStatus.PENDING_APPROVAL) {
@@ -398,7 +418,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
 
         ChequeVoucher voucher = chequeVoucherRepository.findById(request.getId()).orElse(null);
-        if (voucher == null) {
+        if (voucher == null || !isVoucherInCurrentCompanyScope(voucher)) {
             return error("Voucher not found", 404);
         }
         if (voucher.getStatus() != ChequeVoucherStatus.PENDING_APPROVAL) {
@@ -429,6 +449,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             Set<ChequeVoucherStatus> statuses,
             String successMessage) {
         List<ChequeVoucher> vouchers = chequeVoucherRepository.findAll();
+        String currentCompanyCode = resolveCurrentCompanyCode();
 
         ChequeVoucherFilterSearch search = request != null ? request.getSearch() : null;
         String voucherNo = normalize(search != null ? search.getVoucherNo() : null);
@@ -451,6 +472,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .forEach(bank -> bankNames.put(bank.getCode(), bank.getName()));
 
         List<ChequeVoucherListItemDto> filtered = vouchers.stream()
+                .filter(voucher -> matchesScopedCompany(currentCompanyCode, voucher.getCompanyCode()))
                 .filter(voucher -> matches(voucherNo, voucher.getVoucherNo()))
                 .filter(voucher -> matches(companyCode, voucher.getCompanyCode()))
                 .filter(voucher -> matches(customerCode, voucher.getCustomerCode()))
@@ -508,9 +530,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 : CHVM_PAGE_CODE;
 
         ChequeVoucherPrivilegesDto privileges = resolvePrivileges(request, pageCode);
+        String currentCompanyCode = resolveCurrentCompanyCode();
 
         List<ChequeReferenceCompanyDto> companies = chequeCompanyRepository.findAllByStatusOrderByCodeAsc(ChequeCompanyStatus.ACTIVE)
                 .stream()
+                .filter(company -> matchesScopedCompany(currentCompanyCode, company.getCode()))
                 .map(company -> ChequeReferenceCompanyDto.builder()
                         .code(company.getCode())
                         .description(company.getDescription())
@@ -581,7 +605,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
 
         ChequeVoucher voucher = chequeVoucherRepository.findById(voucherId).orElse(null);
-        if (voucher == null) {
+        if (voucher == null || !isVoucherInCurrentCompanyScope(voucher)) {
             return pdfError("Voucher not found", 404);
         }
 
@@ -627,7 +651,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
 
         ChequeVoucher voucher = chequeVoucherRepository.findById(voucherId).orElse(null);
-        if (voucher == null) {
+        if (voucher == null || !isVoucherInCurrentCompanyScope(voucher)) {
             return pdfError("Voucher not found", 404);
         }
         if (voucher.getStatus() != ChequeVoucherStatus.APPROVED
@@ -672,7 +696,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
 
         ChequeVoucher voucher = chequeVoucherRepository.findById(voucherId).orElse(null);
-        if (voucher == null) {
+        if (voucher == null || !isVoucherInCurrentCompanyScope(voucher)) {
             return pdfError("Voucher not found", 404);
         }
         if (voucher.getStatus() != ChequeVoucherStatus.APPROVED
@@ -744,7 +768,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
 
         ChequeVoucher voucher = chequeVoucherRepository.findById(request.getVoucherId()).orElse(null);
-        if (voucher == null) {
+        if (voucher == null || !isVoucherInCurrentCompanyScope(voucher)) {
             return reprintError("Voucher not found", 404);
         }
         if (voucher.getStatus() != ChequeVoucherStatus.CHEQUE_CREATED) {
@@ -784,9 +808,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         permissionRequest.setUsername(request != null ? request.getUsername() : null);
         permissionRequest.setPageCode(pageCode);
         ChequeVoucherPrivilegesDto privileges = resolvePrivileges(permissionRequest, pageCode);
+        String currentCompanyCode = resolveCurrentCompanyCode();
 
         List<ChequeReferenceCompanyDto> companies = chequeCompanyRepository.findAllByStatusOrderByCodeAsc(ChequeCompanyStatus.ACTIVE)
                 .stream()
+                .filter(company -> matchesScopedCompany(currentCompanyCode, company.getCode()))
                 .map(company -> ChequeReferenceCompanyDto.builder()
                         .code(company.getCode())
                         .description(company.getDescription())
@@ -836,6 +862,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     public MessageResponseDTO<ChequeReprintFilterResultDto> reprintFilterList(ChequeReprintFilterRequest request) {
         List<ChequeReprintRequest> requests = chequeReprintRequestRepository.findAll();
         Map<Long, ChequeVoucher> voucherMap = loadVoucherMap(requests.stream().map(ChequeReprintRequest::getVoucherId).toList());
+        String currentCompanyCode = resolveCurrentCompanyCode();
 
         ChequeReprintFilterSearch search = request != null ? request.getSearch() : null;
         String voucherNo = normalize(search != null ? search.getVoucherNo() : null);
@@ -850,7 +877,8 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                     if (voucher == null) {
                         return false;
                     }
-                    return matches(voucherNo, voucher.getVoucherNo())
+                    return matchesScopedCompany(currentCompanyCode, voucher.getCompanyCode())
+                            && matches(voucherNo, voucher.getVoucherNo())
                             && matches(companyCode, voucher.getCompanyCode())
                             && matches(customerCode, voucher.getCustomerCode())
                             && matches(bankCode, voucher.getBankCode())
@@ -904,7 +932,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             return reprintError("Reprint request not found", 404);
         }
         ChequeVoucher voucher = chequeVoucherRepository.findById(reprintRequest.getVoucherId()).orElse(null);
-        if (voucher == null) {
+        if (voucher == null || !isVoucherInCurrentCompanyScope(voucher)) {
             return reprintError("Voucher not found for this reprint request", 404);
         }
         return reprintSuccess("Reprint request retrieved successfully", toReprintDto(reprintRequest, voucher));
@@ -920,6 +948,10 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         ChequeReprintRequest reprintRequest = chequeReprintRequestRepository.findById(request.getId()).orElse(null);
         if (reprintRequest == null) {
             return reprintError("Reprint request not found", 404);
+        }
+        ChequeVoucher voucher = chequeVoucherRepository.findById(reprintRequest.getVoucherId()).orElse(null);
+        if (voucher == null || !isVoucherInCurrentCompanyScope(voucher)) {
+            return reprintError("Voucher not found for this reprint request", 404);
         }
         if (reprintRequest.getStatus() != ChequeReprintStatus.REPRINT_PENDING) {
             return reprintError("Only REPRINT_PENDING requests can be approved", 400);
@@ -941,10 +973,6 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
 
         reprintRequest = chequeReprintRequestRepository.save(reprintRequest);
-        ChequeVoucher voucher = chequeVoucherRepository.findById(reprintRequest.getVoucherId()).orElse(null);
-        if (voucher == null) {
-            return reprintError("Voucher not found for this reprint request", 404);
-        }
         return reprintSuccess("Reprint request approved successfully", toReprintDto(reprintRequest, voucher));
     }
 
@@ -958,6 +986,10 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         ChequeReprintRequest reprintRequest = chequeReprintRequestRepository.findById(request.getId()).orElse(null);
         if (reprintRequest == null) {
             return reprintError("Reprint request not found", 404);
+        }
+        ChequeVoucher voucher = chequeVoucherRepository.findById(reprintRequest.getVoucherId()).orElse(null);
+        if (voucher == null || !isVoucherInCurrentCompanyScope(voucher)) {
+            return reprintError("Voucher not found for this reprint request", 404);
         }
         if (reprintRequest.getStatus() != ChequeReprintStatus.REPRINT_PENDING) {
             return reprintError("Only REPRINT_PENDING requests can be rejected", 400);
@@ -979,10 +1011,6 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
 
         reprintRequest = chequeReprintRequestRepository.save(reprintRequest);
-        ChequeVoucher voucher = chequeVoucherRepository.findById(reprintRequest.getVoucherId()).orElse(null);
-        if (voucher == null) {
-            return reprintError("Voucher not found for this reprint request", 404);
-        }
         return reprintSuccess("Reprint request rejected successfully", toReprintDto(reprintRequest, voucher));
     }
 
@@ -1487,6 +1515,50 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             return requestedChequeDate;
         }
         return LocalDate.now();
+    }
+
+    private String resolveCurrentCompanyCode() {
+        Long companyId = CompanyContext.getCompanyId();
+        if (companyId == null) {
+            return null;
+        }
+        try {
+            MessageResponseDTO<SettingCompanyLookupDto> response = settingCompanyClient.viewCompany(Map.of("id", companyId));
+            if (response != null
+                    && response.isSuccess()
+                    && response.getData() != null
+                    && StringUtils.hasText(response.getData().getCode())) {
+                return response.getData().getCode().trim();
+            }
+        } catch (Exception ex) {
+            log.warn("Unable to resolve company code for companyId={}", companyId, ex);
+        }
+        return null;
+    }
+
+    private String resolveScopedCompanyCode(String currentCompanyCode, String requestedCompanyCode) {
+        if (!StringUtils.hasText(currentCompanyCode)) {
+            return trimToNull(requestedCompanyCode);
+        }
+        if (!StringUtils.hasText(requestedCompanyCode)) {
+            return currentCompanyCode;
+        }
+        return currentCompanyCode.equalsIgnoreCase(requestedCompanyCode.trim()) ? currentCompanyCode : null;
+    }
+
+    private boolean matchesScopedCompany(String currentCompanyCode, String actualCompanyCode) {
+        if (!StringUtils.hasText(currentCompanyCode)) {
+            return true;
+        }
+        return StringUtils.hasText(actualCompanyCode)
+                && currentCompanyCode.equalsIgnoreCase(actualCompanyCode.trim());
+    }
+
+    private boolean isVoucherInCurrentCompanyScope(ChequeVoucher voucher) {
+        if (voucher == null) {
+            return false;
+        }
+        return matchesScopedCompany(resolveCurrentCompanyCode(), voucher.getCompanyCode());
     }
 
     private ChequeCompany resolveActiveCompany(String companyCode) {
