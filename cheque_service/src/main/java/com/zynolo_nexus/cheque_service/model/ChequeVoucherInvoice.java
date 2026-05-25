@@ -6,6 +6,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -18,7 +19,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "cheque_voucher_invoices")
+@Table(
+        name = "cheque_voucher_invoices",
+        indexes = {
+                @Index(name = "idx_cheque_voucher_invoices_company_id", columnList = "company_id")
+        }
+)
 @Data
 @Builder
 @NoArgsConstructor
@@ -32,6 +38,9 @@ public class ChequeVoucherInvoice {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "voucher_id", nullable = false)
     private ChequeVoucher voucher;
+
+    @Column(name = "company_id")
+    private Long companyId;
 
     @Column(name = "line_no", nullable = false)
     private Integer lineNo;

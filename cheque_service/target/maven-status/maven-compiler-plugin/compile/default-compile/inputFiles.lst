@@ -1,6 +1,5 @@
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\ChequeServiceApplication.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\client\AuthModuleClient.java
-C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\client\SettingCompanyClient.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\config\FeignInternalAuthConfig.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\context\CompanyContext.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\controller\ChequeBankController.java
@@ -82,7 +81,6 @@ C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\dto\response\ChequeVoucherPdfDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\dto\response\ChequeVoucherPrivilegesDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\dto\response\ChequeVoucherReferenceDataDto.java
-C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\dto\response\SettingCompanyLookupDto.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\enums\ChequeBankStatus.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\enums\ChequeCompanyStatus.java
 C:\Users\abhisheks\Desktop\Zynolo Nexus\zynolo_nexus_backend\cheque_service\src\main\java\com\zynolo_nexus\cheque_service\enums\ChequeCustomerStatus.java

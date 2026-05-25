@@ -11,6 +11,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -27,7 +28,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "cheque_vouchers")
+@Table(
+        name = "cheque_vouchers",
+        indexes = {
+                @Index(name = "idx_cheque_vouchers_company_id", columnList = "company_id"),
+                @Index(name = "idx_cheque_vouchers_company_id_status", columnList = "company_id,status")
+        }
+)
 @Data
 @Builder
 @NoArgsConstructor
@@ -43,6 +50,9 @@ public class ChequeVoucher {
 
     @Column(name = "company_code", nullable = false, length = 50)
     private String companyCode;
+
+    @Column(name = "company_id")
+    private Long companyId;
 
     @Column(name = "customer_code", nullable = false, length = 50)
     private String customerCode;

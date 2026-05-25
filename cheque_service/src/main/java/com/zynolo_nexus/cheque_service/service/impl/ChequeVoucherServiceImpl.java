@@ -1,7 +1,6 @@
 package com.zynolo_nexus.cheque_service.service.impl;
 
 import com.zynolo_nexus.cheque_service.client.AuthModuleClient;
-import com.zynolo_nexus.cheque_service.client.SettingCompanyClient;
 import com.zynolo_nexus.cheque_service.context.CompanyContext;
 import com.zynolo_nexus.cheque_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.cheque_service.dto.request.ChequePrintRequest;
@@ -35,7 +34,6 @@ import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherListItemDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherPdfDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherPrivilegesDto;
 import com.zynolo_nexus.cheque_service.dto.response.ChequeVoucherReferenceDataDto;
-import com.zynolo_nexus.cheque_service.dto.response.SettingCompanyLookupDto;
 import com.zynolo_nexus.cheque_service.enums.ChequeBankStatus;
 import com.zynolo_nexus.cheque_service.enums.ChequePrintStatus;
 import com.zynolo_nexus.cheque_service.enums.ChequeReprintStatus;
@@ -107,7 +105,6 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     private final ChequeReprintRequestRepository chequeReprintRequestRepository;
     private final UserAccountRepository userAccountRepository;
     private final AuthModuleClient authModuleClient;
-    private final SettingCompanyClient settingCompanyClient;
 
     private volatile JasperReport voucherReport;
     private volatile JasperReport chequePrintReport;
@@ -119,15 +116,13 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             return error("Invalid voucher create request", 400);
         }
 
-        String currentCompanyCode = resolveCurrentCompanyCode();
-        String scopedCompanyCode = resolveScopedCompanyCode(currentCompanyCode, request.getCompanyCode());
-        if (StringUtils.hasText(currentCompanyCode) && !StringUtils.hasText(scopedCompanyCode)) {
-            return error("Voucher company does not match current company context", 403);
-        }
-
-        ChequeCompany company = resolveActiveCompany(scopedCompanyCode != null ? scopedCompanyCode : request.getCompanyCode());
+        Long currentCompanyId = resolveCurrentCompanyId();
+        ChequeCompany company = resolveActiveCompany(request.getCompanyCode());
         if (company == null) {
             return error("Company not found or inactive", 400);
+        }
+        if (currentCompanyId != null && !currentCompanyId.equals(company.getId())) {
+            return error("Voucher company does not match current company context", 403);
         }
 
         ChequeCustomer customer = resolveActiveCustomer(request.getCustomerCode());
@@ -161,6 +156,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         ChequeVoucher voucher = ChequeVoucher.builder()
                 .voucherNo(voucherNo)
                 .companyCode(company.getCode())
+                .companyId(company.getId())
                 .customerCode(customer.getCode())
                 .chequeNo(request.getChequeNo().trim())
                 .bankCode(bank.getCode())
@@ -229,15 +225,13 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             return error("Voucher not found", 404);
         }
 
-        String currentCompanyCode = resolveCurrentCompanyCode();
-        String scopedCompanyCode = resolveScopedCompanyCode(currentCompanyCode, request.getCompanyCode());
-        if (StringUtils.hasText(currentCompanyCode) && !StringUtils.hasText(scopedCompanyCode)) {
-            return error("Voucher company does not match current company context", 403);
-        }
-
-        ChequeCompany company = resolveActiveCompany(scopedCompanyCode != null ? scopedCompanyCode : request.getCompanyCode());
+        Long currentCompanyId = resolveCurrentCompanyId();
+        ChequeCompany company = resolveActiveCompany(request.getCompanyCode());
         if (company == null) {
             return error("Company not found or inactive", 400);
+        }
+        if (currentCompanyId != null && !currentCompanyId.equals(company.getId())) {
+            return error("Voucher company does not match current company context", 403);
         }
 
         ChequeCustomer customer = resolveActiveCustomer(request.getCustomerCode());
@@ -261,6 +255,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         }
 
         voucher.setCompanyCode(company.getCode());
+        voucher.setCompanyId(company.getId());
         voucher.setCustomerCode(customer.getCode());
         voucher.setChequeNo(request.getChequeNo().trim());
         voucher.setBankCode(bank.getCode());
@@ -449,7 +444,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             Set<ChequeVoucherStatus> statuses,
             String successMessage) {
         List<ChequeVoucher> vouchers = chequeVoucherRepository.findAll();
-        String currentCompanyCode = resolveCurrentCompanyCode();
+        Long currentCompanyId = resolveCurrentCompanyId();
 
         ChequeVoucherFilterSearch search = request != null ? request.getSearch() : null;
         String voucherNo = normalize(search != null ? search.getVoucherNo() : null);
@@ -472,7 +467,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 .forEach(bank -> bankNames.put(bank.getCode(), bank.getName()));
 
         List<ChequeVoucherListItemDto> filtered = vouchers.stream()
-                .filter(voucher -> matchesScopedCompany(currentCompanyCode, voucher.getCompanyCode()))
+                .filter(voucher -> matchesScopedCompany(currentCompanyId, resolveVoucherCompanyId(voucher)))
                 .filter(voucher -> matches(voucherNo, voucher.getVoucherNo()))
                 .filter(voucher -> matches(companyCode, voucher.getCompanyCode()))
                 .filter(voucher -> matches(customerCode, voucher.getCustomerCode()))
@@ -530,11 +525,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                 : CHVM_PAGE_CODE;
 
         ChequeVoucherPrivilegesDto privileges = resolvePrivileges(request, pageCode);
-        String currentCompanyCode = resolveCurrentCompanyCode();
+        Long currentCompanyId = resolveCurrentCompanyId();
 
         List<ChequeReferenceCompanyDto> companies = chequeCompanyRepository.findAllByStatusOrderByCodeAsc(ChequeCompanyStatus.ACTIVE)
                 .stream()
-                .filter(company -> matchesScopedCompany(currentCompanyCode, company.getCode()))
+                .filter(company -> matchesScopedCompany(currentCompanyId, company.getId()))
                 .map(company -> ChequeReferenceCompanyDto.builder()
                         .code(company.getCode())
                         .description(company.getDescription())
@@ -808,11 +803,11 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         permissionRequest.setUsername(request != null ? request.getUsername() : null);
         permissionRequest.setPageCode(pageCode);
         ChequeVoucherPrivilegesDto privileges = resolvePrivileges(permissionRequest, pageCode);
-        String currentCompanyCode = resolveCurrentCompanyCode();
+        Long currentCompanyId = resolveCurrentCompanyId();
 
         List<ChequeReferenceCompanyDto> companies = chequeCompanyRepository.findAllByStatusOrderByCodeAsc(ChequeCompanyStatus.ACTIVE)
                 .stream()
-                .filter(company -> matchesScopedCompany(currentCompanyCode, company.getCode()))
+                .filter(company -> matchesScopedCompany(currentCompanyId, company.getId()))
                 .map(company -> ChequeReferenceCompanyDto.builder()
                         .code(company.getCode())
                         .description(company.getDescription())
@@ -862,7 +857,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
     public MessageResponseDTO<ChequeReprintFilterResultDto> reprintFilterList(ChequeReprintFilterRequest request) {
         List<ChequeReprintRequest> requests = chequeReprintRequestRepository.findAll();
         Map<Long, ChequeVoucher> voucherMap = loadVoucherMap(requests.stream().map(ChequeReprintRequest::getVoucherId).toList());
-        String currentCompanyCode = resolveCurrentCompanyCode();
+        Long currentCompanyId = resolveCurrentCompanyId();
 
         ChequeReprintFilterSearch search = request != null ? request.getSearch() : null;
         String voucherNo = normalize(search != null ? search.getVoucherNo() : null);
@@ -877,7 +872,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
                     if (voucher == null) {
                         return false;
                     }
-                    return matchesScopedCompany(currentCompanyCode, voucher.getCompanyCode())
+                    return matchesScopedCompany(currentCompanyId, resolveVoucherCompanyId(voucher))
                             && matches(voucherNo, voucher.getVoucherNo())
                             && matches(companyCode, voucher.getCompanyCode())
                             && matches(customerCode, voucher.getCustomerCode())
@@ -1517,48 +1512,36 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         return LocalDate.now();
     }
 
-    private String resolveCurrentCompanyCode() {
-        Long companyId = CompanyContext.getCompanyId();
-        if (companyId == null) {
+    private Long resolveCurrentCompanyId() {
+        return CompanyContext.getCompanyId();
+    }
+
+    private Long resolveVoucherCompanyId(ChequeVoucher voucher) {
+        if (voucher == null) {
             return null;
         }
-        try {
-            MessageResponseDTO<SettingCompanyLookupDto> response = settingCompanyClient.viewCompany(Map.of("id", companyId));
-            if (response != null
-                    && response.isSuccess()
-                    && response.getData() != null
-                    && StringUtils.hasText(response.getData().getCode())) {
-                return response.getData().getCode().trim();
-            }
-        } catch (Exception ex) {
-            log.warn("Unable to resolve company code for companyId={}", companyId, ex);
+        if (voucher.getCompanyId() != null) {
+            return voucher.getCompanyId();
         }
-        return null;
+        if (!StringUtils.hasText(voucher.getCompanyCode())) {
+            return null;
+        }
+        ChequeCompany company = chequeCompanyRepository.findByCodeIgnoreCase(voucher.getCompanyCode().trim()).orElse(null);
+        return company != null ? company.getId() : null;
     }
 
-    private String resolveScopedCompanyCode(String currentCompanyCode, String requestedCompanyCode) {
-        if (!StringUtils.hasText(currentCompanyCode)) {
-            return trimToNull(requestedCompanyCode);
-        }
-        if (!StringUtils.hasText(requestedCompanyCode)) {
-            return currentCompanyCode;
-        }
-        return currentCompanyCode.equalsIgnoreCase(requestedCompanyCode.trim()) ? currentCompanyCode : null;
-    }
-
-    private boolean matchesScopedCompany(String currentCompanyCode, String actualCompanyCode) {
-        if (!StringUtils.hasText(currentCompanyCode)) {
+    private boolean matchesScopedCompany(Long currentCompanyId, Long actualCompanyId) {
+        if (currentCompanyId == null) {
             return true;
         }
-        return StringUtils.hasText(actualCompanyCode)
-                && currentCompanyCode.equalsIgnoreCase(actualCompanyCode.trim());
+        return actualCompanyId != null && currentCompanyId.equals(actualCompanyId);
     }
 
     private boolean isVoucherInCurrentCompanyScope(ChequeVoucher voucher) {
         if (voucher == null) {
             return false;
         }
-        return matchesScopedCompany(resolveCurrentCompanyCode(), voucher.getCompanyCode());
+        return matchesScopedCompany(resolveCurrentCompanyId(), resolveVoucherCompanyId(voucher));
     }
 
     private ChequeCompany resolveActiveCompany(String companyCode) {
@@ -1607,6 +1590,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         for (ChequeVoucherInvoiceRequest line : requests) {
             invoices.add(ChequeVoucherInvoice.builder()
                     .voucher(voucher)
+                    .companyId(voucher.getCompanyId())
                     .lineNo(lineNo++)
                     .invoiceDate(line.getInvoiceDate())
                     .invoiceNo(line.getInvoiceNo().trim())
