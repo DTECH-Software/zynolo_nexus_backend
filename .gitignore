@@ -1,0 +1,6 @@
+@'
+target/
+*.class
+*.jar
+*.jar.original
+'@ | Out-File -Encoding utf8 .gitignore
