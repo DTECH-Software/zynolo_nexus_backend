@@ -68,6 +68,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -1151,6 +1152,17 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         return format.format(value);
     }
 
+    private String formatCurrencyWithGrouping(BigDecimal amount) {
+        BigDecimal value = amount != null
+                ? amount.setScale(2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(Locale.ENGLISH);
+        symbols.setDecimalSeparator('.');
+        symbols.setGroupingSeparator(',');
+        DecimalFormat format = new DecimalFormat("#,##0.00", symbols);
+        return format.format(value);
+    }
+
     private String wrapWithStars(String value) {
         if (!StringUtils.hasText(value)) {
             return "";
@@ -1351,6 +1363,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         params.put("companyName", company != null ? safe(company.getDescription()) : safe(dto.getCompanyDescription()));
         params.put("companyAddress", buildCompanyAddress(company));
         params.put("companyPhone", company != null ? safe(company.getPhoneNumber()) : "");
+        params.put("companyLogo", buildCompanyLogoStream(company));
         params.put("payer", customer != null ? "M/s " + safe(customer.getDescription()) : safe(dto.getCustomerDescription()));
         params.put("chequeNo", safe(dto.getChequeNo()));
         params.put("chequeBankName", safe(StringUtils.hasText(dto.getBankName()) ? dto.getBankName() : dto.getBankCode()));
@@ -1358,10 +1371,27 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
         params.put("chequeDate", dto.getChequeDate() != null ? dto.getChequeDate().toString() : "");
         params.put("voucherDescription", safe(dto.getDescription()));
         params.put("status", safe(dto.getStatusDescription()));
-        params.put("totalAmount", dto.getTotalAmount() != null ? dto.getTotalAmount().toPlainString() : "0.00");
+        params.put("totalAmount", formatCurrencyWithGrouping(dto.getTotalAmount()));
         params.put("amountInWords", amountToWords(dto.getTotalAmount()));
         params.put("printedAt", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         return params;
+    }
+
+    private InputStream buildCompanyLogoStream(ChequeCompany company) {
+        if (company == null || !StringUtils.hasText(company.getLogoDoc())) {
+            return null;
+        }
+        try {
+            String value = company.getLogoDoc().trim();
+            int commaIndex = value.indexOf(',');
+            if (commaIndex >= 0) {
+                value = value.substring(commaIndex + 1);
+            }
+            return new ByteArrayInputStream(Base64.getDecoder().decode(value));
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid company logo base64 for companyCode={}", company.getCode());
+            return null;
+        }
     }
 
     private String buildCompanyAddress(ChequeCompany company) {
