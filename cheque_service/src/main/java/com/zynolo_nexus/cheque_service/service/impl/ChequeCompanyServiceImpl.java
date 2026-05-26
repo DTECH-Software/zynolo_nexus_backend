@@ -112,26 +112,26 @@ public class ChequeCompanyServiceImpl implements ChequeCompanyService {
             company.setDescription(request.getDescription().trim());
         }
 
-        if (request.getStreet1() != null) {
-            company.setStreet1(trimToNull(request.getStreet1()));
+        if (StringUtils.hasText(request.getStreet1())) {
+            company.setStreet1(request.getStreet1().trim());
         }
         if (request.getStreet2() != null) {
             company.setStreet2(trimToNull(request.getStreet2()));
         }
-        if (request.getCity() != null) {
-            company.setCity(trimToNull(request.getCity()));
+        if (StringUtils.hasText(request.getCity())) {
+            company.setCity(request.getCity().trim());
         }
-        if (request.getState() != null) {
-            company.setState(trimToNull(request.getState()));
+        if (StringUtils.hasText(request.getState())) {
+            company.setState(request.getState().trim());
         }
-        if (request.getCountry() != null) {
-            company.setCountry(trimToNull(request.getCountry()));
+        if (StringUtils.hasText(request.getCountry())) {
+            company.setCountry(request.getCountry().trim());
         }
-        if (request.getZipCode() != null) {
-            company.setZipCode(trimToNull(request.getZipCode()));
+        if (StringUtils.hasText(request.getZipCode())) {
+            company.setZipCode(request.getZipCode().trim());
         }
-        if (request.getPhoneNumber() != null) {
-            company.setPhoneNumber(trimToNull(request.getPhoneNumber()));
+        if (StringUtils.hasText(request.getPhoneNumber())) {
+            company.setPhoneNumber(request.getPhoneNumber().trim());
         }
         if (request.getMobileNumber() != null) {
             company.setMobileNumber(trimToNull(request.getMobileNumber()));
@@ -147,15 +147,6 @@ public class ChequeCompanyServiceImpl implements ChequeCompanyService {
         }
         if (request.getLogo() != null) {
             applyLogo(company, request.getLogo());
-        }
-
-        if (!StringUtils.hasText(company.getStreet1())
-                || !StringUtils.hasText(company.getCity())
-                || !StringUtils.hasText(company.getState())
-                || !StringUtils.hasText(company.getCountry())
-                || !StringUtils.hasText(company.getZipCode())
-                || !StringUtils.hasText(company.getPhoneNumber())) {
-            return error("Missing mandatory company details", 400);
         }
 
         if (request.getStatus() != null) {

@@ -35,33 +35,33 @@
 
     <title>
         <band height="150">
-            <image onErrorType="Blank" scaleImage="RetainShape">
-                <reportElement x="18" y="8" width="70" height="55">
+            <image onErrorType="Blank" scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
+                <reportElement x="18" y="5" width="82" height="62">
                     <printWhenExpression><![CDATA[$P{companyLogo} != null]]></printWhenExpression>
                 </reportElement>
                 <imageExpression><![CDATA[$P{companyLogo}]]></imageExpression>
             </image>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="102" y="9" width="420" height="19"/>
-                <textElement>
-                    <font size="15" isBold="true" pdfFontName="Times-Bold"/>
+                <reportElement x="112" y="6" width="445" height="22"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="17" isBold="true" pdfFontName="Times-Bold"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{companyName}]]></textFieldExpression>
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="102" y="29" width="420" height="14"/>
-                <textElement>
-                    <font size="9" pdfFontName="Times-Roman"/>
+                <reportElement x="112" y="30" width="445" height="16"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" pdfFontName="Times-Roman"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{companyAddress}]]></textFieldExpression>
             </textField>
 
             <textField isBlankWhenNull="true">
-                <reportElement x="102" y="43" width="220" height="13"/>
-                <textElement>
-                    <font size="9" pdfFontName="Times-Roman"/>
+                <reportElement x="112" y="47" width="445" height="15"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" pdfFontName="Times-Roman"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{companyPhone}]]></textFieldExpression>
             </textField>
@@ -69,7 +69,7 @@
             <staticText>
                 <reportElement x="570" y="52" width="190" height="18"/>
                 <textElement textAlignment="Center">
-                    <font size="14" isBold="true" pdfFontName="Times-Bold"/>
+                    <font size="15" isBold="true" pdfFontName="Times-Bold"/>
                 </textElement>
                 <text><![CDATA[PAYMENT VOUCHER]]></text>
             </staticText>
@@ -83,7 +83,7 @@
                 <textField isBlankWhenNull="true">
                     <reportElement x="6" y="5" width="560" height="21"/>
                     <textElement verticalAlignment="Middle">
-                        <font size="9" isBold="true" pdfFontName="Times-Bold"/>
+                        <font size="10" isBold="true" pdfFontName="Times-Bold"/>
                     </textElement>
                     <textFieldExpression><![CDATA["PAYER : " + $P{payer}]]></textFieldExpression>
                 </textField>
@@ -107,14 +107,14 @@
                 <staticText>
                     <reportElement x="575" y="4" width="85" height="17"/>
                     <textElement verticalAlignment="Middle">
-                        <font size="8" pdfFontName="Times-Roman"/>
+                        <font size="9" pdfFontName="Times-Roman"/>
                     </textElement>
                     <text><![CDATA[Voucher No:]]></text>
                 </staticText>
                 <textField isBlankWhenNull="true">
                     <reportElement x="670" y="4" width="85" height="17"/>
                     <textElement verticalAlignment="Middle">
-                        <font size="8" pdfFontName="Times-Roman"/>
+                        <font size="9" pdfFontName="Times-Roman"/>
                     </textElement>
                     <textFieldExpression><![CDATA[$P{voucherNo}]]></textFieldExpression>
                 </textField>
@@ -122,14 +122,14 @@
                 <staticText>
                     <reportElement x="575" y="29" width="85" height="17"/>
                     <textElement verticalAlignment="Middle">
-                        <font size="8" pdfFontName="Times-Roman"/>
+                        <font size="9" pdfFontName="Times-Roman"/>
                     </textElement>
                     <text><![CDATA[Date:]]></text>
                 </staticText>
                 <textField isBlankWhenNull="true">
                     <reportElement x="670" y="29" width="85" height="17"/>
                     <textElement verticalAlignment="Middle">
-                        <font size="8" pdfFontName="Times-Roman"/>
+                        <font size="9" pdfFontName="Times-Roman"/>
                     </textElement>
                     <textFieldExpression><![CDATA[$P{voucherDate}]]></textFieldExpression>
                 </textField>
@@ -137,7 +137,7 @@
                 <textField isBlankWhenNull="true">
                     <reportElement x="6" y="52" width="560" height="19"/>
                     <textElement verticalAlignment="Middle">
-                        <font size="9" pdfFontName="Times-Roman"/>
+                        <font size="10" pdfFontName="Times-Roman"/>
                     </textElement>
                     <textFieldExpression><![CDATA[$P{voucherDescription}]]></textFieldExpression>
                 </textField>
@@ -145,14 +145,14 @@
                 <staticText>
                     <reportElement x="575" y="54" width="85" height="17"/>
                     <textElement verticalAlignment="Middle">
-                        <font size="8" pdfFontName="Times-Roman"/>
+                        <font size="9" pdfFontName="Times-Roman"/>
                     </textElement>
                     <text><![CDATA[Cheque No:]]></text>
                 </staticText>
                 <textField isBlankWhenNull="true">
                     <reportElement x="670" y="54" width="85" height="17"/>
                     <textElement verticalAlignment="Middle">
-                        <font size="8" pdfFontName="Times-Roman"/>
+                        <font size="9" pdfFontName="Times-Roman"/>
                     </textElement>
                     <textFieldExpression><![CDATA[$P{chequeNo}]]></textFieldExpression>
                 </textField>
@@ -166,7 +166,7 @@
                 <reportElement x="0" y="0" width="95" height="28"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" isBold="true" pdfFontName="Times-Bold"/>
+                    <font size="10" isBold="true" pdfFontName="Times-Bold"/>
                 </textElement>
                 <text><![CDATA[Invoice No]]></text>
             </staticText>
@@ -174,7 +174,7 @@
                 <reportElement x="95" y="0" width="95" height="28"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" isBold="true" pdfFontName="Times-Bold"/>
+                    <font size="10" isBold="true" pdfFontName="Times-Bold"/>
                 </textElement>
                 <text><![CDATA[Invoice Date]]></text>
             </staticText>
@@ -182,7 +182,7 @@
                 <reportElement x="190" y="0" width="475" height="28"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" isBold="true" pdfFontName="Times-Bold"/>
+                    <font size="10" isBold="true" pdfFontName="Times-Bold"/>
                 </textElement>
                 <text><![CDATA[Details/Description]]></text>
             </staticText>
@@ -190,7 +190,7 @@
                 <reportElement x="665" y="0" width="95" height="28"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" isBold="true" pdfFontName="Times-Bold"/>
+                    <font size="10" isBold="true" pdfFontName="Times-Bold"/>
                 </textElement>
                 <text><![CDATA[Amount(RS)]]></text>
             </staticText>
@@ -198,36 +198,36 @@
     </columnHeader>
 
     <detail>
-        <band height="26">
+        <band height="30">
             <textField isBlankWhenNull="true">
-                <reportElement x="0" y="0" width="95" height="26"/>
+                <reportElement x="0" y="0" width="95" height="30"/>
                 <box><pen lineWidth="0.8"/></box>
-                <textElement verticalAlignment="Top">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" pdfFontName="Times-Roman"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{invoiceNo}]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement x="95" y="0" width="95" height="26"/>
+                <reportElement x="95" y="0" width="95" height="30"/>
                 <box><pen lineWidth="0.8"/></box>
-                <textElement verticalAlignment="Top">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" pdfFontName="Times-Roman"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{invoiceDate}]]></textFieldExpression>
             </textField>
             <textField isBlankWhenNull="true">
-                <reportElement x="190" y="0" width="475" height="26"/>
+                <reportElement x="190" y="0" width="475" height="30"/>
                 <box><pen lineWidth="0.8"/></box>
-                <textElement verticalAlignment="Top">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                <textElement textAlignment="Center" verticalAlignment="Middle">
+                    <font size="10" pdfFontName="Times-Roman"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{invoiceDescription}]]></textFieldExpression>
             </textField>
             <textField pattern="#,##0.00">
-                <reportElement x="665" y="0" width="95" height="26"/>
+                <reportElement x="665" y="0" width="95" height="30"/>
                 <box><pen lineWidth="0.8"/></box>
-                <textElement textAlignment="Right" verticalAlignment="Top">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                <textElement textAlignment="Right" verticalAlignment="Middle">
+                    <font size="10" pdfFontName="Times-Roman"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{amount}]]></textFieldExpression>
             </textField>
@@ -257,7 +257,7 @@
                 <reportElement x="0" y="100" width="570" height="32"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement verticalAlignment="Middle">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                    <font size="10" pdfFontName="Times-Roman"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{amountInWords}]]></textFieldExpression>
             </textField>
@@ -265,7 +265,7 @@
                 <reportElement x="570" y="100" width="95" height="32"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" isBold="true" pdfFontName="Times-Bold"/>
+                    <font size="10" isBold="true" pdfFontName="Times-Bold"/>
                 </textElement>
                 <text><![CDATA[Total Amount]]></text>
             </staticText>
@@ -273,7 +273,7 @@
                 <reportElement x="665" y="100" width="95" height="32"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Right" verticalAlignment="Middle">
-                    <font size="8" isBold="true" pdfFontName="Times-Bold"/>
+                    <font size="10" isBold="true" pdfFontName="Times-Bold"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{totalAmount}]]></textFieldExpression>
             </textField>
@@ -282,7 +282,7 @@
                 <reportElement x="0" y="132" width="95" height="40"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                    <font size="9" pdfFontName="Times-Roman"/>
                 </textElement>
                 <text><![CDATA[Prepared By]]></text>
             </staticText>
@@ -290,7 +290,7 @@
                 <reportElement x="95" y="132" width="95" height="40"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                    <font size="9" pdfFontName="Times-Roman"/>
                 </textElement>
                 <text><![CDATA[]]></text>
             </staticText>
@@ -298,7 +298,7 @@
                 <reportElement x="190" y="132" width="95" height="40"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                    <font size="9" pdfFontName="Times-Roman"/>
                 </textElement>
                 <text><![CDATA[Checked By]]></text>
             </staticText>
@@ -306,7 +306,7 @@
                 <reportElement x="285" y="132" width="95" height="40"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                    <font size="9" pdfFontName="Times-Roman"/>
                 </textElement>
                 <text><![CDATA[]]></text>
             </staticText>
@@ -314,7 +314,7 @@
                 <reportElement x="380" y="132" width="95" height="40"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                    <font size="9" pdfFontName="Times-Roman"/>
                 </textElement>
                 <text><![CDATA[Authorised By]]></text>
             </staticText>
@@ -322,7 +322,7 @@
                 <reportElement x="475" y="132" width="95" height="40"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                    <font size="9" pdfFontName="Times-Roman"/>
                 </textElement>
                 <text><![CDATA[]]></text>
             </staticText>
@@ -330,7 +330,7 @@
                 <reportElement x="570" y="132" width="95" height="40"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                    <font size="9" pdfFontName="Times-Roman"/>
                 </textElement>
                 <text><![CDATA[Received By]]></text>
             </staticText>
@@ -338,7 +338,7 @@
                 <reportElement x="665" y="132" width="95" height="40"/>
                 <box><pen lineWidth="0.8"/></box>
                 <textElement textAlignment="Center" verticalAlignment="Middle">
-                    <font size="8" pdfFontName="Times-Roman"/>
+                    <font size="9" pdfFontName="Times-Roman"/>
                 </textElement>
                 <text><![CDATA[]]></text>
             </staticText>

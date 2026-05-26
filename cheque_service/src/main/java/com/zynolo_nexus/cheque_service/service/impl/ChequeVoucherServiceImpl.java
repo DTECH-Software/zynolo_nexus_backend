@@ -1387,6 +1387,7 @@ public class ChequeVoucherServiceImpl implements ChequeVoucherService {
             if (commaIndex >= 0) {
                 value = value.substring(commaIndex + 1);
             }
+            value = value.replaceAll("\\s+", "");
             return new ByteArrayInputStream(Base64.getDecoder().decode(value));
         } catch (IllegalArgumentException ex) {
             log.warn("Invalid company logo base64 for companyCode={}", company.getCode());
