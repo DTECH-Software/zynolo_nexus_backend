@@ -226,7 +226,7 @@
             <textField pattern="#,##0.00">
                 <reportElement x="665" y="0" width="95" height="30"/>
                 <box><pen lineWidth="0.8"/></box>
-                <textElement textAlignment="Right" verticalAlignment="Middle">
+                <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font size="10" pdfFontName="Times-Roman"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$F{amount}]]></textFieldExpression>
@@ -255,7 +255,7 @@
 
             <textField isBlankWhenNull="true">
                 <reportElement x="0" y="100" width="570" height="32"/>
-                <box><pen lineWidth="0.8"/></box>
+                <box leftPadding="8"><pen lineWidth="0.8"/></box>
                 <textElement verticalAlignment="Middle">
                     <font size="10" pdfFontName="Times-Roman"/>
                 </textElement>
@@ -272,7 +272,7 @@
             <textField isBlankWhenNull="true">
                 <reportElement x="665" y="100" width="95" height="32"/>
                 <box><pen lineWidth="0.8"/></box>
-                <textElement textAlignment="Right" verticalAlignment="Middle">
+                <textElement textAlignment="Center" verticalAlignment="Middle">
                     <font size="10" isBold="true" pdfFontName="Times-Bold"/>
                 </textElement>
                 <textFieldExpression><![CDATA[$P{totalAmount}]]></textFieldExpression>
