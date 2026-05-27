@@ -36,7 +36,7 @@
     <title>
         <band height="150">
             <image onErrorType="Blank" scaleImage="RetainShape" hAlign="Center" vAlign="Middle">
-                <reportElement x="10" y="4" width="92" height="66">
+                <reportElement x="10" y="4" width="100" height="76">
                     <printWhenExpression><![CDATA[$P{companyLogo} != null]]></printWhenExpression>
                 </reportElement>
                 <imageExpression><![CDATA[$P{companyLogo}]]></imageExpression>
