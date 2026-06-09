@@ -14,10 +14,23 @@ mvn -DskipTests spring-boot:run
 mvn -DskipTests clean package
 ```
 
-## Health
+## Endpoints
+
+Health:
 
 ```text
 GET /api/v1/meeting-room/health
+```
+
+Meeting Room Master:
+
+```text
+POST /api/v1/meeting-room/rooms/reference-data
+POST /api/v1/meeting-room/rooms/filter-list
+POST /api/v1/meeting-room/rooms
+POST /api/v1/meeting-room/rooms/view
+POST /api/v1/meeting-room/rooms/update
+POST /api/v1/meeting-room/rooms/active-status
 ```
 
 Default port: `8095`.
