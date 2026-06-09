@@ -9,6 +9,7 @@ import com.zynolo_nexus.meeting_room_booking_service.dto.request.MeetingRoomRefe
 import com.zynolo_nexus.meeting_room_booking_service.dto.request.MeetingRoomUpdateRequest;
 import com.zynolo_nexus.meeting_room_booking_service.dto.response.MeetingRoomDto;
 import com.zynolo_nexus.meeting_room_booking_service.dto.response.MeetingRoomFilterResultDto;
+import com.zynolo_nexus.meeting_room_booking_service.dto.response.MeetingRoomPrivilegesDto;
 import com.zynolo_nexus.meeting_room_booking_service.dto.response.MeetingRoomReferenceDataDto;
 import com.zynolo_nexus.meeting_room_booking_service.dto.response.ReferenceOptionDto;
 import com.zynolo_nexus.meeting_room_booking_service.enums.RoomAvailabilityStatus;
@@ -20,6 +21,7 @@ import com.zynolo_nexus.meeting_room_booking_service.repository.CompanyLookupRep
 import com.zynolo_nexus.meeting_room_booking_service.repository.MeetingRoomRepository;
 import com.zynolo_nexus.meeting_room_booking_service.service.MeetingRoomService;
 import com.zynolo_nexus.meeting_room_booking_service.context.CompanyContext;
+import com.zynolo_nexus.meeting_room_booking_service.service.support.PagePrivilegeResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -35,10 +37,12 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class MeetingRoomServiceImpl implements MeetingRoomService {
 
+    private static final String PAGE_CODE = "MBM_SYSC_MERM";
     private static final int MAX_ROOM_COUNT = 6;
 
     private final MeetingRoomRepository meetingRoomRepository;
     private final CompanyLookupRepository companyLookupRepository;
+    private final PagePrivilegeResolver pagePrivilegeResolver;
 
     @Value("${app.default.company-id:1}")
     private Long defaultCompanyId;
@@ -209,6 +213,7 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
                 .toList();
         Long companyId = resolveCompanyId();
         CompanyLookup company = resolveCompany(companyId);
+        var pagePrivileges = pagePrivilegeResolver.resolve(request != null ? request.getUsername() : null, PAGE_CODE);
 
         return MessageResponseDTO.<MeetingRoomReferenceDataDto>builder()
                 .success(true)
@@ -220,6 +225,14 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
                         .availabilityStatuses(statuses)
                         .maxRoomCount(MAX_ROOM_COUNT)
                         .currentRoomCount(meetingRoomRepository.countByCompanyId(companyId))
+                        .privileges(MeetingRoomPrivilegesDto.builder()
+                                .add(pagePrivileges.isAdd())
+                                .update(pagePrivileges.isUpdate())
+                                .view(pagePrivileges.isView())
+                                .search(pagePrivileges.isSearch())
+                                .activate(pagePrivileges.isActivate())
+                                .deactivate(pagePrivileges.isDeactivate())
+                                .build())
                         .build())
                 .errors(null)
                 .errorCode(0)

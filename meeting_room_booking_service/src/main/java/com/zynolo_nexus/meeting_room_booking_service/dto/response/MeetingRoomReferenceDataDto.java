@@ -18,4 +18,5 @@ public class MeetingRoomReferenceDataDto {
     private List<ReferenceOptionDto> availabilityStatuses;
     private Integer maxRoomCount;
     private Long currentRoomCount;
+    private MeetingRoomPrivilegesDto privileges;
 }
