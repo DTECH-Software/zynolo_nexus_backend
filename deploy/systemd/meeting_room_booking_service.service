@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 User=dtech
-WorkingDirectory=/opt/zynolo-nexus/meeting_room_booking_service
-ExecStart=/usr/bin/java -jar /opt/zynolo-nexus/meeting_room_booking_service/meeting_room_booking_service.jar
+WorkingDirectory=/opt/zynolo_nexus_backend/meeting_room_booking_service
+ExecStart=/usr/bin/java -jar /opt/zynolo_nexus_backend/meeting_room_booking_service/meeting_room_booking_service.jar
 SuccessExitStatus=143
 Restart=always
 RestartSec=5
