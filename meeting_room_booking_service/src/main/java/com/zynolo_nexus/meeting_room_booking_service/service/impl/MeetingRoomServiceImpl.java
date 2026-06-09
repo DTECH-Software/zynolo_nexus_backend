@@ -14,10 +14,14 @@ import com.zynolo_nexus.meeting_room_booking_service.dto.response.ReferenceOptio
 import com.zynolo_nexus.meeting_room_booking_service.enums.RoomAvailabilityStatus;
 import com.zynolo_nexus.meeting_room_booking_service.exception.BadRequestException;
 import com.zynolo_nexus.meeting_room_booking_service.exception.ResourceNotFoundException;
+import com.zynolo_nexus.meeting_room_booking_service.model.CompanyLookup;
 import com.zynolo_nexus.meeting_room_booking_service.model.MeetingRoom;
+import com.zynolo_nexus.meeting_room_booking_service.repository.CompanyLookupRepository;
 import com.zynolo_nexus.meeting_room_booking_service.repository.MeetingRoomRepository;
 import com.zynolo_nexus.meeting_room_booking_service.service.MeetingRoomService;
+import com.zynolo_nexus.meeting_room_booking_service.context.CompanyContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -34,6 +38,10 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
     private static final int MAX_ROOM_COUNT = 6;
 
     private final MeetingRoomRepository meetingRoomRepository;
+    private final CompanyLookupRepository companyLookupRepository;
+
+    @Value("${app.default.company-id:1}")
+    private Long defaultCompanyId;
 
     @Override
     @Transactional
@@ -41,21 +49,27 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
         if (request == null) {
             throw new BadRequestException("Invalid meeting room request");
         }
-        if (meetingRoomRepository.count() >= MAX_ROOM_COUNT) {
+        Long companyId = resolveCompanyId();
+        if (meetingRoomRepository.countByCompanyId(companyId) >= MAX_ROOM_COUNT) {
             throw new BadRequestException("Maximum 6 meeting rooms can be maintained");
         }
         validateRequired(request.getRoomCode(), request.getRoomName(), request.getCapacity(), request.getAvailabilityStatus(), request.getActive());
 
         String roomCode = normalizeCode(request.getRoomCode());
         String roomName = request.getRoomName().trim();
-        if (meetingRoomRepository.existsByRoomCodeIgnoreCase(roomCode)) {
+        if (meetingRoomRepository.existsByCompanyIdAndRoomCodeIgnoreCase(companyId, roomCode)) {
             throw new BadRequestException("Room code already exists");
         }
-        if (meetingRoomRepository.existsByRoomNameIgnoreCase(roomName)) {
+        if (meetingRoomRepository.existsByCompanyIdAndRoomNameIgnoreCase(companyId, roomName)) {
             throw new BadRequestException("Room name already exists");
         }
 
+        CompanyLookup company = resolveCompany(companyId);
+
         MeetingRoom room = MeetingRoom.builder()
+                .companyId(companyId)
+                .companyCode(resolveCompanyCode(company))
+                .companyName(resolveCompanyName(company))
                 .roomCode(roomCode)
                 .roomName(roomName)
                 .capacity(request.getCapacity())
@@ -78,11 +92,12 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
             throw new BadRequestException("Invalid meeting room update request");
         }
         MeetingRoom room = findRoom(request.getId());
+        Long companyId = room.getCompanyId();
 
         if (StringUtils.hasText(request.getRoomCode())) {
             String roomCode = normalizeCode(request.getRoomCode());
             if (!roomCode.equalsIgnoreCase(room.getRoomCode())
-                    && meetingRoomRepository.existsByRoomCodeIgnoreCaseAndIdNot(roomCode, room.getId())) {
+                    && meetingRoomRepository.existsByCompanyIdAndRoomCodeIgnoreCaseAndIdNot(companyId, roomCode, room.getId())) {
                 throw new BadRequestException("Room code already exists");
             }
             room.setRoomCode(roomCode);
@@ -90,7 +105,7 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
         if (StringUtils.hasText(request.getRoomName())) {
             String roomName = request.getRoomName().trim();
             if (!roomName.equalsIgnoreCase(room.getRoomName())
-                    && meetingRoomRepository.existsByRoomNameIgnoreCaseAndIdNot(roomName, room.getId())) {
+                    && meetingRoomRepository.existsByCompanyIdAndRoomNameIgnoreCaseAndIdNot(companyId, roomName, room.getId())) {
                 throw new BadRequestException("Room name already exists");
             }
             room.setRoomName(roomName);
@@ -153,8 +168,10 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
         int page = request != null && request.getPage() != null && request.getPage() >= 0 ? request.getPage() : 0;
         int size = request != null && request.getSize() != null && request.getSize() > 0 ? request.getSize() : 10;
         MeetingRoomFilterSearch search = request != null ? request.getSearch() : null;
+        Long companyId = resolveCompanyId();
 
         List<MeetingRoomDto> filtered = meetingRoomRepository.findAll().stream()
+                .filter(room -> companyId.equals(room.getCompanyId()))
                 .filter(room -> matches(room, search))
                 .sorted(resolveComparator(request))
                 .map(this::toDto)
@@ -190,14 +207,19 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
                         .description(toDescription(status.name()))
                         .build())
                 .toList();
+        Long companyId = resolveCompanyId();
+        CompanyLookup company = resolveCompany(companyId);
 
         return MessageResponseDTO.<MeetingRoomReferenceDataDto>builder()
                 .success(true)
                 .message("Meeting room reference data loaded successfully")
                 .data(MeetingRoomReferenceDataDto.builder()
+                        .companyId(companyId)
+                        .companyCode(resolveCompanyCode(company))
+                        .companyName(resolveCompanyName(company))
                         .availabilityStatuses(statuses)
                         .maxRoomCount(MAX_ROOM_COUNT)
-                        .currentRoomCount(meetingRoomRepository.count())
+                        .currentRoomCount(meetingRoomRepository.countByCompanyId(companyId))
                         .build())
                 .errors(null)
                 .errorCode(0)
@@ -206,8 +228,13 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
     }
 
     private MeetingRoom findRoom(Long id) {
-        return meetingRoomRepository.findById(id)
+        Long companyId = resolveCompanyId();
+        MeetingRoom room = meetingRoomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Meeting room not found"));
+        if (!companyId.equals(room.getCompanyId())) {
+            throw new ResourceNotFoundException("Meeting room not found");
+        }
+        return room;
     }
 
     private void validateRequired(
@@ -257,6 +284,9 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
         boolean bookable = Boolean.TRUE.equals(room.getActive()) && room.getAvailabilityStatus() == RoomAvailabilityStatus.AVAILABLE;
         return MeetingRoomDto.builder()
                 .id(room.getId())
+                .companyId(room.getCompanyId())
+                .companyCode(room.getCompanyCode())
+                .companyName(room.getCompanyName())
                 .roomCode(room.getRoomCode())
                 .roomName(room.getRoomName())
                 .capacity(room.getCapacity())
@@ -288,6 +318,34 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
 
     private String normalizeCode(String value) {
         return value.trim().toUpperCase(Locale.ENGLISH);
+    }
+
+    private Long resolveCompanyId() {
+        if (CompanyContext.getCompanyId() != null) {
+            return CompanyContext.getCompanyId();
+        }
+        return defaultCompanyId != null ? defaultCompanyId : 1L;
+    }
+
+    private CompanyLookup resolveCompany(Long companyId) {
+        if (companyId == null) {
+            return null;
+        }
+        return companyLookupRepository.findById(companyId).orElse(null);
+    }
+
+    private String resolveCompanyCode(CompanyLookup company) {
+        if (StringUtils.hasText(CompanyContext.getCompanyCode())) {
+            return CompanyContext.getCompanyCode().trim();
+        }
+        return company != null ? trimToNull(company.getCode()) : null;
+    }
+
+    private String resolveCompanyName(CompanyLookup company) {
+        if (StringUtils.hasText(CompanyContext.getCompanyName())) {
+            return CompanyContext.getCompanyName().trim();
+        }
+        return company != null ? trimToNull(company.getDescription()) : null;
     }
 
     private boolean contains(String source, String expected) {

@@ -14,6 +14,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class MeetingRoomDto {
     private Long id;
+    private Long companyId;
+    private String companyCode;
+    private String companyName;
     private String roomCode;
     private String roomName;
     private Integer capacity;

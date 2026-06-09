@@ -21,8 +21,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "meeting_rooms", indexes = {
-        @Index(name = "idx_meeting_rooms_code", columnList = "room_code", unique = true),
-        @Index(name = "idx_meeting_rooms_name", columnList = "room_name", unique = true),
+        @Index(name = "idx_meeting_rooms_company", columnList = "company_id"),
+        @Index(name = "idx_meeting_rooms_company_code", columnList = "company_id,room_code", unique = true),
+        @Index(name = "idx_meeting_rooms_company_name", columnList = "company_id,room_name", unique = true),
         @Index(name = "idx_meeting_rooms_availability", columnList = "availability_status"),
         @Index(name = "idx_meeting_rooms_active", columnList = "active")
 })
@@ -36,10 +37,19 @@ public class MeetingRoom {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "room_code", nullable = false, unique = true, length = 50)
+    @Column(name = "company_id", nullable = false)
+    private Long companyId;
+
+    @Column(name = "company_code", length = 50)
+    private String companyCode;
+
+    @Column(name = "company_name", length = 255)
+    private String companyName;
+
+    @Column(name = "room_code", nullable = false, length = 50)
     private String roomCode;
 
-    @Column(name = "room_name", nullable = false, unique = true, length = 255)
+    @Column(name = "room_name", nullable = false, length = 255)
     private String roomName;
 
     @Column(nullable = false)

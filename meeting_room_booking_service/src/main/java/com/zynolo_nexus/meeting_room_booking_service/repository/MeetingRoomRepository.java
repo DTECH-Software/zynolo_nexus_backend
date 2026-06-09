@@ -5,11 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MeetingRoomRepository extends JpaRepository<MeetingRoom, Long> {
 
-    boolean existsByRoomCodeIgnoreCase(String roomCode);
+    long countByCompanyId(Long companyId);
 
-    boolean existsByRoomCodeIgnoreCaseAndIdNot(String roomCode, Long id);
+    boolean existsByCompanyIdAndRoomCodeIgnoreCase(Long companyId, String roomCode);
 
-    boolean existsByRoomNameIgnoreCase(String roomName);
+    boolean existsByCompanyIdAndRoomCodeIgnoreCaseAndIdNot(Long companyId, String roomCode, Long id);
 
-    boolean existsByRoomNameIgnoreCaseAndIdNot(String roomName, Long id);
+    boolean existsByCompanyIdAndRoomNameIgnoreCase(Long companyId, String roomName);
+
+    boolean existsByCompanyIdAndRoomNameIgnoreCaseAndIdNot(Long companyId, String roomName, Long id);
 }

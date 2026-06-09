@@ -12,6 +12,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MeetingRoomReferenceDataDto {
+    private Long companyId;
+    private String companyCode;
+    private String companyName;
     private List<ReferenceOptionDto> availabilityStatuses;
     private Integer maxRoomCount;
     private Long currentRoomCount;
