@@ -60,6 +60,8 @@ public class PagePrivilegeResolver {
                     .search(hasTask(taskAccess, "SEARCH", "FILTER", "LIST"))
                     .activate(hasTask(taskAccess, "ACTIVATE", "ENABLE", "ACTIVE"))
                     .deactivate(hasTask(taskAccess, "DEACTIVATE", "DISABLE", "INACTIVE", "DELETE", "REMOVE"))
+                    .submit(hasTask(taskAccess, "SUBMIT", "SEND", "FORAPPROVAL"))
+                    .cancel(hasTask(taskAccess, "CANCEL"))
                     .build();
         } catch (Exception ex) {
             return empty();
@@ -74,6 +76,8 @@ public class PagePrivilegeResolver {
                 .search(false)
                 .activate(false)
                 .deactivate(false)
+                .submit(false)
+                .cancel(false)
                 .build();
     }
 
