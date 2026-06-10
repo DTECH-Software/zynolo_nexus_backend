@@ -1,4 +1,4 @@
-package com.zynolo_nexus.meeting_room_booking_service.service.support;
+package com.zynolo_nexus.meeting_room_booking_service.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,18 +9,16 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PageTaskPrivileges {
-    private boolean add;
-    private boolean update;
+public class MyMeetingRequestPrivilegesDto {
+    private boolean createNewBooking;
     private boolean view;
+    private boolean edit;
     private boolean search;
-    private boolean activate;
-    private boolean deactivate;
     private boolean submit;
-    private boolean cancel;
     private boolean delete;
-    private boolean export;
+    private boolean cancel;
     private boolean copyAsNew;
-    private boolean ongoingUpdate;
+    private boolean addOngoingUpdate;
     private boolean viewInvoice;
+    private boolean export;
 }

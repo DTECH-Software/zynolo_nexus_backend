@@ -62,6 +62,11 @@ public class PagePrivilegeResolver {
                     .deactivate(hasTask(taskAccess, "DEACTIVATE", "DISABLE", "INACTIVE", "DELETE", "REMOVE"))
                     .submit(hasTask(taskAccess, "SUBMIT", "SEND", "FORAPPROVAL"))
                     .cancel(hasTask(taskAccess, "CANCEL"))
+                    .delete(hasTask(taskAccess, "DELETE", "REMOVE"))
+                    .export(hasTask(taskAccess, "EXPORT", "DOWNLOAD"))
+                    .copyAsNew(hasTask(taskAccess, "COPY", "COPYASNEW", "DUPLICATE"))
+                    .ongoingUpdate(hasTask(taskAccess, "ONGOING", "ONGOINGUPDATE"))
+                    .viewInvoice(hasTask(taskAccess, "INVOICE", "VIEWINVOICE"))
                     .build();
         } catch (Exception ex) {
             return empty();
@@ -78,6 +83,11 @@ public class PagePrivilegeResolver {
                 .deactivate(false)
                 .submit(false)
                 .cancel(false)
+                .delete(false)
+                .export(false)
+                .copyAsNew(false)
+                .ongoingUpdate(false)
+                .viewInvoice(false)
                 .build();
     }
 

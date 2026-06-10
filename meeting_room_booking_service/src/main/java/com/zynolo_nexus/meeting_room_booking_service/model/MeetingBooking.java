@@ -119,6 +119,27 @@ public class MeetingBooking {
     @Column(name = "submitted_date")
     private LocalDateTime submittedDate;
 
+    @Column(name = "cancellation_reason", length = 1000)
+    private String cancellationReason;
+
+    @Column(name = "cancelled_by", length = 100)
+    private String cancelledBy;
+
+    @Column(name = "cancelled_date")
+    private LocalDateTime cancelledDate;
+
+    @Column(name = "ongoing_update", length = 1000)
+    private String ongoingUpdate;
+
+    @Column(name = "ongoing_updated_by", length = 100)
+    private String ongoingUpdatedBy;
+
+    @Column(name = "ongoing_updated_date")
+    private LocalDateTime ongoingUpdatedDate;
+
+    @Column(name = "invoice_no", length = 50)
+    private String invoiceNo;
+
     @Column(nullable = false)
     private LocalDateTime createdDate;
 
