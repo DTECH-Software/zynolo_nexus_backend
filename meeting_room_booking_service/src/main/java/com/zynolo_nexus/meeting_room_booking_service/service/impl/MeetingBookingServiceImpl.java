@@ -138,7 +138,7 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                                 .map(this::toSupportMasterDto)
                                 .toList())
                         .privileges(MeetingBookingPrivilegesDto.builder()
-                                .saveDraft(pagePrivileges.isAdd())
+                                .saveDraft(pagePrivileges.isSaveDraft() || pagePrivileges.isAdd())
                                 .update(pagePrivileges.isUpdate())
                                 .view(pagePrivileges.isView())
                                 .search(pagePrivileges.isSearch())

@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PageTaskPrivileges {
     private boolean add;
+    private boolean saveDraft;
     private boolean update;
     private boolean view;
     private boolean search;

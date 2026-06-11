@@ -55,6 +55,7 @@ public class PagePrivilegeResolver {
 
             return PageTaskPrivileges.builder()
                     .add(hasTask(taskAccess, "ADD", "CREATE", "NEW"))
+                    .saveDraft(hasTask(taskAccess, "SAVEDRAFT", "DRAFTSAVE"))
                     .update(hasTask(taskAccess, "UPDATE", "EDIT"))
                     .view(hasTask(taskAccess, "VIEW", "READ"))
                     .search(hasTask(taskAccess, "SEARCH", "FILTER", "LIST"))
@@ -78,6 +79,7 @@ public class PagePrivilegeResolver {
     private PageTaskPrivileges empty() {
         return PageTaskPrivileges.builder()
                 .add(false)
+                .saveDraft(false)
                 .update(false)
                 .view(false)
                 .search(false)
