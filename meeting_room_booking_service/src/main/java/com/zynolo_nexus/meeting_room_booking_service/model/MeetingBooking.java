@@ -119,6 +119,24 @@ public class MeetingBooking {
     @Column(name = "submitted_date")
     private LocalDateTime submittedDate;
 
+    @Column(name = "approved_by", length = 100)
+    private String approvedBy;
+
+    @Column(name = "approved_date")
+    private LocalDateTime approvedDate;
+
+    @Column(name = "approval_remark", length = 1000)
+    private String approvalRemark;
+
+    @Column(name = "rejected_by", length = 100)
+    private String rejectedBy;
+
+    @Column(name = "rejected_date")
+    private LocalDateTime rejectedDate;
+
+    @Column(name = "rejection_remark", length = 1000)
+    private String rejectionRemark;
+
     @Column(name = "cancellation_reason", length = 1000)
     private String cancellationReason;
 

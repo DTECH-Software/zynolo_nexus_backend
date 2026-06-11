@@ -232,6 +232,47 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
 
     @Override
     @Transactional
+    public MessageResponseDTO<MeetingBookingDto> editPendingApproval(MeetingBookingUpdateRequest request) {
+        if (request == null || request.getId() == null) {
+            throw new BadRequestException("Invalid pending approval edit request");
+        }
+        MeetingBooking booking = findBooking(request.getId());
+        if (booking.getStatus() != MeetingBookingStatus.PENDING_APPROVAL) {
+            throw new BadRequestException("Only pending approval bookings can be edited by approver");
+        }
+
+        applyHeader(
+                booking,
+                request.getMeetingName(),
+                request.getMeetingType(),
+                request.getMeetingRoomId(),
+                request.getMeetingDate(),
+                request.getStartTime(),
+                request.getEndTime(),
+                request.getNumberOfAttendees(),
+                request.getPurposeRemarks(),
+                true
+        );
+        if (request.getRefreshments() != null || request.getBeverages() != null
+                || request.getSupportServices() != null || request.getParticipants() != null) {
+            replaceDetails(
+                    booking,
+                    request.getRefreshments() != null ? request.getRefreshments() : toRefreshmentRequests(booking),
+                    request.getBeverages() != null ? request.getBeverages() : toBeverageRequests(booking),
+                    request.getSupportServices() != null ? request.getSupportServices() : toSupportRequests(booking),
+                    request.getParticipants() != null ? request.getParticipants() : toParticipantRequests(booking)
+            );
+        }
+        calculateSummary(booking);
+        if (StringUtils.hasText(request.getUsername())) {
+            booking.setLastModifiedBy(request.getUsername().trim());
+        }
+
+        return success("Pending approval meeting request edited successfully", toDto(meetingBookingRepository.save(booking)));
+    }
+
+    @Override
+    @Transactional
     public MessageResponseDTO<MeetingBookingDto> submit(MeetingBookingIdRequest request) {
         if (request == null || request.getId() == null) {
             throw new BadRequestException("Invalid booking submit request");
@@ -655,6 +696,19 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                 .participants(booking.getParticipants().stream().map(this::toParticipantDto).toList())
                 .submittedBy(booking.getSubmittedBy())
                 .submittedDate(booking.getSubmittedDate())
+                .approvedBy(booking.getApprovedBy())
+                .approvedDate(booking.getApprovedDate())
+                .approvalRemark(booking.getApprovalRemark())
+                .rejectedBy(booking.getRejectedBy())
+                .rejectedDate(booking.getRejectedDate())
+                .rejectionRemark(booking.getRejectionRemark())
+                .cancellationReason(booking.getCancellationReason())
+                .cancelledBy(booking.getCancelledBy())
+                .cancelledDate(booking.getCancelledDate())
+                .ongoingUpdate(booking.getOngoingUpdate())
+                .ongoingUpdatedBy(booking.getOngoingUpdatedBy())
+                .ongoingUpdatedDate(booking.getOngoingUpdatedDate())
+                .invoiceNo(booking.getInvoiceNo())
                 .createdDate(booking.getCreatedDate())
                 .lastModifiedDate(booking.getLastModifiedDate())
                 .createdBy(booking.getCreatedBy())

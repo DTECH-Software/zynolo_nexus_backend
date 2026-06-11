@@ -14,6 +14,7 @@ public interface MeetingBookingService {
     MessageResponseDTO<MeetingBookingReferenceDataDto> referenceData(MeetingBookingReferenceDataRequest request);
     MessageResponseDTO<MeetingBookingDto> saveDraft(MeetingBookingSaveDraftRequest request);
     MessageResponseDTO<MeetingBookingDto> update(MeetingBookingUpdateRequest request);
+    MessageResponseDTO<MeetingBookingDto> editPendingApproval(MeetingBookingUpdateRequest request);
     MessageResponseDTO<MeetingBookingDto> submit(MeetingBookingIdRequest request);
     MessageResponseDTO<MeetingBookingDto> cancel(MeetingBookingIdRequest request);
     MessageResponseDTO<MeetingBookingDto> view(Long id);
