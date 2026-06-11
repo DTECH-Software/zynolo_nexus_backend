@@ -56,6 +56,7 @@ public class MeetingBookingDto {
     private LocalDateTime rejectedDate;
     private String rejectionRemark;
     private String cancellationReason;
+    private String cancellationReasonCode;
     private String cancelledBy;
     private LocalDateTime cancelledDate;
     private String ongoingUpdate;

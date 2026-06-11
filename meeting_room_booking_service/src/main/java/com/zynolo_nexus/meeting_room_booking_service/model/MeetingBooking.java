@@ -140,6 +140,9 @@ public class MeetingBooking {
     @Column(name = "cancellation_reason", length = 1000)
     private String cancellationReason;
 
+    @Column(name = "cancellation_reason_code", length = 50)
+    private String cancellationReasonCode;
+
     @Column(name = "cancelled_by", length = 100)
     private String cancelledBy;
 

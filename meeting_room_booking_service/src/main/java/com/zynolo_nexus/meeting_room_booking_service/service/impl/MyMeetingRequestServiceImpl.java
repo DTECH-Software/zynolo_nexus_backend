@@ -412,6 +412,7 @@ public class MyMeetingRequestServiceImpl implements MyMeetingRequestService {
                 .rejectedDate(booking.getRejectedDate())
                 .rejectionRemark(booking.getRejectionRemark())
                 .cancellationReason(booking.getCancellationReason())
+                .cancellationReasonCode(booking.getCancellationReasonCode())
                 .cancelledBy(booking.getCancelledBy())
                 .cancelledDate(booking.getCancelledDate())
                 .ongoingUpdate(booking.getOngoingUpdate())
