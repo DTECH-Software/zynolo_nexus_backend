@@ -21,6 +21,7 @@ public class PageTaskPrivileges {
     private boolean cancel;
     private boolean approve;
     private boolean reject;
+    private boolean saveUpdate;
     private boolean delete;
     private boolean export;
     private boolean copyAsNew;

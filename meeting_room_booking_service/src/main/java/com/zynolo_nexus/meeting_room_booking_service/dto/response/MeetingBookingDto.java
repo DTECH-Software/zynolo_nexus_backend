@@ -59,6 +59,8 @@ public class MeetingBookingDto {
     private String cancelledBy;
     private LocalDateTime cancelledDate;
     private String ongoingUpdate;
+    private Integer ongoingAdditionalAttendees;
+    private Integer ongoingUpdatedTotalAttendees;
     private String ongoingUpdatedBy;
     private LocalDateTime ongoingUpdatedDate;
     private String invoiceNo;

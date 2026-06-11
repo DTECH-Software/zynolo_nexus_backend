@@ -706,6 +706,8 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                 .cancelledBy(booking.getCancelledBy())
                 .cancelledDate(booking.getCancelledDate())
                 .ongoingUpdate(booking.getOngoingUpdate())
+                .ongoingAdditionalAttendees(booking.getOngoingAdditionalAttendees())
+                .ongoingUpdatedTotalAttendees(booking.getOngoingUpdatedTotalAttendees())
                 .ongoingUpdatedBy(booking.getOngoingUpdatedBy())
                 .ongoingUpdatedDate(booking.getOngoingUpdatedDate())
                 .invoiceNo(booking.getInvoiceNo())

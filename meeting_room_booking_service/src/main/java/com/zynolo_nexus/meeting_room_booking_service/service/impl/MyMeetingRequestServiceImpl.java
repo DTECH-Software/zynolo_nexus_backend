@@ -415,6 +415,8 @@ public class MyMeetingRequestServiceImpl implements MyMeetingRequestService {
                 .cancelledBy(booking.getCancelledBy())
                 .cancelledDate(booking.getCancelledDate())
                 .ongoingUpdate(booking.getOngoingUpdate())
+                .ongoingAdditionalAttendees(booking.getOngoingAdditionalAttendees())
+                .ongoingUpdatedTotalAttendees(booking.getOngoingUpdatedTotalAttendees())
                 .ongoingUpdatedBy(booking.getOngoingUpdatedBy())
                 .ongoingUpdatedDate(booking.getOngoingUpdatedDate())
                 .invoiceNo(booking.getInvoiceNo())

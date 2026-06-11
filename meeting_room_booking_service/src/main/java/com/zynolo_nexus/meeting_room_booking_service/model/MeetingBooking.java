@@ -149,6 +149,12 @@ public class MeetingBooking {
     @Column(name = "ongoing_update", length = 1000)
     private String ongoingUpdate;
 
+    @Column(name = "ongoing_additional_attendees")
+    private Integer ongoingAdditionalAttendees;
+
+    @Column(name = "ongoing_updated_total_attendees")
+    private Integer ongoingUpdatedTotalAttendees;
+
     @Column(name = "ongoing_updated_by", length = 100)
     private String ongoingUpdatedBy;
 
