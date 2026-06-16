@@ -15,4 +15,7 @@ public interface BookingReportService {
     MessageResponseDTO<BookingReportFilterResultDto> filterList(BookingReportFilterRequest request);
     MessageResponseDTO<BookingReportDetailDto> view(BookingReportViewRequest request);
     MessageResponseDTO<BookingReportExportDto> export(BookingReportExportRequest request);
+    byte[] exportExcelFile(BookingReportExportRequest request);
+    byte[] exportPdfFile(BookingReportExportRequest request);
+    byte[] exportCsvFile(BookingReportExportRequest request);
 }

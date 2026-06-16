@@ -38,12 +38,28 @@ import com.zynolo_nexus.meeting_room_booking_service.repository.UserLookupReposi
 import com.zynolo_nexus.meeting_room_booking_service.service.BookingReportService;
 import com.zynolo_nexus.meeting_room_booking_service.service.support.PagePrivilegeResolver;
 import com.zynolo_nexus.meeting_room_booking_service.service.support.PageTaskPrivileges;
+import com.lowagie.text.Document;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -179,6 +195,122 @@ public class BookingReportServiceImpl implements BookingReportService {
                 .build();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] exportExcelFile(BookingReportExportRequest request) {
+        List<MeetingBooking> bookings = exportBookings(request);
+        List<BookingReportListItemDto> rows = bookings.stream().map(this::toListItem).toList();
+        BookingReportSummaryDto summary = toSummary(bookings);
+
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Booking Report");
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+
+            int rowIndex = 0;
+            Row titleRow = sheet.createRow(rowIndex++);
+            titleRow.createCell(0).setCellValue("Meeting Booking Report");
+
+            Row generatedRow = sheet.createRow(rowIndex++);
+            generatedRow.createCell(0).setCellValue("Generated Date");
+            generatedRow.createCell(1).setCellValue(LocalDateTime.now().toString());
+            rowIndex++;
+
+            rowIndex = writeSummaryRows(sheet, rowIndex, summary);
+            rowIndex++;
+
+            Row headerRow = sheet.createRow(rowIndex++);
+            String[] headers = reportHeaders();
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            for (BookingReportListItemDto row : rows) {
+                Row dataRow = sheet.createRow(rowIndex++);
+                writeRowCells(dataRow, row);
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(outputStream);
+            return outputStream.toByteArray();
+        } catch (Exception ex) {
+            throw new BadRequestException("Unable to generate Excel report");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] exportPdfFile(BookingReportExportRequest request) {
+        List<MeetingBooking> bookings = exportBookings(request);
+        List<BookingReportListItemDto> rows = bookings.stream().map(this::toListItem).toList();
+        BookingReportSummaryDto summary = toSummary(bookings);
+
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            Document document = new Document(PageSize.A4.rotate());
+            PdfWriter.getInstance(document, outputStream);
+            document.open();
+            document.add(new Paragraph("Meeting Booking Report"));
+            document.add(new Paragraph("Generated Date: " + LocalDateTime.now()));
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph("Total Bookings: " + summary.getTotalBookings()
+                    + " | Internal: " + summary.getInternalMeetings()
+                    + " | External: " + summary.getExternalMeetings()
+                    + " | Approved: " + summary.getApprovedMeetings()
+                    + " | Cancelled: " + summary.getCancelledMeetings()
+                    + " | Pending: " + summary.getPendingApprovals()));
+            document.add(new Paragraph(" "));
+
+            PdfPTable table = new PdfPTable(reportHeaders().length);
+            table.setWidthPercentage(100);
+            for (String header : reportHeaders()) {
+                PdfPCell cell = new PdfPCell(new Phrase(header));
+                table.addCell(cell);
+            }
+            for (BookingReportListItemDto row : rows) {
+                for (String value : rowValues(row)) {
+                    table.addCell(new Phrase(value));
+                }
+            }
+            document.add(table);
+            document.close();
+            return outputStream.toByteArray();
+        } catch (Exception ex) {
+            throw new BadRequestException("Unable to generate PDF report");
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] exportCsvFile(BookingReportExportRequest request) {
+        List<MeetingBooking> bookings = exportBookings(request);
+        List<BookingReportListItemDto> rows = bookings.stream().map(this::toListItem).toList();
+        BookingReportSummaryDto summary = toSummary(bookings);
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("Meeting Booking Report").append(System.lineSeparator());
+        builder.append("Generated Date,").append(csv(LocalDateTime.now())).append(System.lineSeparator());
+        builder.append("Total Bookings,").append(summary.getTotalBookings()).append(System.lineSeparator());
+        builder.append("Internal Meetings,").append(summary.getInternalMeetings()).append(System.lineSeparator());
+        builder.append("External Meetings,").append(summary.getExternalMeetings()).append(System.lineSeparator());
+        builder.append("Approved Meetings,").append(summary.getApprovedMeetings()).append(System.lineSeparator());
+        builder.append("Cancelled Meetings,").append(summary.getCancelledMeetings()).append(System.lineSeparator());
+        builder.append("Pending Approvals,").append(summary.getPendingApprovals()).append(System.lineSeparator());
+        builder.append(System.lineSeparator());
+        builder.append(String.join(",", reportHeaders())).append(System.lineSeparator());
+        for (BookingReportListItemDto row : rows) {
+            builder.append(String.join(",", List.of(rowValues(row)).stream().map(this::csv).toList()))
+                    .append(System.lineSeparator());
+        }
+        return builder.toString().getBytes(StandardCharsets.UTF_8);
+    }
+
     private List<MeetingBooking> filteredBookings(String username, BookingReportFilterSearch search) {
         Long companyId = resolveCompanyId();
         PageTaskPrivileges privileges = pagePrivilegeResolver.resolve(username, PAGE_CODE);
@@ -188,6 +320,14 @@ public class BookingReportServiceImpl implements BookingReportService {
                 .filter(booking -> companyId.equals(booking.getCompanyId()))
                 .filter(booking -> canSeeAll || username.equalsIgnoreCase(nullToEmpty(booking.getCreatedBy())))
                 .filter(booking -> matches(booking, search))
+                .toList();
+    }
+
+    private List<MeetingBooking> exportBookings(BookingReportExportRequest request) {
+        String username = requireUsername(request != null ? request.getUsername() : null);
+        return filteredBookings(username, request != null ? request.getSearch() : null)
+                .stream()
+                .sorted(resolveComparator(request != null ? request.getSortColumn() : null, request != null ? request.getSortDirection() : null))
                 .toList();
     }
 
@@ -255,6 +395,59 @@ public class BookingReportServiceImpl implements BookingReportService {
 
     private long countStatus(List<MeetingBooking> bookings, MeetingBookingStatus status) {
         return bookings.stream().filter(booking -> booking.getStatus() == status).count();
+    }
+
+    private int writeSummaryRows(Sheet sheet, int rowIndex, BookingReportSummaryDto summary) {
+        rowIndex = writeSummaryRow(sheet, rowIndex, "Total Bookings", summary.getTotalBookings());
+        rowIndex = writeSummaryRow(sheet, rowIndex, "Internal Meetings", summary.getInternalMeetings());
+        rowIndex = writeSummaryRow(sheet, rowIndex, "External Meetings", summary.getExternalMeetings());
+        rowIndex = writeSummaryRow(sheet, rowIndex, "Approved Meetings", summary.getApprovedMeetings());
+        rowIndex = writeSummaryRow(sheet, rowIndex, "Cancelled Meetings", summary.getCancelledMeetings());
+        return writeSummaryRow(sheet, rowIndex, "Pending Approvals", summary.getPendingApprovals());
+    }
+
+    private int writeSummaryRow(Sheet sheet, int rowIndex, String label, long value) {
+        Row row = sheet.createRow(rowIndex++);
+        row.createCell(0).setCellValue(label);
+        row.createCell(1).setCellValue(value);
+        return rowIndex;
+    }
+
+    private String[] reportHeaders() {
+        return new String[]{
+                "Request No",
+                "Meeting Name",
+                "Meeting Room",
+                "Date",
+                "Start Time",
+                "End Time",
+                "Type",
+                "Attendees",
+                "Requested By",
+                "Status"
+        };
+    }
+
+    private void writeRowCells(Row dataRow, BookingReportListItemDto row) {
+        String[] values = rowValues(row);
+        for (int i = 0; i < values.length; i++) {
+            dataRow.createCell(i).setCellValue(values[i]);
+        }
+    }
+
+    private String[] rowValues(BookingReportListItemDto row) {
+        return new String[]{
+                text(row.getRequestNo()),
+                text(row.getMeetingName()),
+                text(row.getMeetingRoomName()),
+                text(row.getMeetingDate()),
+                text(row.getStartTime()),
+                text(row.getEndTime()),
+                text(row.getMeetingTypeDescription()),
+                text(row.getAttendees()),
+                text(row.getRequestedBy()),
+                text(row.getStatusDescription())
+        };
     }
 
     private BookingReportListItemDto toListItem(MeetingBooking booking) {
@@ -467,6 +660,18 @@ public class BookingReportServiceImpl implements BookingReportService {
 
     private int defaultInt(Integer value) {
         return value != null ? value : 0;
+    }
+
+    private String csv(Object value) {
+        String text = text(value);
+        if (text.contains(",") || text.contains("\"") || text.contains("\n") || text.contains("\r")) {
+            return "\"" + text.replace("\"", "\"\"") + "\"";
+        }
+        return text;
+    }
+
+    private String text(Object value) {
+        return value == null ? "" : value.toString();
     }
 
     private boolean contains(String source, String expected) {
