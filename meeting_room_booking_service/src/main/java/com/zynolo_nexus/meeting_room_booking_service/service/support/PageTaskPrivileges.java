@@ -24,6 +24,7 @@ public class PageTaskPrivileges {
     private boolean saveUpdate;
     private boolean delete;
     private boolean export;
+    private boolean print;
     private boolean copyAsNew;
     private boolean ongoingUpdate;
     private boolean viewInvoice;
