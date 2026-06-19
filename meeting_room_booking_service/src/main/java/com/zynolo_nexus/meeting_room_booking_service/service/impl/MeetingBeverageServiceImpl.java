@@ -292,9 +292,25 @@ public class MeetingBeverageServiceImpl implements MeetingBeverageService {
                 && contains(beverage.getBeverageName(), search.getBeverageName())
                 && (search.getDefaultVendorId() == null || search.getDefaultVendorId().equals(beverage.getDefaultVendorId()))
                 && contains(beverage.getDefaultVendorName(), search.getDefaultVendorName())
-                && (search.getActive() == null || search.getActive().equals(beverage.getActive()));
+                && matchesActive(search.getActive(), search.getStatus(), beverage.getActive());
     }
 
+
+    private boolean matchesActive(Boolean activeFilter, String statusFilter, Boolean actualActive) {
+        if (StringUtils.hasText(statusFilter)) {
+            String normalized = statusFilter.trim().toUpperCase(Locale.ENGLISH);
+            if ("ACTIVE".equals(normalized)) {
+                return Boolean.TRUE.equals(actualActive);
+            }
+            if ("INACTIVE".equals(normalized) || "DEACTIVE".equals(normalized) || "DEACTIVATED".equals(normalized)) {
+                return !Boolean.TRUE.equals(actualActive);
+            }
+        }
+        if (Boolean.FALSE.equals(activeFilter)) {
+            return !Boolean.TRUE.equals(actualActive);
+        }
+        return true;
+    }
     private Comparator<MeetingBeverage> resolveComparator(MeetingBeverageFilterRequest request) {
         String column = request != null && StringUtils.hasText(request.getSortColumn())
                 ? request.getSortColumn().trim()
@@ -422,3 +438,4 @@ public class MeetingBeverageServiceImpl implements MeetingBeverageService {
         return builder.toString();
     }
 }
+

@@ -292,9 +292,25 @@ public class MeetingRefreshmentServiceImpl implements MeetingRefreshmentService 
                 && contains(refreshment.getItemName(), search.getItemName())
                 && (search.getDefaultVendorId() == null || search.getDefaultVendorId().equals(refreshment.getDefaultVendorId()))
                 && contains(refreshment.getDefaultVendorName(), search.getDefaultVendorName())
-                && (search.getActive() == null || search.getActive().equals(refreshment.getActive()));
+                && matchesActive(search.getActive(), search.getStatus(), refreshment.getActive());
     }
 
+
+    private boolean matchesActive(Boolean activeFilter, String statusFilter, Boolean actualActive) {
+        if (StringUtils.hasText(statusFilter)) {
+            String normalized = statusFilter.trim().toUpperCase(Locale.ENGLISH);
+            if ("ACTIVE".equals(normalized)) {
+                return Boolean.TRUE.equals(actualActive);
+            }
+            if ("INACTIVE".equals(normalized) || "DEACTIVE".equals(normalized) || "DEACTIVATED".equals(normalized)) {
+                return !Boolean.TRUE.equals(actualActive);
+            }
+        }
+        if (Boolean.FALSE.equals(activeFilter)) {
+            return !Boolean.TRUE.equals(actualActive);
+        }
+        return true;
+    }
     private Comparator<MeetingRefreshment> resolveComparator(MeetingRefreshmentFilterRequest request) {
         String column = request != null && StringUtils.hasText(request.getSortColumn())
                 ? request.getSortColumn().trim()
@@ -426,3 +442,4 @@ public class MeetingRefreshmentServiceImpl implements MeetingRefreshmentService 
         return builder.toString();
     }
 }
+

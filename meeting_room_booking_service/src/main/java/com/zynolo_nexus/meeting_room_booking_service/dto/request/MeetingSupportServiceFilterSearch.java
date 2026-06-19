@@ -10,4 +10,6 @@ public class MeetingSupportServiceFilterSearch {
     private String assignedTeam;
     private Boolean chargeable;
     private Boolean active;
+    private String status;
 }
+

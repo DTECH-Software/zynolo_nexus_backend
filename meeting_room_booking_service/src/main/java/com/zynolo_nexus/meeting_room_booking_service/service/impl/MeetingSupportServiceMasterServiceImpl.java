@@ -279,9 +279,25 @@ public class MeetingSupportServiceMasterServiceImpl implements MeetingSupportSer
                 && contains(service.getServiceCategory() != null ? service.getServiceCategory().name() : null, search.getServiceCategory())
                 && contains(service.getAssignedTeam() != null ? service.getAssignedTeam().name() : null, search.getAssignedTeam())
                 && (search.getChargeable() == null || search.getChargeable().equals(service.getChargeable()))
-                && (search.getActive() == null || search.getActive().equals(service.getActive()));
+                && matchesActive(search.getActive(), search.getStatus(), service.getActive());
     }
 
+
+    private boolean matchesActive(Boolean activeFilter, String statusFilter, Boolean actualActive) {
+        if (StringUtils.hasText(statusFilter)) {
+            String normalized = statusFilter.trim().toUpperCase(Locale.ENGLISH);
+            if ("ACTIVE".equals(normalized)) {
+                return Boolean.TRUE.equals(actualActive);
+            }
+            if ("INACTIVE".equals(normalized) || "DEACTIVE".equals(normalized) || "DEACTIVATED".equals(normalized)) {
+                return !Boolean.TRUE.equals(actualActive);
+            }
+        }
+        if (Boolean.FALSE.equals(activeFilter)) {
+            return !Boolean.TRUE.equals(actualActive);
+        }
+        return true;
+    }
     private Comparator<MeetingSupportService> resolveComparator(MeetingSupportServiceFilterRequest request) {
         String column = request != null && StringUtils.hasText(request.getSortColumn())
                 ? request.getSortColumn().trim()
@@ -396,3 +412,4 @@ public class MeetingSupportServiceMasterServiceImpl implements MeetingSupportSer
         return builder.toString();
     }
 }
+

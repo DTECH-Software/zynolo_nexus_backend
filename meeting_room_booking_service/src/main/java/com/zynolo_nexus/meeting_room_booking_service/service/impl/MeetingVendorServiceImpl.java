@@ -273,9 +273,25 @@ public class MeetingVendorServiceImpl implements MeetingVendorService {
                 && contains(vendor.getVendorType() != null ? vendor.getVendorType().name() : null, search.getVendorType())
                 && contains(vendor.getContactPerson(), search.getContactPerson())
                 && contains(vendor.getContactNumber(), search.getContactNumber())
-                && (search.getActive() == null || search.getActive().equals(vendor.getActive()));
+                && matchesActive(search.getActive(), search.getStatus(), vendor.getActive());
     }
 
+
+    private boolean matchesActive(Boolean activeFilter, String statusFilter, Boolean actualActive) {
+        if (StringUtils.hasText(statusFilter)) {
+            String normalized = statusFilter.trim().toUpperCase(Locale.ENGLISH);
+            if ("ACTIVE".equals(normalized)) {
+                return Boolean.TRUE.equals(actualActive);
+            }
+            if ("INACTIVE".equals(normalized) || "DEACTIVE".equals(normalized) || "DEACTIVATED".equals(normalized)) {
+                return !Boolean.TRUE.equals(actualActive);
+            }
+        }
+        if (Boolean.FALSE.equals(activeFilter)) {
+            return !Boolean.TRUE.equals(actualActive);
+        }
+        return true;
+    }
     private Comparator<MeetingVendor> resolveComparator(MeetingVendorFilterRequest request) {
         String column = request != null && StringUtils.hasText(request.getSortColumn())
                 ? request.getSortColumn().trim()
@@ -388,3 +404,4 @@ public class MeetingVendorServiceImpl implements MeetingVendorService {
         return builder.toString();
     }
 }
+

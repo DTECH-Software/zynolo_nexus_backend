@@ -10,4 +10,6 @@ public class MeetingVendorFilterSearch {
     private String contactPerson;
     private String contactNumber;
     private Boolean active;
+    private String status;
 }
+

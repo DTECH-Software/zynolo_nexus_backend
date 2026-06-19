@@ -10,4 +10,6 @@ public class MeetingRoomFilterSearch {
     private String floor;
     private String availabilityStatus;
     private Boolean active;
+    private String status;
 }
+

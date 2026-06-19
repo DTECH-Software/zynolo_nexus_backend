@@ -10,4 +10,6 @@ public class MeetingRefreshmentFilterSearch {
     private Long defaultVendorId;
     private String defaultVendorName;
     private Boolean active;
+    private String status;
 }
+

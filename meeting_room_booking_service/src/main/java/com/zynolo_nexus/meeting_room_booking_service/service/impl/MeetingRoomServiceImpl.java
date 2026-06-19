@@ -274,9 +274,25 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
                 && contains(room.getLocation(), search.getLocation())
                 && contains(room.getFloor(), search.getFloor())
                 && contains(room.getAvailabilityStatus() != null ? room.getAvailabilityStatus().name() : null, search.getAvailabilityStatus())
-                && (search.getActive() == null || search.getActive().equals(room.getActive()));
+                && matchesActive(search.getActive(), search.getStatus(), room.getActive());
     }
 
+
+    private boolean matchesActive(Boolean activeFilter, String statusFilter, Boolean actualActive) {
+        if (StringUtils.hasText(statusFilter)) {
+            String normalized = statusFilter.trim().toUpperCase(Locale.ENGLISH);
+            if ("ACTIVE".equals(normalized)) {
+                return Boolean.TRUE.equals(actualActive);
+            }
+            if ("INACTIVE".equals(normalized) || "DEACTIVE".equals(normalized) || "DEACTIVATED".equals(normalized)) {
+                return !Boolean.TRUE.equals(actualActive);
+            }
+        }
+        if (Boolean.FALSE.equals(activeFilter)) {
+            return !Boolean.TRUE.equals(actualActive);
+        }
+        return true;
+    }
     private Comparator<MeetingRoom> resolveComparator(MeetingRoomFilterRequest request) {
         String column = request != null && StringUtils.hasText(request.getSortColumn())
                 ? request.getSortColumn().trim()
@@ -377,3 +393,4 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
         return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
     }
 }
+
