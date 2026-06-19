@@ -38,7 +38,6 @@ import java.util.Locale;
 public class MeetingRoomServiceImpl implements MeetingRoomService {
 
     private static final String PAGE_CODE = "MBM_SYSC_MERM";
-    private static final int MAX_ROOM_COUNT = 6;
 
     private final MeetingRoomRepository meetingRoomRepository;
     private final CompanyLookupRepository companyLookupRepository;
@@ -54,9 +53,7 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
             throw new BadRequestException("Invalid meeting room request");
         }
         Long companyId = resolveCompanyId();
-        if (meetingRoomRepository.countByCompanyId(companyId) >= MAX_ROOM_COUNT) {
-            throw new BadRequestException("Maximum 6 meeting rooms can be maintained");
-        }
+
         validateRequired(request.getRoomCode(), request.getRoomName(), request.getCapacity(), request.getAvailabilityStatus(), request.getActive());
 
         String roomCode = normalizeCode(request.getRoomCode());
@@ -223,7 +220,7 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
                         .companyCode(resolveCompanyCode(company))
                         .companyName(resolveCompanyName(company))
                         .availabilityStatuses(statuses)
-                        .maxRoomCount(MAX_ROOM_COUNT)
+                        .maxRoomCount(null)
                         .currentRoomCount(meetingRoomRepository.countByCompanyId(companyId))
                         .privileges(MeetingRoomPrivilegesDto.builder()
                                 .add(pagePrivileges.isAdd())
@@ -393,4 +390,6 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
         return Character.toUpperCase(lower.charAt(0)) + lower.substring(1);
     }
 }
+
+
 
