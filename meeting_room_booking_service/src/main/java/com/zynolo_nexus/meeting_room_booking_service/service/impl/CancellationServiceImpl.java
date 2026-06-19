@@ -52,6 +52,11 @@ public class CancellationServiceImpl implements CancellationService {
             MeetingBookingStatus.APPROVED,
             MeetingBookingStatus.ONGOING
     );
+    private static final Set<MeetingBookingStatus> VISIBLE_CANCELLATION_STATUSES = Set.of(
+            MeetingBookingStatus.APPROVED,
+            MeetingBookingStatus.ONGOING,
+            MeetingBookingStatus.CANCELLED
+    );
 
     private final MeetingBookingRepository meetingBookingRepository;
     private final MeetingRoomRepository meetingRoomRepository;
@@ -76,7 +81,7 @@ public class CancellationServiceImpl implements CancellationService {
                         .companyId(companyId)
                         .companyCode(resolveCompanyCode(company))
                         .companyName(resolveCompanyName(company))
-                        .statuses(List.of(toOption(MeetingBookingStatus.APPROVED), toOption(MeetingBookingStatus.ONGOING)))
+                        .statuses(List.of(toOption(MeetingBookingStatus.APPROVED), toOption(MeetingBookingStatus.ONGOING), toOption(MeetingBookingStatus.CANCELLED)))
                         .cancellationReasons(cancellationReasons())
                         .meetingRooms(meetingRoomRepository.findAll().stream()
                                 .filter(room -> companyId.equals(room.getCompanyId()))
@@ -108,7 +113,7 @@ public class CancellationServiceImpl implements CancellationService {
         List<CancellationListItemDto> filtered = meetingBookingRepository.findAll().stream()
                 .filter(booking -> companyId.equals(booking.getCompanyId()))
                 .filter(booking -> username.equalsIgnoreCase(nullToEmpty(booking.getCreatedBy())))
-                .filter(this::isCancellable)
+                .filter(this::isVisibleInCancellationPage)
                 .filter(booking -> matches(booking, search))
                 .sorted(resolveComparator(request))
                 .map(booking -> toListItem(booking, privileges))
@@ -188,6 +193,11 @@ public class CancellationServiceImpl implements CancellationService {
         return booking != null && CANCELLABLE_STATUSES.contains(booking.getStatus());
     }
 
+    private boolean isVisibleInCancellationPage(MeetingBooking booking) {
+        return booking != null && VISIBLE_CANCELLATION_STATUSES.contains(booking.getStatus());
+    }
+
+
     private CancellationListItemDto toListItem(MeetingBooking booking, PageTaskPrivileges privileges) {
         return CancellationListItemDto.builder()
                 .id(booking.getId())
@@ -202,7 +212,7 @@ public class CancellationServiceImpl implements CancellationService {
                 .statusDescription(booking.getStatus() != null ? toTitleCase(booking.getStatus().name()) : null)
                 .actions(CancellationActionsDto.builder()
                         .view(privileges.isView())
-                        .cancel(privileges.isCancel())
+                        .cancel(privileges.isCancel() && isCancellable(booking))
                         .build())
                 .build();
     }
@@ -352,3 +362,7 @@ public class CancellationServiceImpl implements CancellationService {
         return builder.toString();
     }
 }
+
+
+
+
