@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class VendorDto {
     private Long id;
+    private Long sourceId;
+    private String vendorSource;
+    private Boolean editable;
     private String code;
     private String description;
     private String street1;
@@ -31,3 +34,4 @@ public class VendorDto {
     private String createdBy;
     private String lastModifiedBy;
 }
+

@@ -13,6 +13,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class VendorListItemDto {
     private Long id;
+    private Long sourceId;
+    private String vendorSource;
+    private Boolean editable;
     private String code;
     private String description;
     private String contactNo;
@@ -24,3 +27,4 @@ public class VendorListItemDto {
     private String createdBy;
     private String lastModifiedBy;
 }
+

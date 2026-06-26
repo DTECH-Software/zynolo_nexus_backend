@@ -11,4 +11,6 @@ public class VendorFilterSearch {
     private String contactNo;
     private String email;
     private String status;
+    private String vendorSource;
 }
+

@@ -13,5 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class VendorReferenceDataDto {
     private List<ReferenceOptionDto> defaultStatus;
+    private List<ReferenceOptionDto> vendorSources;
     private VendorPrivilegesDto privileges;
 }
+
