@@ -25,6 +25,8 @@ public class MeetingBookingSaveDraftRequest {
     private MeetingBookingType meetingType;
 
     private Long customerId;
+    private String customerCode;
+    private String customerCompanyName;
     private String contactPerson;
     private String contactNumber;
 

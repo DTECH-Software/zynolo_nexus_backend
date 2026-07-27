@@ -188,6 +188,8 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                 request.getMeetingName(),
                 request.getMeetingType(),
                 request.getCustomerId(),
+                request.getCustomerCode(),
+                request.getCustomerCompanyName(),
                 request.getContactPerson(),
                 request.getContactNumber(),
                 request.getMeetingRoomId(),
@@ -220,6 +222,8 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                 request.getMeetingName(),
                 request.getMeetingType(),
                 request.getCustomerId(),
+                request.getCustomerCode(),
+                request.getCustomerCompanyName(),
                 request.getContactPerson(),
                 request.getContactNumber(),
                 request.getMeetingRoomId(),
@@ -264,6 +268,8 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                 request.getMeetingName(),
                 request.getMeetingType(),
                 request.getCustomerId(),
+                request.getCustomerCode(),
+                request.getCustomerCompanyName(),
                 request.getContactPerson(),
                 request.getContactNumber(),
                 request.getMeetingRoomId(),
@@ -389,6 +395,8 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                              String meetingName,
                              MeetingBookingType meetingType,
                              Long customerId,
+                             String customerCode,
+                             String customerCompanyName,
                              String contactPerson,
                              String contactNumber,
                              Long meetingRoomId,
@@ -401,6 +409,8 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
         String nextMeetingName = partial && !StringUtils.hasText(meetingName) ? booking.getMeetingName() : trimToNull(meetingName);
         MeetingBookingType nextMeetingType = partial && meetingType == null ? booking.getMeetingType() : meetingType;
         Long nextCustomerId = partial && customerId == null ? booking.getCustomerId() : customerId;
+        String nextCustomerCode = partial && customerCode == null ? booking.getCustomerCode() : trimToNull(customerCode);
+        String nextCustomerCompanyName = partial && customerCompanyName == null ? booking.getCustomerCompanyName() : trimToNull(customerCompanyName);
         String nextContactPerson = partial && contactPerson == null ? booking.getContactPerson() : trimToNull(contactPerson);
         String nextContactNumber = partial && contactNumber == null ? booking.getContactNumber() : trimToNull(contactNumber);
         Long nextRoomId = partial && meetingRoomId == null ? booking.getMeetingRoomId() : meetingRoomId;
@@ -410,7 +420,7 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
         Integer nextAttendees = partial && numberOfAttendees == null ? booking.getNumberOfAttendees() : numberOfAttendees;
 
         MeetingRoom room = validateHeader(nextMeetingName, nextMeetingType, nextRoomId, nextDate, nextStart, nextEnd, nextAttendees, booking.getId());
-        applyCustomer(booking, nextMeetingType, nextCustomerId, nextContactPerson, nextContactNumber);
+        applyCustomer(booking, nextMeetingType, nextCustomerId, nextCustomerCode, nextCustomerCompanyName, nextContactPerson, nextContactNumber);
         booking.setMeetingName(nextMeetingName);
         booking.setMeetingType(nextMeetingType);
         booking.setMeetingRoomId(room.getId());
@@ -462,9 +472,15 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
     private void applyCustomer(MeetingBooking booking,
                                MeetingBookingType meetingType,
                                Long customerId,
+                               String customerCode,
+                               String customerCompanyName,
                                String contactPerson,
                                String contactNumber) {
-        if (meetingType != MeetingBookingType.EXTERNAL_MEETING) {
+        boolean hasCustomerInput = customerId != null || StringUtils.hasText(customerCode) || StringUtils.hasText(customerCompanyName);
+        if (!hasCustomerInput) {
+            if (meetingType == MeetingBookingType.EXTERNAL_MEETING) {
+                throw new BadRequestException("Customer company is required for external meetings");
+            }
             booking.setCustomerId(null);
             booking.setCustomerCode(null);
             booking.setCustomerCompanyName(null);
@@ -472,21 +488,23 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
             booking.setContactNumber(null);
             return;
         }
-        if (customerId == null) {
-            throw new BadRequestException("Customer company is required for external meetings");
-        }
 
         Long companyId = resolveCompanyId();
-        ZynoloSpaceCustomer customer = zynoloSpaceCustomerRepository.findById(customerId)
-                .orElseThrow(() -> new BadRequestException("Zynolo Space customer not found"));
+        ZynoloSpaceCustomer customer = resolveCustomer(companyId, customerId, customerCode, customerCompanyName);
         if (!companyId.equals(customer.getCompanyId()) || !Boolean.TRUE.equals(customer.getActive())) {
             throw new BadRequestException("Zynolo Space customer must be active");
+        }
+        if (StringUtils.hasText(customerCode) && !customerCode.trim().equalsIgnoreCase(customer.getCustomerCode())) {
+            throw new BadRequestException("Customer code does not match selected customer");
+        }
+        if (StringUtils.hasText(customerCompanyName) && !customerCompanyName.trim().equalsIgnoreCase(customer.getCustomerCompanyName())) {
+            throw new BadRequestException("Customer company name does not match selected customer");
         }
 
         String resolvedContactPerson = StringUtils.hasText(contactPerson) ? contactPerson.trim() : trimToNull(customer.getContactPerson());
         String resolvedContactNumber = StringUtils.hasText(contactNumber) ? contactNumber.trim() : trimToNull(customer.getContactNumber());
         if (!StringUtils.hasText(resolvedContactPerson) || !StringUtils.hasText(resolvedContactNumber)) {
-            throw new BadRequestException("Contact person and contact number are required for external meetings");
+            throw new BadRequestException("Contact person and contact number are required for selected customer");
         }
         validateContactNumber(resolvedContactNumber);
 
@@ -497,12 +515,26 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
         booking.setContactNumber(resolvedContactNumber);
     }
 
+    private ZynoloSpaceCustomer resolveCustomer(Long companyId, Long customerId, String customerCode, String customerCompanyName) {
+        if (customerId != null) {
+            return zynoloSpaceCustomerRepository.findById(customerId)
+                    .orElseThrow(() -> new BadRequestException("Zynolo Space customer not found"));
+        }
+        if (StringUtils.hasText(customerCode)) {
+            return zynoloSpaceCustomerRepository.findByCompanyIdAndCustomerCodeIgnoreCase(companyId, customerCode.trim())
+                    .orElseThrow(() -> new BadRequestException("Zynolo Space customer not found"));
+        }
+        return zynoloSpaceCustomerRepository.findByCompanyIdAndCustomerCompanyNameIgnoreCase(companyId, customerCompanyName.trim())
+                .orElseThrow(() -> new BadRequestException("Zynolo Space customer not found"));
+    }
+
     private void validateBookingCustomer(MeetingBooking booking) {
-        if (booking.getMeetingType() != MeetingBookingType.EXTERNAL_MEETING) {
+        if (booking.getMeetingType() != MeetingBookingType.EXTERNAL_MEETING && booking.getCustomerId() == null) {
             return;
         }
-        if (booking.getCustomerId() == null || !StringUtils.hasText(booking.getCustomerCompanyName())
-                || !StringUtils.hasText(booking.getContactPerson()) || !StringUtils.hasText(booking.getContactNumber())) {
+        if (booking.getMeetingType() == MeetingBookingType.EXTERNAL_MEETING
+                && (booking.getCustomerId() == null || !StringUtils.hasText(booking.getCustomerCompanyName())
+                || !StringUtils.hasText(booking.getContactPerson()) || !StringUtils.hasText(booking.getContactNumber()))) {
             throw new BadRequestException("Customer company, contact person and contact number are required for external meetings");
         }
         Long companyId = resolveCompanyId();

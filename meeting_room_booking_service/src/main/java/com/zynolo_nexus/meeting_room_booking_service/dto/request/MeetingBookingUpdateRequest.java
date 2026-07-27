@@ -19,6 +19,8 @@ public class MeetingBookingUpdateRequest {
     private String meetingName;
     private MeetingBookingType meetingType;
     private Long customerId;
+    private String customerCode;
+    private String customerCompanyName;
     private String contactPerson;
     private String contactNumber;
     private Long meetingRoomId;
