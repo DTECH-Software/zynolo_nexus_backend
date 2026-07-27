@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MeetingStatusReportPrivilegesDto {
+    private boolean view;
     private boolean search;
     private boolean resetFilters;
     private boolean viewDetails;

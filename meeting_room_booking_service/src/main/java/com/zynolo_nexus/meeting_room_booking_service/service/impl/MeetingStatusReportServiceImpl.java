@@ -699,6 +699,7 @@ public class MeetingStatusReportServiceImpl implements MeetingStatusReportServic
     private MeetingStatusReportPrivilegesDto toPrivileges(PageTaskPrivileges privileges) {
         boolean export = privileges.isExport();
         return MeetingStatusReportPrivilegesDto.builder()
+                .view(privileges.isView())
                 .search(privileges.isSearch())
                 .resetFilters(privileges.isSearch())
                 .viewDetails(privileges.isView())
