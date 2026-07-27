@@ -23,6 +23,8 @@ public class PageTaskPrivileges {
     private boolean reject;
     private boolean saveUpdate;
     private boolean delete;
+    private boolean generate;
+    private boolean download;
     private boolean export;
     private boolean print;
     private boolean copyAsNew;
