@@ -1,0 +1,20 @@
+package com.zynolo_nexus.meeting_room_booking_service.service;
+
+import com.zynolo_nexus.meeting_room_booking_service.dto.api.MessageResponseDTO;
+import com.zynolo_nexus.meeting_room_booking_service.dto.request.ZynoloSpaceCustomerActiveStatusRequest;
+import com.zynolo_nexus.meeting_room_booking_service.dto.request.ZynoloSpaceCustomerCreateRequest;
+import com.zynolo_nexus.meeting_room_booking_service.dto.request.ZynoloSpaceCustomerFilterRequest;
+import com.zynolo_nexus.meeting_room_booking_service.dto.request.ZynoloSpaceCustomerReferenceDataRequest;
+import com.zynolo_nexus.meeting_room_booking_service.dto.request.ZynoloSpaceCustomerUpdateRequest;
+import com.zynolo_nexus.meeting_room_booking_service.dto.response.ZynoloSpaceCustomerDto;
+import com.zynolo_nexus.meeting_room_booking_service.dto.response.ZynoloSpaceCustomerFilterResultDto;
+import com.zynolo_nexus.meeting_room_booking_service.dto.response.ZynoloSpaceCustomerReferenceDataDto;
+
+public interface ZynoloSpaceCustomerService {
+    MessageResponseDTO<ZynoloSpaceCustomerDto> create(ZynoloSpaceCustomerCreateRequest request);
+    MessageResponseDTO<ZynoloSpaceCustomerDto> update(ZynoloSpaceCustomerUpdateRequest request);
+    MessageResponseDTO<ZynoloSpaceCustomerDto> view(Long id);
+    MessageResponseDTO<ZynoloSpaceCustomerDto> updateActiveStatus(ZynoloSpaceCustomerActiveStatusRequest request);
+    MessageResponseDTO<ZynoloSpaceCustomerFilterResultDto> filterList(ZynoloSpaceCustomerFilterRequest request);
+    MessageResponseDTO<ZynoloSpaceCustomerReferenceDataDto> referenceData(ZynoloSpaceCustomerReferenceDataRequest request);
+}

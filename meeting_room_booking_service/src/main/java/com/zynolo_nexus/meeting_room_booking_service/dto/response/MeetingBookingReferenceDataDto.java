@@ -20,6 +20,7 @@ public class MeetingBookingReferenceDataDto {
     private List<ReferenceOptionDto> statuses;
     private BigDecimal externalMeetingRoomHourlyRate;
     private List<MeetingRoomDto> meetingRooms;
+    private List<ZynoloSpaceCustomerDto> activeCustomers;
     private List<MeetingVendorDto> activeVendors;
     private List<MeetingRefreshmentDto> refreshments;
     private List<MeetingBeverageDto> beverages;

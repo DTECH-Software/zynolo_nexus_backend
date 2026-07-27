@@ -64,6 +64,21 @@ public class MeetingBooking {
     @Column(name = "meeting_type", nullable = false, length = 30)
     private MeetingBookingType meetingType;
 
+    @Column(name = "customer_id")
+    private Long customerId;
+
+    @Column(name = "customer_code", length = 50)
+    private String customerCode;
+
+    @Column(name = "customer_company_name", length = 255)
+    private String customerCompanyName;
+
+    @Column(name = "contact_person", length = 150)
+    private String contactPerson;
+
+    @Column(name = "contact_number", length = 30)
+    private String contactNumber;
+
     @Column(name = "meeting_room_id", nullable = false)
     private Long meetingRoomId;
 

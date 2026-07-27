@@ -24,6 +24,10 @@ public class MeetingBookingSaveDraftRequest {
     @NotNull(message = "Meeting type is required")
     private MeetingBookingType meetingType;
 
+    private Long customerId;
+    private String contactPerson;
+    private String contactNumber;
+
     @NotNull(message = "Meeting room is required")
     private Long meetingRoomId;
 

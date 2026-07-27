@@ -18,6 +18,9 @@ public class MeetingBookingUpdateRequest {
     private Long id;
     private String meetingName;
     private MeetingBookingType meetingType;
+    private Long customerId;
+    private String contactPerson;
+    private String contactNumber;
     private Long meetingRoomId;
     private LocalDate meetingDate;
     private LocalTime startTime;

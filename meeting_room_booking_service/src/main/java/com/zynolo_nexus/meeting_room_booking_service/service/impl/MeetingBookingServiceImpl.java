@@ -26,6 +26,7 @@ import com.zynolo_nexus.meeting_room_booking_service.dto.response.MeetingRoomDto
 import com.zynolo_nexus.meeting_room_booking_service.dto.response.MeetingSupportServiceDto;
 import com.zynolo_nexus.meeting_room_booking_service.dto.response.MeetingVendorDto;
 import com.zynolo_nexus.meeting_room_booking_service.dto.response.ReferenceOptionDto;
+import com.zynolo_nexus.meeting_room_booking_service.dto.response.ZynoloSpaceCustomerDto;
 import com.zynolo_nexus.meeting_room_booking_service.enums.MeetingBookingStatus;
 import com.zynolo_nexus.meeting_room_booking_service.enums.MeetingBookingType;
 import com.zynolo_nexus.meeting_room_booking_service.enums.MeetingParticipantType;
@@ -43,6 +44,7 @@ import com.zynolo_nexus.meeting_room_booking_service.model.MeetingRefreshment;
 import com.zynolo_nexus.meeting_room_booking_service.model.MeetingRoom;
 import com.zynolo_nexus.meeting_room_booking_service.model.MeetingSupportService;
 import com.zynolo_nexus.meeting_room_booking_service.model.MeetingVendor;
+import com.zynolo_nexus.meeting_room_booking_service.model.ZynoloSpaceCustomer;
 import com.zynolo_nexus.meeting_room_booking_service.repository.CompanyLookupRepository;
 import com.zynolo_nexus.meeting_room_booking_service.repository.MeetingBeverageRepository;
 import com.zynolo_nexus.meeting_room_booking_service.repository.MeetingBookingRepository;
@@ -50,6 +52,7 @@ import com.zynolo_nexus.meeting_room_booking_service.repository.MeetingRefreshme
 import com.zynolo_nexus.meeting_room_booking_service.repository.MeetingRoomRepository;
 import com.zynolo_nexus.meeting_room_booking_service.repository.MeetingSupportServiceRepository;
 import com.zynolo_nexus.meeting_room_booking_service.repository.MeetingVendorRepository;
+import com.zynolo_nexus.meeting_room_booking_service.repository.ZynoloSpaceCustomerRepository;
 import com.zynolo_nexus.meeting_room_booking_service.service.MeetingBookingService;
 import com.zynolo_nexus.meeting_room_booking_service.service.support.PagePrivilegeResolver;
 import lombok.RequiredArgsConstructor;
@@ -68,6 +71,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -76,9 +80,11 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
 
     private static final String PAGE_CODE = "MBM_TRNS_CREB";
     private static final BigDecimal EXTERNAL_ROOM_RATE = new BigDecimal("3600.00");
+    private static final Pattern NUMERIC_PATTERN = Pattern.compile("^[0-9]+$");
 
     private final MeetingBookingRepository meetingBookingRepository;
     private final MeetingRoomRepository meetingRoomRepository;
+    private final ZynoloSpaceCustomerRepository zynoloSpaceCustomerRepository;
     private final MeetingVendorRepository meetingVendorRepository;
     private final MeetingRefreshmentRepository meetingRefreshmentRepository;
     private final MeetingBeverageRepository meetingBeverageRepository;
@@ -112,6 +118,12 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                                 .filter(room -> room.getAvailabilityStatus() == RoomAvailabilityStatus.AVAILABLE)
                                 .sorted(Comparator.comparing(MeetingRoom::getRoomName, Comparator.nullsLast(String::compareToIgnoreCase)))
                                 .map(this::toRoomDto)
+                                .toList())
+                        .activeCustomers(zynoloSpaceCustomerRepository.findAll().stream()
+                                .filter(customer -> companyId.equals(customer.getCompanyId()))
+                                .filter(customer -> Boolean.TRUE.equals(customer.getActive()))
+                                .sorted(Comparator.comparing(ZynoloSpaceCustomer::getCustomerCompanyName, Comparator.nullsLast(String::compareToIgnoreCase)))
+                                .map(this::toCustomerDto)
                                 .toList())
                         .activeVendors(meetingVendorRepository.findAll().stream()
                                 .filter(vendor -> companyId.equals(vendor.getCompanyId()))
@@ -175,6 +187,9 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                 booking,
                 request.getMeetingName(),
                 request.getMeetingType(),
+                request.getCustomerId(),
+                request.getContactPerson(),
+                request.getContactNumber(),
                 request.getMeetingRoomId(),
                 request.getMeetingDate(),
                 request.getStartTime(),
@@ -204,6 +219,9 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                 booking,
                 request.getMeetingName(),
                 request.getMeetingType(),
+                request.getCustomerId(),
+                request.getContactPerson(),
+                request.getContactNumber(),
                 request.getMeetingRoomId(),
                 request.getMeetingDate(),
                 request.getStartTime(),
@@ -245,6 +263,9 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                 booking,
                 request.getMeetingName(),
                 request.getMeetingType(),
+                request.getCustomerId(),
+                request.getContactPerson(),
+                request.getContactNumber(),
                 request.getMeetingRoomId(),
                 request.getMeetingDate(),
                 request.getStartTime(),
@@ -291,6 +312,7 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                 booking.getNumberOfAttendees(),
                 booking.getId()
         );
+        validateBookingCustomer(booking);
         validateRequiredDetails(booking);
         booking.setStatus(MeetingBookingStatus.PENDING_APPROVAL);
         booking.setSubmittedBy(trimToNull(request.getUsername()));
@@ -366,6 +388,9 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
     private void applyHeader(MeetingBooking booking,
                              String meetingName,
                              MeetingBookingType meetingType,
+                             Long customerId,
+                             String contactPerson,
+                             String contactNumber,
                              Long meetingRoomId,
                              LocalDate meetingDate,
                              LocalTime startTime,
@@ -375,6 +400,9 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                              boolean partial) {
         String nextMeetingName = partial && !StringUtils.hasText(meetingName) ? booking.getMeetingName() : trimToNull(meetingName);
         MeetingBookingType nextMeetingType = partial && meetingType == null ? booking.getMeetingType() : meetingType;
+        Long nextCustomerId = partial && customerId == null ? booking.getCustomerId() : customerId;
+        String nextContactPerson = partial && contactPerson == null ? booking.getContactPerson() : trimToNull(contactPerson);
+        String nextContactNumber = partial && contactNumber == null ? booking.getContactNumber() : trimToNull(contactNumber);
         Long nextRoomId = partial && meetingRoomId == null ? booking.getMeetingRoomId() : meetingRoomId;
         LocalDate nextDate = partial && meetingDate == null ? booking.getMeetingDate() : meetingDate;
         LocalTime nextStart = partial && startTime == null ? booking.getStartTime() : startTime;
@@ -382,6 +410,7 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
         Integer nextAttendees = partial && numberOfAttendees == null ? booking.getNumberOfAttendees() : numberOfAttendees;
 
         MeetingRoom room = validateHeader(nextMeetingName, nextMeetingType, nextRoomId, nextDate, nextStart, nextEnd, nextAttendees, booking.getId());
+        applyCustomer(booking, nextMeetingType, nextCustomerId, nextContactPerson, nextContactNumber);
         booking.setMeetingName(nextMeetingName);
         booking.setMeetingType(nextMeetingType);
         booking.setMeetingRoomId(room.getId());
@@ -428,6 +457,67 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
         }
         validateNoOverlap(companyId, meetingRoomId, meetingDate, startTime, endTime, excludeBookingId);
         return room;
+    }
+
+    private void applyCustomer(MeetingBooking booking,
+                               MeetingBookingType meetingType,
+                               Long customerId,
+                               String contactPerson,
+                               String contactNumber) {
+        if (meetingType != MeetingBookingType.EXTERNAL_MEETING) {
+            booking.setCustomerId(null);
+            booking.setCustomerCode(null);
+            booking.setCustomerCompanyName(null);
+            booking.setContactPerson(null);
+            booking.setContactNumber(null);
+            return;
+        }
+        if (customerId == null) {
+            throw new BadRequestException("Customer company is required for external meetings");
+        }
+
+        Long companyId = resolveCompanyId();
+        ZynoloSpaceCustomer customer = zynoloSpaceCustomerRepository.findById(customerId)
+                .orElseThrow(() -> new BadRequestException("Zynolo Space customer not found"));
+        if (!companyId.equals(customer.getCompanyId()) || !Boolean.TRUE.equals(customer.getActive())) {
+            throw new BadRequestException("Zynolo Space customer must be active");
+        }
+
+        String resolvedContactPerson = StringUtils.hasText(contactPerson) ? contactPerson.trim() : trimToNull(customer.getContactPerson());
+        String resolvedContactNumber = StringUtils.hasText(contactNumber) ? contactNumber.trim() : trimToNull(customer.getContactNumber());
+        if (!StringUtils.hasText(resolvedContactPerson) || !StringUtils.hasText(resolvedContactNumber)) {
+            throw new BadRequestException("Contact person and contact number are required for external meetings");
+        }
+        validateContactNumber(resolvedContactNumber);
+
+        booking.setCustomerId(customer.getId());
+        booking.setCustomerCode(customer.getCustomerCode());
+        booking.setCustomerCompanyName(customer.getCustomerCompanyName());
+        booking.setContactPerson(resolvedContactPerson);
+        booking.setContactNumber(resolvedContactNumber);
+    }
+
+    private void validateBookingCustomer(MeetingBooking booking) {
+        if (booking.getMeetingType() != MeetingBookingType.EXTERNAL_MEETING) {
+            return;
+        }
+        if (booking.getCustomerId() == null || !StringUtils.hasText(booking.getCustomerCompanyName())
+                || !StringUtils.hasText(booking.getContactPerson()) || !StringUtils.hasText(booking.getContactNumber())) {
+            throw new BadRequestException("Customer company, contact person and contact number are required for external meetings");
+        }
+        Long companyId = resolveCompanyId();
+        ZynoloSpaceCustomer customer = zynoloSpaceCustomerRepository.findById(booking.getCustomerId())
+                .orElseThrow(() -> new BadRequestException("Zynolo Space customer not found"));
+        if (!companyId.equals(customer.getCompanyId()) || !Boolean.TRUE.equals(customer.getActive())) {
+            throw new BadRequestException("Zynolo Space customer must be active");
+        }
+        validateContactNumber(booking.getContactNumber());
+    }
+
+    private void validateContactNumber(String contactNumber) {
+        if (StringUtils.hasText(contactNumber) && !NUMERIC_PATTERN.matcher(contactNumber.trim()).matches()) {
+            throw new BadRequestException("Contact number must be numeric");
+        }
     }
 
     private void validateNoOverlap(Long companyId,
@@ -640,6 +730,10 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
         return contains(booking.getRequestNo(), search.getRequestNo())
                 && contains(booking.getMeetingName(), search.getMeetingName())
                 && contains(booking.getMeetingType() != null ? booking.getMeetingType().name() : null, search.getMeetingType())
+                && contains(booking.getCustomerCode(), search.getCustomerCode())
+                && contains(booking.getCustomerCompanyName(), search.getCustomerCompanyName())
+                && contains(booking.getContactPerson(), search.getContactPerson())
+                && contains(booking.getContactNumber(), search.getContactNumber())
                 && contains(booking.getMeetingRoomName(), search.getMeetingRoomName())
                 && contains(booking.getMeetingDate() != null ? booking.getMeetingDate().toString() : null, search.getMeetingDate())
                 && contains(booking.getStatus() != null ? booking.getStatus().name() : null, search.getStatus())
@@ -654,6 +748,9 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
         Comparator<MeetingBooking> comparator = switch (column) {
             case "requestNo" -> Comparator.comparing(MeetingBooking::getRequestNo, Comparator.nullsLast(String::compareToIgnoreCase));
             case "meetingName" -> Comparator.comparing(MeetingBooking::getMeetingName, Comparator.nullsLast(String::compareToIgnoreCase));
+            case "customerCode" -> Comparator.comparing(MeetingBooking::getCustomerCode, Comparator.nullsLast(String::compareToIgnoreCase));
+            case "customerCompanyName" -> Comparator.comparing(MeetingBooking::getCustomerCompanyName, Comparator.nullsLast(String::compareToIgnoreCase));
+            case "contactPerson" -> Comparator.comparing(MeetingBooking::getContactPerson, Comparator.nullsLast(String::compareToIgnoreCase));
             case "meetingDate" -> Comparator.comparing(MeetingBooking::getMeetingDate, Comparator.nullsLast(LocalDate::compareTo));
             case "startTime" -> Comparator.comparing(MeetingBooking::getStartTime, Comparator.nullsLast(LocalTime::compareTo));
             case "status" -> Comparator.comparing(booking -> booking.getStatus() != null ? booking.getStatus().name() : null,
@@ -673,6 +770,11 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                 .meetingName(booking.getMeetingName())
                 .meetingType(booking.getMeetingType())
                 .meetingTypeDescription(booking.getMeetingType() != null ? toTitleCase(booking.getMeetingType().name()) : null)
+                .customerId(booking.getCustomerId())
+                .customerCode(booking.getCustomerCode())
+                .customerCompanyName(booking.getCustomerCompanyName())
+                .contactPerson(booking.getContactPerson())
+                .contactNumber(booking.getContactNumber())
                 .meetingRoomId(booking.getMeetingRoomId())
                 .meetingRoomCode(booking.getMeetingRoomCode())
                 .meetingRoomName(booking.getMeetingRoomName())
@@ -816,6 +918,25 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                 .active(vendor.getActive())
                 .activeStatusDescription(Boolean.TRUE.equals(vendor.getActive()) ? "Active" : "Inactive")
                 .selectable(Boolean.TRUE.equals(vendor.getActive()))
+                .build();
+    }
+
+    private ZynoloSpaceCustomerDto toCustomerDto(ZynoloSpaceCustomer customer) {
+        return ZynoloSpaceCustomerDto.builder()
+                .id(customer.getId())
+                .companyId(customer.getCompanyId())
+                .companyCode(customer.getCompanyCode())
+                .companyName(customer.getCompanyName())
+                .customerCode(customer.getCustomerCode())
+                .customerCompanyName(customer.getCustomerCompanyName())
+                .contactPerson(customer.getContactPerson())
+                .contactNumber(customer.getContactNumber())
+                .emailAddress(customer.getEmailAddress())
+                .address(customer.getAddress())
+                .remarks(customer.getRemarks())
+                .active(customer.getActive())
+                .activeStatusDescription(Boolean.TRUE.equals(customer.getActive()) ? "Active" : "Inactive")
+                .selectable(Boolean.TRUE.equals(customer.getActive()))
                 .build();
     }
 

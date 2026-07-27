@@ -20,6 +20,11 @@ public class MyMeetingRequestListItemDto {
     private String meetingName;
     private MeetingBookingType meetingType;
     private String meetingTypeDescription;
+    private Long customerId;
+    private String customerCode;
+    private String customerCompanyName;
+    private String contactPerson;
+    private String contactNumber;
     private Long meetingRoomId;
     private String meetingRoomName;
     private LocalDate meetingDate;
