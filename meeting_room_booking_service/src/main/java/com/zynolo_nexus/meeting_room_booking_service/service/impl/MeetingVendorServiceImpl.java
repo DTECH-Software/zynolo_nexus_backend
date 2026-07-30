@@ -24,6 +24,7 @@ import com.zynolo_nexus.meeting_room_booking_service.service.MeetingVendorServic
 import com.zynolo_nexus.meeting_room_booking_service.service.support.PagePrivilegeResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -86,7 +87,11 @@ public class MeetingVendorServiceImpl implements MeetingVendorService {
                 .lastModifiedBy(trimToNull(request.getUsername()))
                 .build();
 
-        return success("Vendor created successfully", toDto(meetingVendorRepository.save(vendor)));
+        try {
+            return success("Vendor created successfully", toDto(meetingVendorRepository.saveAndFlush(vendor)));
+        } catch (DataIntegrityViolationException ex) {
+            throw duplicateVendorException(ex);
+        }
     }
 
     @Override
@@ -142,7 +147,11 @@ public class MeetingVendorServiceImpl implements MeetingVendorService {
             vendor.setLastModifiedBy(request.getUsername().trim());
         }
 
-        return success("Vendor updated successfully", toDto(meetingVendorRepository.save(vendor)));
+        try {
+            return success("Vendor updated successfully", toDto(meetingVendorRepository.saveAndFlush(vendor)));
+        } catch (DataIntegrityViolationException ex) {
+            throw duplicateVendorException(ex);
+        }
     }
 
     @Override
@@ -263,6 +272,18 @@ public class MeetingVendorServiceImpl implements MeetingVendorService {
         if (StringUtils.hasText(contactNumber) && !NUMERIC_PATTERN.matcher(contactNumber.trim()).matches()) {
             throw new BadRequestException("Contact number must be numeric");
         }
+    }
+
+    private BadRequestException duplicateVendorException(DataIntegrityViolationException ex) {
+        String message = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
+        String normalized = message != null ? message.toLowerCase(Locale.ENGLISH) : "";
+        if (normalized.contains("idx_meeting_vendors_company_code") || normalized.contains("vendor_code")) {
+            return new BadRequestException("Vendor code already exists");
+        }
+        if (normalized.contains("idx_meeting_vendors_company_name") || normalized.contains("vendor_name")) {
+            return new BadRequestException("Vendor name already exists");
+        }
+        return new BadRequestException("Vendor code or vendor name already exists");
     }
 
     private boolean matches(MeetingVendor vendor, MeetingVendorFilterSearch search) {
