@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -56,6 +57,7 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
         Long companyId = resolveCompanyId();
 
         validateRequired(request.getRoomCode(), request.getRoomName(), request.getCapacity(), request.getAvailabilityStatus(), request.getActive());
+        validatePerHourCharge(request.getPerHourCharge());
 
         String roomCode = normalizeCode(request.getRoomCode());
         String roomName = request.getRoomName().trim();
@@ -77,6 +79,7 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
                 .capacity(request.getCapacity())
                 .location(trimToNull(request.getLocation()))
                 .floor(trimToNull(request.getFloor()))
+                .perHourCharge(request.getPerHourCharge())
                 .availabilityStatus(request.getAvailabilityStatus())
                 .description(trimToNull(request.getDescription()))
                 .active(request.getActive())
@@ -127,6 +130,10 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
         }
         if (request.getFloor() != null) {
             room.setFloor(trimToNull(request.getFloor()));
+        }
+        if (request.getPerHourCharge() != null) {
+            validatePerHourCharge(request.getPerHourCharge());
+            room.setPerHourCharge(request.getPerHourCharge());
         }
         if (request.getAvailabilityStatus() != null) {
             room.setAvailabilityStatus(request.getAvailabilityStatus());
@@ -272,6 +279,12 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
         }
     }
 
+    private void validatePerHourCharge(BigDecimal perHourCharge) {
+        if (perHourCharge != null && perHourCharge.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("Per-hour charge cannot be negative");
+        }
+    }
+
     private BadRequestException duplicateRoomException(DataIntegrityViolationException ex) {
         String message = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
         String normalized = message != null ? message.toLowerCase(Locale.ENGLISH) : "";
@@ -335,6 +348,7 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
             case "roomCode" -> Comparator.comparing(MeetingRoom::getRoomCode, Comparator.nullsLast(String::compareToIgnoreCase));
             case "roomName" -> Comparator.comparing(MeetingRoom::getRoomName, Comparator.nullsLast(String::compareToIgnoreCase));
             case "capacity" -> Comparator.comparing(MeetingRoom::getCapacity, Comparator.nullsLast(Integer::compareTo));
+            case "perHourCharge" -> Comparator.comparing(MeetingRoom::getPerHourCharge, Comparator.nullsLast(BigDecimal::compareTo));
             case "availabilityStatus" -> Comparator.comparing(room -> room.getAvailabilityStatus() != null ? room.getAvailabilityStatus().name() : null,
                     Comparator.nullsLast(String::compareToIgnoreCase));
             default -> Comparator.comparing(MeetingRoom::getLastModifiedDate, Comparator.nullsLast(LocalDateTime::compareTo));
@@ -354,6 +368,7 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
                 .capacity(room.getCapacity())
                 .location(room.getLocation())
                 .floor(room.getFloor())
+                .perHourCharge(room.getPerHourCharge())
                 .availabilityStatus(room.getAvailabilityStatus())
                 .availabilityStatusDescription(room.getAvailabilityStatus() != null ? toDescription(room.getAvailabilityStatus().name()) : null)
                 .description(room.getDescription())

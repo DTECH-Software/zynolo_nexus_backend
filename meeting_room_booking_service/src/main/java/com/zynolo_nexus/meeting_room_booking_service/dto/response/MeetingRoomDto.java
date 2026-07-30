@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -22,6 +23,7 @@ public class MeetingRoomDto {
     private Integer capacity;
     private String location;
     private String floor;
+    private BigDecimal perHourCharge;
     private RoomAvailabilityStatus availabilityStatus;
     private String availabilityStatusDescription;
     private String description;

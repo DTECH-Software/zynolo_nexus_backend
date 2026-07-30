@@ -725,7 +725,7 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
         BigDecimal durationHours = BigDecimal.valueOf(minutes)
                 .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
         BigDecimal roomCharge = booking.getMeetingType() == MeetingBookingType.EXTERNAL_MEETING
-                ? EXTERNAL_ROOM_RATE.multiply(durationHours)
+                ? resolveRoomHourlyRate(booking).multiply(durationHours)
                 : BigDecimal.ZERO;
 
         booking.setDurationHours(durationHours);
@@ -734,6 +734,16 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
         booking.setEstimatedSupportCost(supportCost);
         booking.setRoomCharge(roomCharge);
         booking.setTotalEstimatedCost(refreshmentCost.add(beverageCost).add(supportCost).add(roomCharge));
+    }
+
+    private BigDecimal resolveRoomHourlyRate(MeetingBooking booking) {
+        if (booking.getMeetingRoomId() == null) {
+            return EXTERNAL_ROOM_RATE;
+        }
+        return meetingRoomRepository.findById(booking.getMeetingRoomId())
+                .map(MeetingRoom::getPerHourCharge)
+                .filter(rate -> rate.compareTo(BigDecimal.ZERO) >= 0)
+                .orElse(EXTERNAL_ROOM_RATE);
     }
 
     private void validateRequiredDetails(MeetingBooking booking) {
@@ -925,6 +935,7 @@ public class MeetingBookingServiceImpl implements MeetingBookingService {
                 .capacity(room.getCapacity())
                 .location(room.getLocation())
                 .floor(room.getFloor())
+                .perHourCharge(room.getPerHourCharge())
                 .availabilityStatus(room.getAvailabilityStatus())
                 .availabilityStatusDescription(room.getAvailabilityStatus() != null ? toTitleCase(room.getAvailabilityStatus().name()) : null)
                 .description(room.getDescription())

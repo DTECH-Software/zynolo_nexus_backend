@@ -17,6 +17,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -60,6 +61,9 @@ public class MeetingRoom {
 
     @Column(length = 100)
     private String floor;
+
+    @Column(name = "per_hour_charge", precision = 18, scale = 2)
+    private BigDecimal perHourCharge;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "availability_status", nullable = false, length = 30)

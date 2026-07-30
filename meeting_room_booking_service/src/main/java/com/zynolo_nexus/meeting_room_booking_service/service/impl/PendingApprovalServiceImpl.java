@@ -278,6 +278,7 @@ public class PendingApprovalServiceImpl implements PendingApprovalService {
                 .capacity(room.getCapacity())
                 .location(room.getLocation())
                 .floor(room.getFloor())
+                .perHourCharge(room.getPerHourCharge())
                 .availabilityStatus(room.getAvailabilityStatus())
                 .availabilityStatusDescription(room.getAvailabilityStatus() != null ? toTitleCase(room.getAvailabilityStatus().name()) : null)
                 .description(room.getDescription())
