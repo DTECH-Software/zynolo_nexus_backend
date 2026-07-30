@@ -270,8 +270,22 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
                 && contains(room.getRoomName(), search.getRoomName())
                 && contains(room.getLocation(), search.getLocation())
                 && contains(room.getFloor(), search.getFloor())
-                && contains(room.getAvailabilityStatus() != null ? room.getAvailabilityStatus().name() : null, search.getAvailabilityStatus())
+                && matchesAvailabilityStatus(room.getAvailabilityStatus(), search.getAvailabilityStatus())
                 && matchesActive(search.getActive(), search.getStatus(), room.getActive());
+    }
+
+    private boolean matchesAvailabilityStatus(RoomAvailabilityStatus actualStatus, String expectedStatus) {
+        if (!StringUtils.hasText(expectedStatus)) {
+            return true;
+        }
+        if (actualStatus == null) {
+            return false;
+        }
+        String normalized = expectedStatus.trim()
+                .toUpperCase(Locale.ENGLISH)
+                .replace('-', '_')
+                .replace(' ', '_');
+        return actualStatus.name().equals(normalized);
     }
 
 
