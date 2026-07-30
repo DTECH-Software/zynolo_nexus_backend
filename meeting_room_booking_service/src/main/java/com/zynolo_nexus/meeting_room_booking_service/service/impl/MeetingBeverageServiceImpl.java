@@ -26,6 +26,7 @@ import com.zynolo_nexus.meeting_room_booking_service.service.MeetingBeverageServ
 import com.zynolo_nexus.meeting_room_booking_service.service.support.PagePrivilegeResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -88,7 +89,11 @@ public class MeetingBeverageServiceImpl implements MeetingBeverageService {
                 .lastModifiedBy(trimToNull(request.getUsername()))
                 .build();
 
-        return success("Beverage created successfully", toDto(meetingBeverageRepository.save(beverage)));
+        try {
+            return success("Beverage created successfully", toDto(meetingBeverageRepository.saveAndFlush(beverage)));
+        } catch (DataIntegrityViolationException ex) {
+            throw duplicateBeverageException(ex);
+        }
     }
 
     @Override
@@ -138,7 +143,11 @@ public class MeetingBeverageServiceImpl implements MeetingBeverageService {
             beverage.setLastModifiedBy(request.getUsername().trim());
         }
 
-        return success("Beverage updated successfully", toDto(meetingBeverageRepository.save(beverage)));
+        try {
+            return success("Beverage updated successfully", toDto(meetingBeverageRepository.saveAndFlush(beverage)));
+        } catch (DataIntegrityViolationException ex) {
+            throw duplicateBeverageException(ex);
+        }
     }
 
     @Override
@@ -283,6 +292,18 @@ public class MeetingBeverageServiceImpl implements MeetingBeverageService {
         if (unitPrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new BadRequestException("Unit price must be 0 or greater");
         }
+    }
+
+    private BadRequestException duplicateBeverageException(DataIntegrityViolationException ex) {
+        String message = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
+        String normalized = message != null ? message.toLowerCase(Locale.ENGLISH) : "";
+        if (normalized.contains("idx_meeting_beverages_company_code") || normalized.contains("beverage_code")) {
+            return new BadRequestException("Beverage code already exists");
+        }
+        if (normalized.contains("idx_meeting_beverages_company_name") || normalized.contains("beverage_name")) {
+            return new BadRequestException("Beverage name already exists");
+        }
+        return new BadRequestException("Beverage code or beverage name already exists");
     }
 
     private boolean matches(MeetingBeverage beverage, MeetingBeverageFilterSearch search) {
