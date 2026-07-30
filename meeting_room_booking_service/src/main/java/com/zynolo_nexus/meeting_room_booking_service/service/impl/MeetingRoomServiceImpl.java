@@ -23,6 +23,7 @@ import com.zynolo_nexus.meeting_room_booking_service.service.MeetingRoomService;
 import com.zynolo_nexus.meeting_room_booking_service.context.CompanyContext;
 import com.zynolo_nexus.meeting_room_booking_service.service.support.PagePrivilegeResolver;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -83,7 +84,11 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
                 .lastModifiedBy(trimToNull(request.getUsername()))
                 .build();
 
-        return success("Meeting room created successfully", toDto(meetingRoomRepository.save(room)));
+        try {
+            return success("Meeting room created successfully", toDto(meetingRoomRepository.saveAndFlush(room)));
+        } catch (DataIntegrityViolationException ex) {
+            throw duplicateRoomException(ex);
+        }
     }
 
     @Override
@@ -136,7 +141,11 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
             room.setLastModifiedBy(request.getUsername().trim());
         }
 
-        return success("Meeting room updated successfully", toDto(meetingRoomRepository.save(room)));
+        try {
+            return success("Meeting room updated successfully", toDto(meetingRoomRepository.saveAndFlush(room)));
+        } catch (DataIntegrityViolationException ex) {
+            throw duplicateRoomException(ex);
+        }
     }
 
     @Override
@@ -260,6 +269,18 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
         if (capacity <= 0) {
             throw new BadRequestException("Capacity must be greater than 0");
         }
+    }
+
+    private BadRequestException duplicateRoomException(DataIntegrityViolationException ex) {
+        String message = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
+        String normalized = message != null ? message.toLowerCase(Locale.ENGLISH) : "";
+        if (normalized.contains("idx_meeting_rooms_company_code") || normalized.contains("room_code")) {
+            return new BadRequestException("Room code already exists");
+        }
+        if (normalized.contains("idx_meeting_rooms_company_name") || normalized.contains("room_name")) {
+            return new BadRequestException("Room name already exists");
+        }
+        return new BadRequestException("Room code or room name already exists");
     }
 
     private boolean matches(MeetingRoom room, MeetingRoomFilterSearch search) {
