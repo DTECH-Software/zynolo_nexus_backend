@@ -229,6 +229,7 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
                         .companyCode(resolveCompanyCode(company))
                         .companyName(resolveCompanyName(company))
                         .availabilityStatuses(statuses)
+                        .statuses(activeStatusOptions())
                         .maxRoomCount(null)
                         .currentRoomCount(meetingRoomRepository.countByCompanyId(companyId))
                         .privileges(MeetingRoomPrivilegesDto.builder()
@@ -414,6 +415,13 @@ public class MeetingRoomServiceImpl implements MeetingRoomService {
             return true;
         }
         return source != null && source.toLowerCase(Locale.ENGLISH).contains(expected.trim().toLowerCase(Locale.ENGLISH));
+    }
+
+    private List<ReferenceOptionDto> activeStatusOptions() {
+        return List.of(
+                ReferenceOptionDto.builder().code("ACTIVE").description("Active").build(),
+                ReferenceOptionDto.builder().code("INACTIVE").description("Inactive").build()
+        );
     }
 
     private String trimToNull(String value) {

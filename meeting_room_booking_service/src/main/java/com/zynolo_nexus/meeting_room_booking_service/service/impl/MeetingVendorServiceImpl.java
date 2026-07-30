@@ -227,6 +227,7 @@ public class MeetingVendorServiceImpl implements MeetingVendorService {
                         .companyCode(resolveCompanyCode(company))
                         .companyName(resolveCompanyName(company))
                         .vendorTypes(vendorTypes)
+                        .statuses(activeStatusOptions())
                         .privileges(MeetingVendorPrivilegesDto.builder()
                                 .add(pagePrivileges.isAdd())
                                 .update(pagePrivileges.isUpdate())
@@ -383,6 +384,13 @@ public class MeetingVendorServiceImpl implements MeetingVendorService {
             return true;
         }
         return source != null && source.toLowerCase(Locale.ENGLISH).contains(expected.trim().toLowerCase(Locale.ENGLISH));
+    }
+
+    private List<ReferenceOptionDto> activeStatusOptions() {
+        return List.of(
+                ReferenceOptionDto.builder().code("ACTIVE").description("Active").build(),
+                ReferenceOptionDto.builder().code("INACTIVE").description("Inactive").build()
+        );
     }
 
     private String trimToNull(String value) {

@@ -17,5 +17,6 @@ public class MeetingSupportServiceReferenceDataDto {
     private String companyName;
     private List<ReferenceOptionDto> serviceCategories;
     private List<ReferenceOptionDto> assignedTeams;
+    private List<ReferenceOptionDto> statuses;
     private MeetingSupportServicePrivilegesDto privileges;
 }

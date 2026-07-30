@@ -26,6 +26,7 @@ import com.zynolo_nexus.meeting_room_booking_service.repository.MeetingVendorRep
 import com.zynolo_nexus.meeting_room_booking_service.service.MeetingRefreshmentService;
 import com.zynolo_nexus.meeting_room_booking_service.service.support.PagePrivilegeResolver;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,7 +86,11 @@ public class MeetingRefreshmentServiceImpl implements MeetingRefreshmentService 
                 .lastModifiedBy(trimToNull(request.getUsername()))
                 .build();
 
-        return success("Refreshment created successfully", toDto(meetingRefreshmentRepository.save(refreshment)));
+        try {
+            return success("Refreshment created successfully", toDto(meetingRefreshmentRepository.saveAndFlush(refreshment)));
+        } catch (DataIntegrityViolationException ex) {
+            throw duplicateRefreshmentException(ex);
+        }
     }
 
     @Override
@@ -132,7 +137,11 @@ public class MeetingRefreshmentServiceImpl implements MeetingRefreshmentService 
             refreshment.setLastModifiedBy(request.getUsername().trim());
         }
 
-        return success("Refreshment updated successfully", toDto(meetingRefreshmentRepository.save(refreshment)));
+        try {
+            return success("Refreshment updated successfully", toDto(meetingRefreshmentRepository.saveAndFlush(refreshment)));
+        } catch (DataIntegrityViolationException ex) {
+            throw duplicateRefreshmentException(ex);
+        }
     }
 
     @Override
@@ -224,6 +233,7 @@ public class MeetingRefreshmentServiceImpl implements MeetingRefreshmentService 
                         .companyCode(resolveCompanyCode(company))
                         .companyName(resolveCompanyName(company))
                         .categories(categories)
+                        .statuses(activeStatusOptions())
                         .activeVendors(activeVendors)
                         .privileges(MeetingRefreshmentPrivilegesDto.builder()
                                 .add(pagePrivileges.isAdd())
@@ -281,6 +291,15 @@ public class MeetingRefreshmentServiceImpl implements MeetingRefreshmentService 
         if (unitPrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new BadRequestException("Unit price must be 0 or greater");
         }
+    }
+
+    private BadRequestException duplicateRefreshmentException(DataIntegrityViolationException ex) {
+        String message = ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage();
+        String normalized = message != null ? message.toLowerCase(Locale.ENGLISH) : "";
+        if (normalized.contains("idx_meeting_refreshments_company_code") || normalized.contains("refreshment_code")) {
+            return new BadRequestException("Refreshment code already exists");
+        }
+        return new BadRequestException("Refreshment code already exists");
     }
 
     private boolean matches(MeetingRefreshment refreshment, MeetingRefreshmentFilterSearch search) {
@@ -421,6 +440,13 @@ public class MeetingRefreshmentServiceImpl implements MeetingRefreshmentService 
             return true;
         }
         return source != null && source.toLowerCase(Locale.ENGLISH).contains(expected.trim().toLowerCase(Locale.ENGLISH));
+    }
+
+    private List<ReferenceOptionDto> activeStatusOptions() {
+        return List.of(
+                ReferenceOptionDto.builder().code("ACTIVE").description("Active").build(),
+                ReferenceOptionDto.builder().code("INACTIVE").description("Inactive").build()
+        );
     }
 
     private String trimToNull(String value) {

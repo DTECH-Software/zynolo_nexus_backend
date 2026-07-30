@@ -16,6 +16,7 @@ public class MeetingRoomReferenceDataDto {
     private String companyCode;
     private String companyName;
     private List<ReferenceOptionDto> availabilityStatuses;
+    private List<ReferenceOptionDto> statuses;
     private Integer maxRoomCount;
     private Long currentRoomCount;
     private MeetingRoomPrivilegesDto privileges;

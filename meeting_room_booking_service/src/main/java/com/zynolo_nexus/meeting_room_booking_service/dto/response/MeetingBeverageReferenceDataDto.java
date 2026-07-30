@@ -16,6 +16,7 @@ public class MeetingBeverageReferenceDataDto {
     private String companyCode;
     private String companyName;
     private List<ReferenceOptionDto> commonBeverages;
+    private List<ReferenceOptionDto> statuses;
     private List<MeetingVendorDto> activeVendors;
     private MeetingBeveragePrivilegesDto privileges;
 }

@@ -16,5 +16,6 @@ public class MeetingVendorReferenceDataDto {
     private String companyCode;
     private String companyName;
     private List<ReferenceOptionDto> vendorTypes;
+    private List<ReferenceOptionDto> statuses;
     private MeetingVendorPrivilegesDto privileges;
 }

@@ -16,6 +16,7 @@ public class MeetingRefreshmentReferenceDataDto {
     private String companyCode;
     private String companyName;
     private List<ReferenceOptionDto> categories;
+    private List<ReferenceOptionDto> statuses;
     private List<MeetingVendorDto> activeVendors;
     private MeetingRefreshmentPrivilegesDto privileges;
 }

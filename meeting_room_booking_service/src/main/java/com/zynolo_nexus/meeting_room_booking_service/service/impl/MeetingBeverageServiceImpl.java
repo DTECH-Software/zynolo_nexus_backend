@@ -230,6 +230,7 @@ public class MeetingBeverageServiceImpl implements MeetingBeverageService {
                         .companyCode(resolveCompanyCode(company))
                         .companyName(resolveCompanyName(company))
                         .commonBeverages(commonBeverages)
+                        .statuses(activeStatusOptions())
                         .activeVendors(activeVendors)
                         .privileges(MeetingBeveragePrivilegesDto.builder()
                                 .add(pagePrivileges.isAdd())
@@ -417,6 +418,13 @@ public class MeetingBeverageServiceImpl implements MeetingBeverageService {
             return true;
         }
         return source != null && source.toLowerCase(Locale.ENGLISH).contains(expected.trim().toLowerCase(Locale.ENGLISH));
+    }
+
+    private List<ReferenceOptionDto> activeStatusOptions() {
+        return List.of(
+                ReferenceOptionDto.builder().code("ACTIVE").description("Active").build(),
+                ReferenceOptionDto.builder().code("INACTIVE").description("Inactive").build()
+        );
     }
 
     private String trimToNull(String value) {
