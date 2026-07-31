@@ -97,12 +97,14 @@ public class GoogleSsoServiceImpl implements GoogleSsoService {
         ProfileDetails profileDetails = userMapper.toProfileDetails(user);
 
         Long companyId = resolveCompanyId();
-        String accessToken = jwtUtil.generateAccessToken(user.getUsername(), companyId);
-        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), companyId);
+        String sessionId = UUID.randomUUID().toString();
+        String accessToken = jwtUtil.generateAccessToken(user.getUsername(), companyId, sessionId);
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), companyId, sessionId);
 
         refreshTokenRepository.deleteByUsername(user.getUsername());
         RefreshToken refreshTokenEntity = new RefreshToken();
         refreshTokenEntity.setUsername(user.getUsername());
+        refreshTokenEntity.setSessionId(sessionId);
         refreshTokenEntity.setToken(refreshToken);
         refreshTokenEntity.setExpiresAt(
                 LocalDateTime.now().plusSeconds(jwtUtil.getRefreshTokenValidityMs() / 1000));

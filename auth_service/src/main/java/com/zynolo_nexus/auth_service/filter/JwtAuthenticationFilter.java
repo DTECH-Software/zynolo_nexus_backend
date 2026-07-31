@@ -1,6 +1,7 @@
 package com.zynolo_nexus.auth_service.filter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.zynolo_nexus.auth_service.security.CustomUserDetailsService;
+import com.zynolo_nexus.auth_service.repository.RefreshTokenRepository;
 import com.zynolo_nexus.auth_service.util.JwtUtil;
 
 import jakarta.servlet.FilterChain;
@@ -21,10 +23,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService userDetailsService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil,
+                                   CustomUserDetailsService userDetailsService,
+                                   RefreshTokenRepository refreshTokenRepository) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Override
@@ -42,7 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
 
-            if (jwtUtil.validateToken(token)) {
+            if (jwtUtil.validateAccessToken(token) && isActiveSession(token)) {
                 username = jwtUtil.getUsername(token);
             }
         }
@@ -64,6 +70,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isActiveSession(String token) {
+        String username = jwtUtil.getUsername(token);
+        String sessionId = jwtUtil.getSessionId(token);
+        return username != null
+                && sessionId != null
+                && refreshTokenRepository.existsByUsernameAndSessionIdAndExpiresAtAfter(
+                username,
+                sessionId,
+                LocalDateTime.now()
+        );
     }
 
     @Override

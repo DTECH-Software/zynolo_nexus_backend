@@ -42,7 +42,7 @@ public class CompanyContextFilter extends OncePerRequestFilter {
             String authHeader = request.getHeader(AUTH_HEADER);
             if (StringUtils.hasText(authHeader) && authHeader.startsWith(BEARER_PREFIX)) {
                 String token = authHeader.substring(BEARER_PREFIX.length());
-                if (jwtUtil.validateToken(token)) {
+                if (jwtUtil.validateAccessToken(token)) {
                     CompanyContext.setCompanyId(jwtUtil.getCompanyId(token));
                 }
             }

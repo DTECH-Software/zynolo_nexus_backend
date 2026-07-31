@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.slf4j.Logger;
@@ -125,12 +126,14 @@ public class AuthServiceImpl implements AuthService {
 
         var companyInfo = resolveLoginCompany(user);
         Long companyId = companyInfo.defaultCompanyId();
-        String accessToken = jwtUtil.generateAccessToken(user.getUsername(), companyId);
-        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), companyId);
+        String sessionId = UUID.randomUUID().toString();
+        String accessToken = jwtUtil.generateAccessToken(user.getUsername(), companyId, sessionId);
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), companyId, sessionId);
 
         refreshTokenRepository.deleteByUsername(user.getUsername());
         RefreshToken refreshTokenEntity = new RefreshToken();
         refreshTokenEntity.setUsername(user.getUsername());
+        refreshTokenEntity.setSessionId(sessionId);
         refreshTokenEntity.setToken(refreshToken);
         refreshTokenEntity.setExpiresAt(
                 LocalDateTime.now().plusSeconds(jwtUtil.getRefreshTokenValidityMs() / 1000));
@@ -488,12 +491,14 @@ public class AuthServiceImpl implements AuthService {
         }
 
         Long companyId = mapping.getCompany() != null ? mapping.getCompany().getId() : company.getId();
-        String accessToken = jwtUtil.generateAccessToken(user.getUsername(), companyId);
-        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), companyId);
+        String sessionId = UUID.randomUUID().toString();
+        String accessToken = jwtUtil.generateAccessToken(user.getUsername(), companyId, sessionId);
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), companyId, sessionId);
 
         refreshTokenRepository.deleteByUsername(user.getUsername());
         RefreshToken refreshTokenEntity = new RefreshToken();
         refreshTokenEntity.setUsername(user.getUsername());
+        refreshTokenEntity.setSessionId(sessionId);
         refreshTokenEntity.setToken(refreshToken);
         refreshTokenEntity.setExpiresAt(
                 LocalDateTime.now().plusSeconds(jwtUtil.getRefreshTokenValidityMs() / 1000));

@@ -36,10 +36,14 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtValidator jwtValidator;
+    private final AuthSessionValidator authSessionValidator;
     private final ObjectMapper objectMapper;
 
-    public GatewaySecurityFilter(JwtValidator jwtValidator, ObjectMapper objectMapper) {
+    public GatewaySecurityFilter(JwtValidator jwtValidator,
+                                 AuthSessionValidator authSessionValidator,
+                                 ObjectMapper objectMapper) {
         this.jwtValidator = jwtValidator;
+        this.authSessionValidator = authSessionValidator;
         this.objectMapper = objectMapper;
     }
 
@@ -70,6 +74,14 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
+            String tokenUsername = claims.getSubject();
+            String sessionId = claims.get("sessionId", String.class);
+            if (!authSessionValidator.isActive(tokenUsername, sessionId)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"success\":false,\"message\":\"Session expired\",\"errorCode\":401}");
+                return;
+            }
             Object companyClaim = claims.get("companyId");
             if (companyClaim != null) {
                 companyHeaderValue = String.valueOf(companyClaim);
@@ -79,7 +91,6 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
                 CachedBodyHttpServletRequest cached = new CachedBodyHttpServletRequest(request);
                 PayloadInfo payloadInfo = extractPayloadInfo(cached.getCachedBody());
                 String payloadUsername = payloadInfo.username();
-                String tokenUsername = claims.getSubject();
                 if (payloadInfo.validateAgainstToken()
                         && payloadUsername != null
                         && tokenUsername != null

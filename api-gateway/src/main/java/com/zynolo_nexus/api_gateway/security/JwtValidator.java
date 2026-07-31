@@ -13,6 +13,8 @@ import java.security.Key;
 @Component
 public class JwtValidator {
 
+    private static final String ACCESS_TOKEN_TYPE = "access";
+
     private final Key signingKey;
 
     public JwtValidator(@Value("${jwt.secret}") String secret) {
@@ -21,11 +23,12 @@ public class JwtValidator {
 
     public Claims validateAndGetClaims(String token) {
         try {
-            return Jwts.parserBuilder()
+            Claims claims = Jwts.parserBuilder()
                     .setSigningKey(signingKey)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
+            return ACCESS_TOKEN_TYPE.equals(claims.get("type", String.class)) ? claims : null;
         } catch (JwtException | IllegalArgumentException ex) {
             return null;
         }
