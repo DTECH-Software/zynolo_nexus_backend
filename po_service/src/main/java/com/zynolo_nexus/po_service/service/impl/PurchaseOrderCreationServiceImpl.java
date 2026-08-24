@@ -596,6 +596,7 @@ public class PurchaseOrderCreationServiceImpl implements PurchaseOrderCreationSe
                 .itemDescription(item.getItemDescription())
                 .uom(item.getUom())
                 .quantity(item.getQuantity())
+                .estimatedUnitPrice(item.getEstimatedUnitPrice() != null ? item.getEstimatedUnitPrice() : item.getUnitPrice())
                 .unitPrice(item.getUnitPrice())
                 .lineAmount(item.getLineAmount())
                 .build();

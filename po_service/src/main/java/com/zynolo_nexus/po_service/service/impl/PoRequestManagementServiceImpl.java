@@ -75,6 +75,7 @@ public class PoRequestManagementServiceImpl implements PoRequestManagementServic
                         .map(entry -> option(entry.getKey(), entry.getValue()))
                         .toList())
                 .currencies(List.of())
+                .products(List.of())
                 .defaultStatus(List.of(
                         option(PoRequestStatus.DRAFT.name(), "Draft"),
                         option(PoRequestStatus.SUBMITTED.name(), "Submitted"),
@@ -240,6 +241,7 @@ public class PoRequestManagementServiceImpl implements PoRequestManagementServic
                 .itemDescription(item.getItemDescription())
                 .uom(item.getUom())
                 .quantity(item.getQuantity())
+                .estimatedUnitPrice(item.getEstimatedUnitPrice() != null ? item.getEstimatedUnitPrice() : item.getUnitPrice())
                 .unitPrice(item.getUnitPrice())
                 .lineAmount(item.getLineAmount())
                 .build();

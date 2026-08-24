@@ -43,6 +43,9 @@ public class PoRequestItem {
     @Column(name = "unit_price", nullable = false, precision = 18, scale = 2)
     private BigDecimal unitPrice;
 
+    @Column(name = "estimated_unit_price", precision = 18, scale = 2)
+    private BigDecimal estimatedUnitPrice;
+
     @Column(name = "line_amount", nullable = false, precision = 18, scale = 2)
     private BigDecimal lineAmount;
 }

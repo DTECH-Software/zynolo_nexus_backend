@@ -30,9 +30,6 @@ public class PoRequestUpdateRequest extends AuditRequest {
     @NotBlank(message = "currencyCode is required")
     private String currencyCode;
 
-    @NotBlank(message = "vendorCode is required")
-    private String vendorCode;
-
     @NotNull(message = "requiredDate is required")
     private LocalDate requiredDate;
 

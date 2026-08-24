@@ -18,6 +18,7 @@ public class PoRequestReferenceDataDto {
     private List<ReferenceOptionDto> vendors;
     private List<ReferenceOptionDto> requestTypes;
     private List<ReferenceOptionDto> currencies;
+    private List<PoProductOptionDto> products;
     private List<ReferenceOptionDto> defaultStatus;
     private PoRequestPrivilegesDto privileges;
 }

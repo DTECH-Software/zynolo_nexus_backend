@@ -11,13 +11,9 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PoRequestItemDto {
-    private Long id;
-    private String itemCode;
-    private String itemDescription;
+public class PoProductOptionDto {
+    private String code;
+    private String description;
     private String uom;
-    private BigDecimal quantity;
-    private BigDecimal estimatedUnitPrice;
-    private BigDecimal unitPrice;
-    private BigDecimal lineAmount;
+    private BigDecimal defaultPrice;
 }

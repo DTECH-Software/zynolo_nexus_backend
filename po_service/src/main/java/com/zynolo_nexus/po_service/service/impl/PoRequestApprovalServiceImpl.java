@@ -1,12 +1,15 @@
 package com.zynolo_nexus.po_service.service.impl;
 
 import com.zynolo_nexus.po_service.dto.request.PoReferenceDataRequest;
+import com.zynolo_nexus.po_service.dto.request.PoApprovalVendorProductsRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestApproveRequest;
+import com.zynolo_nexus.po_service.dto.request.PoRequestApprovalItemRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestFilterRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestFilterSearch;
 import com.zynolo_nexus.po_service.dto.request.PoRequestRejectRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestViewRequest;
 import com.zynolo_nexus.po_service.dto.response.PoRequestDto;
+import com.zynolo_nexus.po_service.dto.response.PoApprovalVendorProductDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestFilterResultDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestItemDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestListItemDto;
@@ -20,10 +23,15 @@ import com.zynolo_nexus.po_service.exception.ResourceNotFoundException;
 import com.zynolo_nexus.po_service.model.Department;
 import com.zynolo_nexus.po_service.model.PoRequest;
 import com.zynolo_nexus.po_service.model.PoRequestItem;
+import com.zynolo_nexus.po_service.model.Product;
+import com.zynolo_nexus.po_service.model.Vendor;
+import com.zynolo_nexus.po_service.model.VendorProductMapping;
 import com.zynolo_nexus.po_service.repository.CompanyRepository;
 import com.zynolo_nexus.po_service.repository.DepartmentRepository;
 import com.zynolo_nexus.po_service.repository.PoRequestRepository;
+import com.zynolo_nexus.po_service.repository.ProductRepository;
 import com.zynolo_nexus.po_service.repository.VendorRepository;
+import com.zynolo_nexus.po_service.repository.VendorProductMappingRepository;
 import com.zynolo_nexus.po_service.service.PoRequestApprovalService;
 import com.zynolo_nexus.po_service.service.support.PagePrivilegeResolver;
 import jakarta.persistence.criteria.Predicate;
@@ -36,12 +44,15 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -59,6 +70,8 @@ public class PoRequestApprovalServiceImpl implements PoRequestApprovalService {
     private final CompanyRepository companyRepository;
     private final DepartmentRepository departmentRepository;
     private final VendorRepository vendorRepository;
+    private final ProductRepository productRepository;
+    private final VendorProductMappingRepository vendorProductMappingRepository;
     private final PoRequestRepository poRequestRepository;
     private final PagePrivilegeResolver pagePrivilegeResolver;
 
@@ -78,6 +91,7 @@ public class PoRequestApprovalServiceImpl implements PoRequestApprovalService {
                         .map(entry -> option(entry.getKey(), entry.getValue()))
                         .toList())
                 .currencies(List.of())
+                .products(List.of())
                 .defaultStatus(List.of(
                         option(PoRequestStatus.SUBMITTED.name(), "Submitted"),
                         option(PoRequestStatus.APPROVED.name(), "Approved"),
@@ -124,11 +138,49 @@ public class PoRequestApprovalServiceImpl implements PoRequestApprovalService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<PoApprovalVendorProductDto> getVendorProducts(PoApprovalVendorProductsRequest request) {
+        PoRequest poRequest = getById(request.getId());
+        validateSubmitted(poRequest);
+        Vendor vendor = resolveVendor(request.getVendorCode());
+
+        return poRequest.getItems().stream()
+                .map(item -> toApprovalVendorProduct(item, vendor))
+                .toList();
+    }
+
+    @Override
     @Transactional
     public PoRequestDto approve(PoRequestApproveRequest request) {
         PoRequest poRequest = getById(request.getId());
         validateSubmitted(poRequest);
 
+        Vendor vendor = resolveVendor(request.getVendorCode());
+        Map<Long, PoRequestApprovalItemRequest> approvalItems = indexApprovalItems(request);
+        if (approvalItems.size() != poRequest.getItems().size()) {
+            throw new BadRequestException("Approval prices are required for every requested item");
+        }
+
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (PoRequestItem item : poRequest.getItems()) {
+            PoRequestApprovalItemRequest approvalItem = approvalItems.get(item.getId());
+            if (approvalItem == null) {
+                throw new BadRequestException("Approval price is missing for request item ID: " + item.getId());
+            }
+
+            Product product = resolveActiveProduct(item.getItemCode());
+            vendorProductMappingRepository.findByVendorAndProductAndStatus(vendor, product, MasterStatus.ACTIVE)
+                    .orElseThrow(() -> new BadRequestException(
+                            "Selected vendor does not supply active product: " + item.getItemCode()));
+
+            item.setUnitPrice(approvalItem.getUnitPrice());
+            item.setLineAmount(item.getQuantity().multiply(approvalItem.getUnitPrice()));
+            totalAmount = totalAmount.add(item.getLineAmount());
+        }
+
+        poRequest.setVendorCode(vendor.getCode());
+        poRequest.setVendorName(vendor.getDescription());
+        poRequest.setTotalAmount(totalAmount);
         poRequest.setStatus(PoRequestStatus.APPROVED);
         poRequest.setReviewedDate(LocalDateTime.now());
         poRequest.setReviewedBy(request.getUsername());
@@ -285,9 +337,54 @@ public class PoRequestApprovalServiceImpl implements PoRequestApprovalService {
                 .itemDescription(item.getItemDescription())
                 .uom(item.getUom())
                 .quantity(item.getQuantity())
+                .estimatedUnitPrice(effectiveEstimatedUnitPrice(item))
                 .unitPrice(item.getUnitPrice())
                 .lineAmount(item.getLineAmount())
                 .build();
+    }
+
+    private PoApprovalVendorProductDto toApprovalVendorProduct(PoRequestItem item, Vendor vendor) {
+        Optional<Product> product = productRepository.findByCodeIgnoreCaseAndStatus(item.getItemCode(), MasterStatus.ACTIVE);
+        Optional<VendorProductMapping> mapping = product.flatMap(value ->
+                vendorProductMappingRepository.findByVendorAndProductAndStatus(vendor, value, MasterStatus.ACTIVE));
+
+        return PoApprovalVendorProductDto.builder()
+                .requestItemId(item.getId())
+                .itemCode(item.getItemCode())
+                .itemDescription(item.getItemDescription())
+                .uom(item.getUom())
+                .quantity(item.getQuantity())
+                .estimatedUnitPrice(effectiveEstimatedUnitPrice(item))
+                .available(mapping.isPresent())
+                .vendorProductCode(mapping.map(VendorProductMapping::getVendorProductCode).orElse(null))
+                .defaultPrice(product.map(Product::getDefaultPrice).orElse(null))
+                .lastPrice(mapping.map(VendorProductMapping::getLastPrice).orElse(null))
+                .leadTimeDays(mapping.map(VendorProductMapping::getLeadTimeDays).orElse(null))
+                .build();
+    }
+
+    private Map<Long, PoRequestApprovalItemRequest> indexApprovalItems(PoRequestApproveRequest request) {
+        Map<Long, PoRequestApprovalItemRequest> indexed = new HashMap<>();
+        for (PoRequestApprovalItemRequest item : request.getItems()) {
+            if (indexed.put(item.getRequestItemId(), item) != null) {
+                throw new BadRequestException("Duplicate requestItemId: " + item.getRequestItemId());
+            }
+        }
+        return indexed;
+    }
+
+    private Vendor resolveVendor(String vendorCode) {
+        return vendorRepository.findByCodeIgnoreCaseAndStatus(vendorCode, "ACTIVE")
+                .orElseThrow(() -> new BadRequestException("Active vendor not found for code: " + vendorCode));
+    }
+
+    private Product resolveActiveProduct(String itemCode) {
+        return productRepository.findByCodeIgnoreCaseAndStatus(itemCode, MasterStatus.ACTIVE)
+                .orElseThrow(() -> new BadRequestException("Active product not found for code: " + itemCode));
+    }
+
+    private BigDecimal effectiveEstimatedUnitPrice(PoRequestItem item) {
+        return item.getEstimatedUnitPrice() != null ? item.getEstimatedUnitPrice() : item.getUnitPrice();
     }
 
     private String toStatusDescription(PoRequestStatus status) {

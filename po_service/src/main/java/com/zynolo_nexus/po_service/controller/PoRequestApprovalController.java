@@ -2,6 +2,7 @@ package com.zynolo_nexus.po_service.controller;
 
 import com.zynolo_nexus.po_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.po_service.dto.request.PoReferenceDataRequest;
+import com.zynolo_nexus.po_service.dto.request.PoApprovalVendorProductsRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestApproveRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestFilterRequest;
 import com.zynolo_nexus.po_service.dto.request.PoRequestRejectRequest;
@@ -9,6 +10,7 @@ import com.zynolo_nexus.po_service.dto.request.PoRequestViewRequest;
 import com.zynolo_nexus.po_service.dto.response.PoRequestDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestFilterResultDto;
 import com.zynolo_nexus.po_service.dto.response.PoRequestReferenceDataDto;
+import com.zynolo_nexus.po_service.dto.response.PoApprovalVendorProductDto;
 import com.zynolo_nexus.po_service.service.PoRequestApprovalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -39,6 +42,12 @@ public class PoRequestApprovalController {
     @PostMapping("/view")
     public MessageResponseDTO<PoRequestDto> view(@Valid @RequestBody PoRequestViewRequest request) {
         return success("PO request retrieved successfully", poRequestApprovalService.view(request));
+    }
+
+    @PostMapping("/vendor-products")
+    public MessageResponseDTO<List<PoApprovalVendorProductDto>> vendorProducts(
+            @Valid @RequestBody PoApprovalVendorProductsRequest request) {
+        return success("Vendor products checked successfully", poRequestApprovalService.getVendorProducts(request));
     }
 
     @PostMapping("/approve")
