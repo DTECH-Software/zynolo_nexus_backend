@@ -34,12 +34,17 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CurrencyServiceImpl implements CurrencyService {
 
     private static final String PAGE_CODE = "CURM";
+    private static final Set<String> ISO_4217_CODES = java.util.Currency.getAvailableCurrencies().stream()
+            .map(java.util.Currency::getCurrencyCode)
+            .collect(Collectors.toUnmodifiableSet());
 
     private final CurrencyRepository currencyRepository;
     private final PagePrivilegeResolver pagePrivilegeResolver;
@@ -232,7 +237,13 @@ public class CurrencyServiceImpl implements CurrencyService {
     }
 
     private String normalizeCode(String code) {
-        return code.trim().toUpperCase(Locale.ROOT);
+        if (code == null || !code.matches("[A-Z]{3}")) {
+            throw new BadRequestException("Currency code must contain exactly 3 uppercase letters");
+        }
+        if (!ISO_4217_CODES.contains(code)) {
+            throw new BadRequestException("Invalid ISO 4217 currency code: " + code);
+        }
+        return code;
     }
 
     private String trim(String value) {
