@@ -12,6 +12,6 @@ public class PoRequestRejectRequest extends AuditRequest {
     @NotNull(message = "id is required")
     private Long id;
 
-    @NotBlank(message = "reviewRemark is required")
-    private String reviewRemark;
+    @NotBlank(message = "rejectionReason is required")
+    private String rejectionReason;
 }

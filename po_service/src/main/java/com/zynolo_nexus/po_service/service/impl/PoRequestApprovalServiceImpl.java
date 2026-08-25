@@ -199,7 +199,7 @@ public class PoRequestApprovalServiceImpl implements PoRequestApprovalService {
         poRequest.setStatus(PoRequestStatus.REJECTED);
         poRequest.setReviewedDate(LocalDateTime.now());
         poRequest.setReviewedBy(request.getUsername());
-        poRequest.setReviewRemark(trim(request.getReviewRemark()));
+        poRequest.setReviewRemark(trim(request.getRejectionReason()));
         applyAudit(poRequest, request.getUsername());
 
         return toDto(poRequestRepository.save(poRequest));
@@ -294,7 +294,8 @@ public class PoRequestApprovalServiceImpl implements PoRequestApprovalService {
                 .submittedDate(poRequest.getSubmittedDate())
                 .reviewedDate(poRequest.getReviewedDate())
                 .reviewedBy(poRequest.getReviewedBy())
-                .reviewRemark(poRequest.getReviewRemark())
+                .reviewRemark(poRequest.getStatus() == PoRequestStatus.APPROVED ? poRequest.getReviewRemark() : null)
+                .rejectionReason(poRequest.getStatus() == PoRequestStatus.REJECTED ? poRequest.getReviewRemark() : null)
                 .createdDate(poRequest.getCreatedDate())
                 .lastModifiedDate(poRequest.getLastModifiedDate())
                 .createdBy(poRequest.getCreatedBy())

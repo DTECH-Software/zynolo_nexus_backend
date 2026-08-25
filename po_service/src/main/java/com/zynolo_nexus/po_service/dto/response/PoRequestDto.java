@@ -35,6 +35,7 @@ public class PoRequestDto {
     private LocalDateTime reviewedDate;
     private String reviewedBy;
     private String reviewRemark;
+    private String rejectionReason;
     private LocalDateTime createdDate;
     private LocalDateTime lastModifiedDate;
     private String createdBy;
