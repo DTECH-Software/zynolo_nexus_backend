@@ -103,6 +103,9 @@ public class CurrencyServiceImpl implements CurrencyService {
 
         currency.setCode(code);
         currency.setDescription(trim(request.getDescription()));
+        if (hasText(request.getStatus())) {
+            currency.setStatus(parseStatus(request.getStatus()));
+        }
         applyAudit(currency, request.getUsername(), false);
 
         return toDto(currencyRepository.save(currency));
@@ -238,12 +241,18 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     private String normalizeCode(String code) {
         if (code == null || !code.matches("[A-Z]{3}")) {
-            throw new BadRequestException("Currency code must contain exactly 3 uppercase letters");
+            throw invalidCurrencyCode();
         }
         if (!ISO_4217_CODES.contains(code)) {
-            throw new BadRequestException("Invalid ISO 4217 currency code: " + code);
+            throw invalidCurrencyCode();
         }
         return code;
+    }
+
+    private BadRequestException invalidCurrencyCode() {
+        return new BadRequestException(
+                "Invalid currency code. Enter a valid 3-letter ISO 4217 code using uppercase letters only (e.g., USD, LKR, EUR)."
+        );
     }
 
     private String trim(String value) {
