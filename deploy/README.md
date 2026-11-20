@@ -23,6 +23,7 @@ sudo mkdir -p /opt/zynolo-nexus/api-gateway
 sudo mkdir -p /opt/zynolo-nexus/cheque_service
 sudo mkdir -p /opt/zynolo-nexus/po_service
 sudo mkdir -p /opt/zynolo-nexus/meeting_room_booking_service
+sudo mkdir -p /opt/zynolo-nexus/fleet_service
 sudo chown -R dtech:dtech /opt/zynolo-nexus
 ```
 
@@ -35,8 +36,9 @@ sudo cp deploy/systemd/api-gateway.service /etc/systemd/system/api-gateway.servi
 sudo cp deploy/systemd/cheque_service.service /etc/systemd/system/cheque_service.service
 sudo cp deploy/systemd/po_service.service /etc/systemd/system/po_service.service
 sudo cp deploy/systemd/meeting_room_booking_service.service /etc/systemd/system/meeting_room_booking_service.service
+sudo cp deploy/systemd/fleet_service.service /etc/systemd/system/fleet_service.service
 sudo systemctl daemon-reload
-sudo systemctl enable auth_service setting_service api-gateway cheque_service po_service meeting_room_booking_service
+sudo systemctl enable auth_service setting_service api-gateway cheque_service po_service meeting_room_booking_service fleet_service
 ```
 
 3. Nginx config:
@@ -50,7 +52,7 @@ sudo systemctl reload nginx
 
 ## Deploy
 
-Push to `main` and GitHub Actions will:
+Push to `development` and GitHub Actions will:
 - build the jars
 - upload to server
 - restart systemd services

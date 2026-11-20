@@ -44,6 +44,9 @@ jobs:
       - name: Build meeting_room_booking_service
         run: mvn -DskipTests -f meeting_room_booking_service/pom.xml clean package
 
+      - name: Build fleet_service
+        run: mvn -DskipTests -f fleet_service/pom.xml clean package
+
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
@@ -59,7 +62,8 @@ jobs:
             mkdir -p ${APP_DIR}/api-gateway &&
             mkdir -p ${APP_DIR}/cheque_service &&
             mkdir -p ${APP_DIR}/po_service &&
-            mkdir -p ${APP_DIR}/meeting_room_booking_service
+            mkdir -p ${APP_DIR}/meeting_room_booking_service &&
+            mkdir -p ${APP_DIR}/fleet_service
           "
       - name: Upload JARs
         run: |
@@ -81,6 +85,9 @@ jobs:
           rsync -avz -e "ssh -p ${SSH_PORT}" \
             meeting_room_booking_service/target/meeting_room_booking_service-0.0.1-SNAPSHOT.jar \
             ${SSH_USER}@${SSH_HOST}:${APP_DIR}/meeting_room_booking_service/meeting_room_booking_service.jar
+          rsync -avz -e "ssh -p ${SSH_PORT}" \
+            fleet_service/target/fleet_service-0.0.1-SNAPSHOT.jar \
+            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/fleet_service/fleet_service.jar
 
       - name: Restart services
         run: |
@@ -91,5 +98,6 @@ jobs:
             sudo systemctl restart api-gateway &&
             sudo systemctl restart cheque_service &&
             sudo systemctl restart po_service &&
-            sudo systemctl restart meeting_room_booking_service
+            sudo systemctl restart meeting_room_booking_service &&
+            sudo systemctl restart fleet_service
           "
