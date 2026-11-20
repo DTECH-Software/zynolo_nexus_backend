@@ -28,3 +28,18 @@ Zynolo Fleet microservice scaffold for transport management (mobile-first pilot)
 
 ## Health
 - `POST /api/v1/fleet/health`
+
+## FLVM - Vehicle Master Endpoints
+Page code: `FLVM` (section `FLEET_MASTER`)
+
+- `POST /api/v1/fleet/vehicles/reference-data`
+- `POST /api/v1/fleet/vehicles/filter-list`
+- `POST /api/v1/fleet/vehicles/add`
+- `POST /api/v1/fleet/vehicles/view`
+- `POST /api/v1/fleet/vehicles/update`
+- `POST /api/v1/fleet/vehicles/status-update`
+
+Notes:
+- Scoped by `X-Company-Id` (falls back to `app.default.company-id`)
+- Duplicate registration rejected within the same company (normalized: ignore spaces/dashes, case-insensitive)
+- Status values: `ACTIVE`, `INACTIVE`
