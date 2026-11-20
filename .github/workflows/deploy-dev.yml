@@ -1,4 +1,4 @@
-name: Deploy Dev
+name: Deploy Fleet Dev
 
 on:
   push:
@@ -27,24 +27,6 @@ jobs:
       - name: Build contracts
         run: mvn -DskipTests -f zynolo-nexus-contracts/pom.xml clean install
 
-      - name: Build auth_service
-        run: mvn -DskipTests -f auth_service/pom.xml clean package
-
-      - name: Build setting_service
-        run: mvn -DskipTests -f setting_service/pom.xml clean package
-
-      - name: Build api-gateway
-        run: mvn -DskipTests -f api-gateway/pom.xml clean package
-
-      - name: Build cheque_service
-        run: mvn -DskipTests -f cheque_service/pom.xml clean package
-
-      - name: Build po_service
-        run: mvn -DskipTests -f po_service/pom.xml clean package
-
-      - name: Build meeting_room_booking_service
-        run: mvn -DskipTests -f meeting_room_booking_service/pom.xml clean package
-
       - name: Build fleet_service
         run: |
           mvn -DskipTests -f fleet_service/pom.xml clean package
@@ -59,35 +41,11 @@ jobs:
 
       - name: Prepare remote directories
         run: |
-          ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} "
-            mkdir -p ${APP_DIR}/auth_service &&
-            mkdir -p ${APP_DIR}/setting_service &&
-            mkdir -p ${APP_DIR}/api-gateway &&
-            mkdir -p ${APP_DIR}/cheque_service &&
-            mkdir -p ${APP_DIR}/po_service &&
-            mkdir -p ${APP_DIR}/meeting_room_booking_service &&
-            mkdir -p ${APP_DIR}/fleet_service
-          "
-      - name: Upload JARs
+          ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} \
+            "mkdir -p ${APP_DIR}/fleet_service"
+
+      - name: Upload fleet JAR
         run: |
-          rsync -avz -e "ssh -p ${SSH_PORT}" \
-            auth_service/target/auth_service-0.0.1-SNAPSHOT.jar \
-            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/auth_service/auth_service.jar
-          rsync -avz -e "ssh -p ${SSH_PORT}" \
-            setting_service/target/setting_service-0.0.1-SNAPSHOT.jar \
-            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/setting_service/setting_service.jar
-          rsync -avz -e "ssh -p ${SSH_PORT}" \
-            api-gateway/target/api-gateway-0.0.1-SNAPSHOT.jar \
-            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/api-gateway/api-gateway.jar
-          rsync -avz -e "ssh -p ${SSH_PORT}" \
-            cheque_service/target/cheque_service-0.0.1-SNAPSHOT.jar \
-            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/cheque_service/cheque_service.jar
-          rsync -avz -e "ssh -p ${SSH_PORT}" \
-            po_service/target/po_service-0.0.1-SNAPSHOT.jar \
-            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/po_service/po_service.jar
-          rsync -avz -e "ssh -p ${SSH_PORT}" \
-            meeting_room_booking_service/target/meeting_room_booking_service-0.0.1-SNAPSHOT.jar \
-            ${SSH_USER}@${SSH_HOST}:${APP_DIR}/meeting_room_booking_service/meeting_room_booking_service.jar
           rsync -avz -e "ssh -p ${SSH_PORT}" \
             fleet_service/target/fleet_service-0.0.1-SNAPSHOT.jar \
             ${SSH_USER}@${SSH_HOST}:${APP_DIR}/fleet_service/fleet_service.jar
@@ -97,7 +55,7 @@ jobs:
           ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} \
             "test -f ${APP_DIR}/fleet_service/fleet_service.jar && ls -la ${APP_DIR}/fleet_service/fleet_service.jar"
 
-      - name: Restart core services
+      - name: Restart fleet service
         run: |
           ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} "bash -s" <<'REMOTE'
             set -e
@@ -110,12 +68,6 @@ jobs:
 
             sudo -n systemctl daemon-reload
             sudo -n systemctl restart fleet_service
-            sudo -n systemctl restart auth_service
-            sudo -n systemctl restart setting_service
-            sudo -n systemctl restart api-gateway
-            sudo -n systemctl restart cheque_service
-            sudo -n systemctl restart po_service
-            sudo -n systemctl restart meeting_room_booking_service
           REMOTE
 
       - name: Verify fleet core service
@@ -137,6 +89,9 @@ jobs:
 
             echo "fleet_service failed its health check."
             sudo -n systemctl status fleet_service --no-pager --full || true
-            sudo -n journalctl -u fleet_service -n 100 --no-pager || true
+            if ! sudo -n journalctl -u fleet_service -n 100 --no-pager 2>/dev/null; then
+              echo "GitHub Actions cannot read the system journal with passwordless sudo."
+              echo "Run manually: sudo journalctl -u fleet_service -b -n 200 --no-pager"
+            fi
             exit 1
           REMOTE
