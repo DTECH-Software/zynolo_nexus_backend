@@ -40,6 +40,8 @@ Page code: `FLVM` (section `FLEET_MASTER`)
 - `POST /api/v1/fleet/vehicles/status-update`
 
 Notes:
+- **No `users` / `roles` JPA mapping** — send `roleCode` from login (`profileDetails.userRole.code`) on reference-data.
 - Scoped by `X-Company-Id` (falls back to `app.default.company-id`)
+- `spring.jpa.hibernate.ddl-auto=update` (same as other domain services; creates `fleet_vehicles` only)
 - Duplicate registration rejected within the same company (normalized: ignore spaces/dashes, case-insensitive)
 - Status values: `ACTIVE`, `INACTIVE`
