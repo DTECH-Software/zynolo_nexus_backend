@@ -3,6 +3,7 @@ name: Deploy Dev
 on:
   push:
     branches: [ "development" ]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -88,6 +89,11 @@ jobs:
           rsync -avz -e "ssh -p ${SSH_PORT}" \
             fleet_service/target/fleet_service-0.0.1-SNAPSHOT.jar \
             ${SSH_USER}@${SSH_HOST}:${APP_DIR}/fleet_service/fleet_service.jar
+
+      - name: Verify fleet JAR on server
+        run: |
+          ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} \
+            "test -f ${APP_DIR}/fleet_service/fleet_service.jar && ls -la ${APP_DIR}/fleet_service/fleet_service.jar"
 
       - name: Restart services
         run: |

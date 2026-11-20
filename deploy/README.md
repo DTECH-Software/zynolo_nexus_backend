@@ -52,10 +52,14 @@ sudo systemctl reload nginx
 
 ## Deploy
 
-Push to `development` and GitHub Actions will:
-- build the jars
-- upload to server
+Push to `development` **or** run **Actions → Deploy Dev → Run workflow** on branch `development`.
+
+GitHub Actions will:
+- build the jars (including `fleet_service`)
+- upload to server (`fleet_service/fleet_service.jar`)
 - restart systemd services
+
+If `/opt/zynolo-nexus/fleet_service/` is empty, open the latest **Deploy Dev** run on GitHub and check whether **Build fleet_service** or **Upload JARs** failed.
 
 ## Notes
 

@@ -1,0 +1,10 @@
+services:
+  fleet-service:
+    build:
+      context: ..
+      dockerfile: fleet_service/Dockerfile
+    container_name: fleet-service
+    ports:
+      - "8096:8096"
+    environment:
+      SPRING_PROFILES_ACTIVE: default

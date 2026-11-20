@@ -19,6 +19,24 @@ Zynolo Fleet microservice scaffold for transport management (mobile-first pilot)
 ## Default Port
 - `8096`
 
+## Docker (local)
+
+From repo root:
+
+```bash
+docker compose -f fleet_service/docker-compose.yml build
+docker compose -f fleet_service/docker-compose.yml up -d
+```
+
+Or from `fleet_service/`:
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+Uses shared MySQL from `application.properties` (same as other domain services).
+
 ## API base
 - `/api/v1/fleet/**` (routed via `api-gateway`)
 
