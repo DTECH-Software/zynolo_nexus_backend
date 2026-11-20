@@ -4,6 +4,7 @@ import com.zynolo_nexus.fleet_service.dto.api.MessageResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -14,6 +15,18 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<MessageResponseDTO<Object>> handleUnreadable(HttpMessageNotReadableException ex) {
+        return ResponseEntity.badRequest().body(MessageResponseDTO.builder()
+                .success(false)
+                .message("Invalid or missing request body")
+                .data(null)
+                .errors(ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : null)
+                .errorCode(400)
+                .responseTime(LocalDateTime.now())
+                .build());
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<MessageResponseDTO<Object>> handleValidation(MethodArgumentNotValidException ex) {
