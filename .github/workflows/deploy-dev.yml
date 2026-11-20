@@ -46,7 +46,9 @@ jobs:
         run: mvn -DskipTests -f meeting_room_booking_service/pom.xml clean package
 
       - name: Build fleet_service
-        run: mvn -DskipTests -f fleet_service/pom.xml clean package
+        run: |
+          mvn -DskipTests -f fleet_service/pom.xml clean package
+          test -s fleet_service/target/fleet_service-0.0.1-SNAPSHOT.jar
 
       - name: Configure SSH
         run: |
@@ -95,15 +97,46 @@ jobs:
           ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} \
             "test -f ${APP_DIR}/fleet_service/fleet_service.jar && ls -la ${APP_DIR}/fleet_service/fleet_service.jar"
 
-      - name: Restart services
+      - name: Restart core services
         run: |
-          ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} "
-            sudo systemctl daemon-reload &&
-            sudo systemctl restart auth_service &&
-            sudo systemctl restart setting_service &&
-            sudo systemctl restart api-gateway &&
-            sudo systemctl restart cheque_service &&
-            sudo systemctl restart po_service &&
-            sudo systemctl restart meeting_room_booking_service &&
-            sudo systemctl restart fleet_service
-          "
+          ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} "bash -s" <<'REMOTE'
+            set -e
+
+            if ! sudo -n systemctl cat fleet_service >/dev/null 2>&1; then
+              echo "fleet_service.service is not installed or sudo requires a password."
+              echo "Install deploy/systemd/fleet_service.service and configure passwordless systemctl access for the deploy user."
+              exit 1
+            fi
+
+            sudo -n systemctl daemon-reload
+            sudo -n systemctl restart fleet_service
+            sudo -n systemctl restart auth_service
+            sudo -n systemctl restart setting_service
+            sudo -n systemctl restart api-gateway
+            sudo -n systemctl restart cheque_service
+            sudo -n systemctl restart po_service
+            sudo -n systemctl restart meeting_room_booking_service
+          REMOTE
+
+      - name: Verify fleet core service
+        run: |
+          ssh -p ${SSH_PORT} ${SSH_USER}@${SSH_HOST} "bash -s" <<'REMOTE'
+            set -e
+            for attempt in {1..12}; do
+              if sudo -n systemctl is-active --quiet fleet_service && \
+                 curl --fail --silent --show-error --request POST \
+                   http://127.0.0.1:8096/api/v1/fleet/health >/tmp/fleet-health.json; then
+                cat /tmp/fleet-health.json
+                echo
+                echo "fleet_service is active and healthy."
+                exit 0
+              fi
+              echo "Waiting for fleet_service health check (${attempt}/12)..."
+              sleep 5
+            done
+
+            echo "fleet_service failed its health check."
+            sudo -n systemctl status fleet_service --no-pager --full || true
+            sudo -n journalctl -u fleet_service -n 100 --no-pager || true
+            exit 1
+          REMOTE
