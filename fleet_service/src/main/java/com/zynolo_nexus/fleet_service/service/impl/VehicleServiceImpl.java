@@ -52,7 +52,7 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     public VehicleReferenceDataDto getReferenceData(VehicleReferenceDataRequest request) {
         var privileges = pagePrivilegeResolver.resolve(
-                request != null ? request.getRoleCode() : null,
+                request != null ? request.getUsername() : null,
                 PAGE_CODE
         );
         return VehicleReferenceDataDto.builder()

@@ -1,6 +1,8 @@
 package com.zynolo_nexus.fleet_service.service.support;
 
 import com.zynolo_nexus.fleet_service.client.AuthModuleClient;
+import com.zynolo_nexus.fleet_service.model.UserAccount;
+import com.zynolo_nexus.fleet_service.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -13,15 +15,21 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PagePrivilegeResolver {
 
+    private final UserAccountRepository userAccountRepository;
     private final AuthModuleClient authModuleClient;
 
-    public PageTaskPrivileges resolve(String roleCode, String pageCode) {
-        if (!StringUtils.hasText(roleCode) || !StringUtils.hasText(pageCode)) {
+    public PageTaskPrivileges resolve(String username, String pageCode) {
+        if (!StringUtils.hasText(username)) {
+            return empty();
+        }
+
+        UserAccount user = userAccountRepository.findByUsername(username).orElse(null);
+        if (user == null || user.getRole() == null || !StringUtils.hasText(user.getRole().getCode())) {
             return empty();
         }
 
         try {
-            var access = authModuleClient.getRolePageTaskAccess(roleCode.trim());
+            var access = authModuleClient.getRolePageTaskAccess(user.getRole().getCode());
             if (access == null || access.getPages() == null) {
                 return empty();
             }
