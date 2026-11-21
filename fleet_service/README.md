@@ -255,3 +255,32 @@ Notes:
 - Default sort: `scheduledPickupAt` DESC.
 - Trip statuses: `ASSIGNED`, `STARTED`, `COMPLETED`, `CANCELLED`.
 - Tasks: VIEW, SEARCH.
+
+## FLTD - Trip Detail Endpoints
+Page code: `FLTD` (section `FLEET_PASSENGER`)
+
+- `POST /api/v1/fleet/trip-detail/reference-data`
+- `POST /api/v1/fleet/trip-detail/view`
+
+Notes:
+- Same ownership as FLMT (`requesterUsername` = login `username`).
+- `view` returns full trip + request fields, last location, trail (default 50 / max 100), `signalLost` (30s), and `websocketTopic`.
+- Prefer WebSocket for live marker while trip is `STARTED`; use `view` for initial load / reconnect.
+- Tasks: VIEW.
+
+## FLTF - Trip Fare Endpoints
+Page code: `FLTF` (section `FLEET_PAYMENT`)
+
+- `POST /api/v1/fleet/trip-fare/reference-data`
+- `POST /api/v1/fleet/trip-fare/filter-list`
+- `POST /api/v1/fleet/trip-fare/add`
+- `POST /api/v1/fleet/trip-fare/view`
+- `POST /api/v1/fleet/trip-fare/update`
+
+Notes:
+- Creates `fleet_trip_fares` via `ddl-auto=update`.
+- `add` only on trip status `COMPLETED`; one fare per trip; generates `FTF-yyyyMMdd-####`.
+- Payment methods: `CASH`, `CARD`, `COMPANY`, `OTHER`. Currency: `LKR` (default) or `USD`.
+- Statuses: `RECORDED`, `CANCELLED`.
+- `update` allowed while `RECORDED` (amount / currency / method / notes; optional `status=CANCELLED`).
+- Company-wide (dispatcher / owner). Tasks: ADD, VIEW, SEARCH, UPDATE.

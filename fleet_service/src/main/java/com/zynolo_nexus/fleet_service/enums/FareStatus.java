@@ -1,0 +1,6 @@
+package com.zynolo_nexus.fleet_service.enums;
+
+public enum FareStatus {
+    RECORDED,
+    CANCELLED
+}
