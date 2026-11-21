@@ -243,6 +243,8 @@ public class MyAssignmentServiceImpl implements MyAssignmentService {
                 .scheduledPickupAt(trip.getScheduledPickupAt())
                 .assignedAt(trip.getAssignedAt())
                 .assignedBy(trip.getAssignedBy())
+                .startedAt(trip.getStartedAt())
+                .completedAt(trip.getCompletedAt())
                 .notes(trip.getNotes())
                 .status(trip.getStatus().name())
                 .statusDescription(toStatusDescription(trip.getStatus()))

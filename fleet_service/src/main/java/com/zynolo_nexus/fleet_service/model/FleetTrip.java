@@ -57,6 +57,12 @@ public class FleetTrip extends BaseAuditEntity {
     @Column(name = "notes", length = 500)
     private String notes;
 
+    @Column(name = "started_at")
+    private LocalDateTime startedAt;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private TripStatus status;

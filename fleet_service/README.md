@@ -178,3 +178,17 @@ Notes:
 - Lists trips for that driver on `search.scheduleDate` (defaults to today).
 - Trip statuses: `ASSIGNED`, `STARTED`, `COMPLETED`, `CANCELLED`.
 - Tasks: VIEW, SEARCH.
+
+## FLTSU - Trip Status Update Endpoints
+Page code: `FLTSU` (section `FLEET_DRIVER_OPS`)
+
+- `POST /api/v1/fleet/trip-status/reference-data`
+- `POST /api/v1/fleet/trip-status/filter-list`
+- `POST /api/v1/fleet/trip-status/view`
+- `POST /api/v1/fleet/trip-status/status-update`
+
+Notes:
+- Same driver link as FLDA (`linkedUsername`).
+- `filter-list` defaults to actionable statuses `ASSIGNED` + `STARTED` for the day.
+- Transitions: `ASSIGNED` → `STARTED` (sets `startedAt`), `STARTED` → `COMPLETED` (sets `completedAt`).
+- Tasks: VIEW, SEARCH, UPDATE.

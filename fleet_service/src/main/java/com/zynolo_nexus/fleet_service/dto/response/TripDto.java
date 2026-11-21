@@ -29,6 +29,8 @@ public class TripDto {
     private LocalDateTime scheduledPickupAt;
     private LocalDateTime assignedAt;
     private String assignedBy;
+    private LocalDateTime startedAt;
+    private LocalDateTime completedAt;
     private String notes;
     private String status;
     private String statusDescription;

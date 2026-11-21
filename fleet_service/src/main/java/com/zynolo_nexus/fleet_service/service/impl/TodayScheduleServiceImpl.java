@@ -358,6 +358,8 @@ public class TodayScheduleServiceImpl implements TodayScheduleService {
                 .scheduledPickupAt(trip.getScheduledPickupAt())
                 .assignedAt(trip.getAssignedAt())
                 .assignedBy(trip.getAssignedBy())
+                .startedAt(trip.getStartedAt())
+                .completedAt(trip.getCompletedAt())
                 .notes(trip.getNotes())
                 .status(trip.getStatus().name())
                 .statusDescription(toStatusDescription(trip.getStatus()))
