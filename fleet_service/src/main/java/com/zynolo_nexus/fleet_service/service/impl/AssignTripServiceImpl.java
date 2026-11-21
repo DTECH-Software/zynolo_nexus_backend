@@ -104,6 +104,8 @@ public class AssignTripServiceImpl implements AssignTripService {
                 ))
                 .defaultTripStatus(List.of(
                         option(TripStatus.ASSIGNED.name(), "Assigned"),
+                        option(TripStatus.STARTED.name(), "Started"),
+                        option(TripStatus.COMPLETED.name(), "Completed"),
                         option(TripStatus.CANCELLED.name(), "Cancelled")
                 ))
                 .vehicles(vehicles)
@@ -373,7 +375,7 @@ public class AssignTripServiceImpl implements AssignTripService {
                 .assignedBy(trip.getAssignedBy())
                 .notes(trip.getNotes())
                 .status(trip.getStatus().name())
-                .statusDescription(trip.getStatus() == TripStatus.ASSIGNED ? "Assigned" : "Cancelled")
+                .statusDescription(toTripStatusDescription(trip.getStatus()))
                 .createdDate(trip.getCreatedDate())
                 .lastModifiedDate(trip.getLastModifiedDate())
                 .createdBy(trip.getCreatedBy())
@@ -439,6 +441,15 @@ public class AssignTripServiceImpl implements AssignTripService {
             case DRAFT -> "Draft";
             case SUBMITTED -> "Submitted";
             case ASSIGNED -> "Assigned";
+            case CANCELLED -> "Cancelled";
+        };
+    }
+
+    private String toTripStatusDescription(TripStatus status) {
+        return switch (status) {
+            case ASSIGNED -> "Assigned";
+            case STARTED -> "Started";
+            case COMPLETED -> "Completed";
             case CANCELLED -> "Cancelled";
         };
     }

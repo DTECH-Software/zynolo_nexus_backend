@@ -16,5 +16,7 @@ public interface FleetDriverRepository extends JpaRepository<FleetDriver, Long>,
 
     Optional<FleetDriver> findByIdAndCompanyId(Long id, Long companyId);
 
+    Optional<FleetDriver> findByCompanyIdAndLinkedUsernameIgnoreCase(Long companyId, String linkedUsername);
+
     List<FleetDriver> findByCompanyIdAndStatusOrderByNameAsc(Long companyId, MasterStatus status);
 }

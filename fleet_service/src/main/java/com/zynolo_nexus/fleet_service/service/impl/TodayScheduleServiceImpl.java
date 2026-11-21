@@ -99,6 +99,8 @@ public class TodayScheduleServiceImpl implements TodayScheduleService {
         return TodayScheduleReferenceDataDto.builder()
                 .defaultTripStatus(List.of(
                         option(TripStatus.ASSIGNED.name(), "Assigned"),
+                        option(TripStatus.STARTED.name(), "Started"),
+                        option(TripStatus.COMPLETED.name(), "Completed"),
                         option(TripStatus.CANCELLED.name(), "Cancelled")
                 ))
                 .vehicles(vehicles)
@@ -430,7 +432,12 @@ public class TodayScheduleServiceImpl implements TodayScheduleService {
     }
 
     private String toStatusDescription(TripStatus status) {
-        return status == TripStatus.ASSIGNED ? "Assigned" : "Cancelled";
+        return switch (status) {
+            case ASSIGNED -> "Assigned";
+            case STARTED -> "Started";
+            case COMPLETED -> "Completed";
+            case CANCELLED -> "Cancelled";
+        };
     }
 
     private String trimToNull(String value) {

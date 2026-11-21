@@ -165,3 +165,16 @@ Notes:
 - Lists trips by `scheduledPickupAt` for `search.scheduleDate` (defaults to today).
 - `update` reassigns vehicle/driver while trip is `ASSIGNED`.
 - Tasks: VIEW, SEARCH, UPDATE.
+
+## FLDA - My Assignments Endpoints
+Page code: `FLDA` (section `FLEET_DRIVER_OPS`)
+
+- `POST /api/v1/fleet/my-assignments/reference-data`
+- `POST /api/v1/fleet/my-assignments/filter-list`
+- `POST /api/v1/fleet/my-assignments/view`
+
+Notes:
+- Resolves driver via `fleet_drivers.linked_username` = request `username`.
+- Lists trips for that driver on `search.scheduleDate` (defaults to today).
+- Trip statuses: `ASSIGNED`, `STARTED`, `COMPLETED`, `CANCELLED`.
+- Tasks: VIEW, SEARCH.
