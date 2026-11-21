@@ -192,3 +192,19 @@ Notes:
 - `filter-list` defaults to actionable statuses `ASSIGNED` + `STARTED` for the day.
 - Transitions: `ASSIGNED` → `STARTED` (sets `startedAt`), `STARTED` → `COMPLETED` (sets `completedAt`).
 - Tasks: VIEW, SEARCH, UPDATE.
+
+## FLDI - Incidents Endpoints
+Page code: `FLDI` (section `FLEET_DRIVER_OPS`)
+
+- `POST /api/v1/fleet/incidents/reference-data`
+- `POST /api/v1/fleet/incidents/filter-list`
+- `POST /api/v1/fleet/incidents/add`
+- `POST /api/v1/fleet/incidents/view`
+
+Notes:
+- Same driver link as FLDA (`linkedUsername`).
+- Report only on own trips in `ASSIGNED`, `STARTED`, or `COMPLETED`.
+- Creates `fleet_trip_incidents` via `ddl-auto=update`; new incidents are `OPEN`.
+- Types: `BREAKDOWN`, `ACCIDENT`, `DELAY`, `PASSENGER`, `OTHER`.
+- Severity: `LOW`, `MEDIUM`, `HIGH`.
+- Tasks: ADD, VIEW, SEARCH.
