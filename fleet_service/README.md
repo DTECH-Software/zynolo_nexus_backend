@@ -299,3 +299,15 @@ Notes:
 - Ops: leave `ownOnly` false / omit for company-wide; optional `requesterUsername` filter.
 - `view` with `ownOnly=true` rejects other users' receipts.
 - Tasks: VIEW, SEARCH.
+
+## FLDB - Today Dashboard Endpoints
+Page code: `FLDB` (section `FLEET_REPORT`)
+
+- `POST /api/v1/fleet/today-dashboard/reference-data`
+- `POST /api/v1/fleet/today-dashboard/view`
+
+Notes:
+- Company-wide ops snapshot; `reportDate` optional (defaults to today).
+- Counts: requests submitted that day, open SUBMITTED queue, trips by status for `scheduledPickupAt` day,
+  live STARTED trips, fares recorded that day (+ amount total), completed trips without fare.
+- Tasks: VIEW.
