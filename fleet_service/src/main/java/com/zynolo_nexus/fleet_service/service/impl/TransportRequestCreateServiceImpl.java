@@ -64,6 +64,7 @@ public class TransportRequestCreateServiceImpl implements TransportRequestCreate
                 .defaultStatus(List.of(
                         option(TransportRequestStatus.DRAFT.name(), "Draft"),
                         option(TransportRequestStatus.SUBMITTED.name(), "Submitted"),
+                        option(TransportRequestStatus.ASSIGNED.name(), "Assigned"),
                         option(TransportRequestStatus.CANCELLED.name(), "Cancelled")
                 ))
                 .privileges(TransportRequestPrivilegesDto.builder()
@@ -373,6 +374,7 @@ public class TransportRequestCreateServiceImpl implements TransportRequestCreate
         return switch (status) {
             case DRAFT -> "Draft";
             case SUBMITTED -> "Submitted";
+            case ASSIGNED -> "Assigned";
             case CANCELLED -> "Cancelled";
         };
     }

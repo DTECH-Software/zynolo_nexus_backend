@@ -58,6 +58,7 @@ public class RequestQueueServiceImpl implements RequestQueueService {
                 .defaultStatus(List.of(
                         option(TransportRequestStatus.DRAFT.name(), "Draft"),
                         option(TransportRequestStatus.SUBMITTED.name(), "Submitted"),
+                        option(TransportRequestStatus.ASSIGNED.name(), "Assigned"),
                         option(TransportRequestStatus.CANCELLED.name(), "Cancelled")
                 ))
                 .privileges(RequestQueuePrivilegesDto.builder()
@@ -257,6 +258,7 @@ public class RequestQueueServiceImpl implements RequestQueueService {
         return switch (status) {
             case DRAFT -> "Draft";
             case SUBMITTED -> "Submitted";
+            case ASSIGNED -> "Assigned";
             case CANCELLED -> "Cancelled";
         };
     }

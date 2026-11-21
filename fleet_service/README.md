@@ -134,3 +134,21 @@ Notes:
 - `filter-list` defaults to `SUBMITTED` when `search.status` is empty.
 - `update` sets `dispatcherNotes` on `SUBMITTED` only (vehicle/driver assign is Scheduling).
 - Tasks: VIEW, SEARCH, UPDATE.
+
+## FLAT - Assign Trip Endpoints
+Page code: `FLAT` (section `FLEET_SCHEDULING`)
+
+- `POST /api/v1/fleet/assign-trip/reference-data`
+- `POST /api/v1/fleet/assign-trip/filter-list` (SUBMITTED requests only)
+- `POST /api/v1/fleet/assign-trip/view-request`
+- `POST /api/v1/fleet/assign-trip/add`
+- `POST /api/v1/fleet/assign-trip/view`
+- `POST /api/v1/fleet/assign-trip/update`
+
+Notes:
+- Creates `fleet_trips` via `ddl-auto=update`.
+- `add` assigns ACTIVE vehicle + driver, creates trip `ASSIGNED`, sets request status `ASSIGNED`.
+- One trip per transport request.
+- Vehicle capacity must be >= request passenger count.
+- `update` reassigns vehicle/driver while trip is still `ASSIGNED`.
+- Tasks: ADD, VIEW, SEARCH, UPDATE.
