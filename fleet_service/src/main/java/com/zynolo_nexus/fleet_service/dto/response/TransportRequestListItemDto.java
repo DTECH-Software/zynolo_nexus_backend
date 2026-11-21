@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class TransportRequestListItemDto {
     private Long id;
     private String requestNumber;
+    private String requesterUsername;
     private String pickupLocation;
     private String dropLocation;
     private LocalDateTime requestedPickupAt;

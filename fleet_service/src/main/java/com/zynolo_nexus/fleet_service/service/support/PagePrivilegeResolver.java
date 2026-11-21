@@ -61,6 +61,7 @@ public class PagePrivilegeResolver {
                     .export(hasTask(taskAccess, "EXPORT", "DOWNLOAD"))
                     .delete(hasTask(taskAccess, "DELETE", "REMOVE", "DEACTIVATE"))
                     .submit(hasTask(taskAccess, "SUBMIT", "SEND"))
+                    .cancel(hasTask(taskAccess, "CANCEL", "ABORT"))
                     .approve(hasTask(taskAccess, "APPROVE", "AUTHORIZE"))
                     .reject(hasTask(taskAccess, "REJECT", "DECLINE"))
                     .build();
@@ -78,6 +79,7 @@ public class PagePrivilegeResolver {
                 .export(false)
                 .delete(false)
                 .submit(false)
+                .cancel(false)
                 .approve(false)
                 .reject(false)
                 .build();

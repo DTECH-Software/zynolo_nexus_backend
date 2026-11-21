@@ -259,6 +259,12 @@ public class TransportRequestCreateServiceImpl implements TransportRequestCreate
                             like(search.getRequestNumber())
                     ));
                 }
+                if (hasText(search.getRequesterUsername())) {
+                    predicates.add(criteriaBuilder.like(
+                            criteriaBuilder.lower(root.get("requesterUsername")),
+                            like(search.getRequesterUsername())
+                    ));
+                }
                 if (hasText(search.getPickupLocation())) {
                     predicates.add(criteriaBuilder.like(
                             criteriaBuilder.lower(root.get("pickupLocation")),
@@ -293,6 +299,7 @@ public class TransportRequestCreateServiceImpl implements TransportRequestCreate
                 .contactMobile(entity.getContactMobile())
                 .purpose(entity.getPurpose())
                 .notes(entity.getNotes())
+                .dispatcherNotes(entity.getDispatcherNotes())
                 .status(entity.getStatus().name())
                 .statusDescription(toStatusDescription(entity.getStatus()))
                 .submittedAt(entity.getSubmittedAt())
@@ -307,6 +314,7 @@ public class TransportRequestCreateServiceImpl implements TransportRequestCreate
         return TransportRequestListItemDto.builder()
                 .id(entity.getId())
                 .requestNumber(entity.getRequestNumber())
+                .requesterUsername(entity.getRequesterUsername())
                 .pickupLocation(entity.getPickupLocation())
                 .dropLocation(entity.getDropLocation())
                 .requestedPickupAt(entity.getRequestedPickupAt())

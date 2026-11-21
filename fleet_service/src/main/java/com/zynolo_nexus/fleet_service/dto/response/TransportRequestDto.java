@@ -23,6 +23,7 @@ public class TransportRequestDto {
     private String contactMobile;
     private String purpose;
     private String notes;
+    private String dispatcherNotes;
     private String status;
     private String statusDescription;
     private LocalDateTime submittedAt;

@@ -107,3 +107,30 @@ Notes:
 - `view` / `update` / `filter-list` / `submit` are scoped to the requester (`username`).
 - Only `DRAFT` can be updated or submitted.
 - Statuses: `DRAFT`, `SUBMITTED`, `CANCELLED`.
+
+## FLMR - My Requests Endpoints
+Page code: `FLMR` (section `FLEET_REQUEST`)
+
+- `POST /api/v1/fleet/my-requests/reference-data`
+- `POST /api/v1/fleet/my-requests/filter-list`
+- `POST /api/v1/fleet/my-requests/view`
+- `POST /api/v1/fleet/my-requests/cancel`
+
+Notes:
+- Own requests only (`username` = requester).
+- Cancel allowed for `DRAFT` or `SUBMITTED` → `CANCELLED`.
+- Tasks: VIEW, SEARCH, CANCEL.
+
+## FLRQ - Request Queue Endpoints
+Page code: `FLRQ` (section `FLEET_REQUEST`)
+
+- `POST /api/v1/fleet/request-queue/reference-data`
+- `POST /api/v1/fleet/request-queue/filter-list`
+- `POST /api/v1/fleet/request-queue/view`
+- `POST /api/v1/fleet/request-queue/update`
+
+Notes:
+- Company-wide queue (not requester-scoped).
+- `filter-list` defaults to `SUBMITTED` when `search.status` is empty.
+- `update` sets `dispatcherNotes` on `SUBMITTED` only (vehicle/driver assign is Scheduling).
+- Tasks: VIEW, SEARCH, UPDATE.

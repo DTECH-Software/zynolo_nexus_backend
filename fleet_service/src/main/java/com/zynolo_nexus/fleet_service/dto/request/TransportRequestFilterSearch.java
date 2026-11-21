@@ -7,6 +7,7 @@ import lombok.Setter;
 @Setter
 public class TransportRequestFilterSearch {
     private String requestNumber;
+    private String requesterUsername;
     private String status;
     private String pickupLocation;
     private String dropLocation;

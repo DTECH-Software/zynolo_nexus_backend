@@ -54,6 +54,9 @@ public class FleetTransportRequest extends BaseAuditEntity {
     @Column(name = "notes", length = 500)
     private String notes;
 
+    @Column(name = "dispatcher_notes", length = 500)
+    private String dispatcherNotes;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private TransportRequestStatus status;
