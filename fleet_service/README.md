@@ -241,3 +241,17 @@ Notes:
 - Stale `recordedAt` (older than last) is stored in history but does not overwrite last location.
 - Tasks: ADD, VIEW.
 - Next production step: WebSocket push + Redis pub/sub on top of this model.
+
+## FLMT - My Trips Endpoints
+Page code: `FLMT` (section `FLEET_PASSENGER`)
+
+- `POST /api/v1/fleet/my-trips/reference-data`
+- `POST /api/v1/fleet/my-trips/filter-list`
+- `POST /api/v1/fleet/my-trips/view`
+
+Notes:
+- Passenger/employee scope: trips linked to transport requests where `requesterUsername` = login `username`.
+- `filter-list` search: optional `scheduleDate`, `tripNumber`, `requestNumber`, `status` (no default date — all own trips).
+- Default sort: `scheduledPickupAt` DESC.
+- Trip statuses: `ASSIGNED`, `STARTED`, `COMPLETED`, `CANCELLED`.
+- Tasks: VIEW, SEARCH.
