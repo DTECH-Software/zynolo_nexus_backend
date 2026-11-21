@@ -63,3 +63,19 @@ Notes:
 - `spring.jpa.hibernate.ddl-auto=update` (same as other domain services; creates `fleet_vehicles` only)
 - Duplicate registration rejected within the same company (normalized: ignore spaces/dashes, case-insensitive)
 - Status values: `ACTIVE`, `INACTIVE`
+
+## FLDM - Driver Master Endpoints
+Page code: `FLDM` (section `FLEET_MASTER`)
+
+- `POST /api/v1/fleet/drivers/reference-data`
+- `POST /api/v1/fleet/drivers/filter-list`
+- `POST /api/v1/fleet/drivers/add`
+- `POST /api/v1/fleet/drivers/view`
+- `POST /api/v1/fleet/drivers/update`
+- `POST /api/v1/fleet/drivers/status-update`
+
+Notes:
+- Reference-data includes active vehicles for `usualVehicleId` and privileges via `username`.
+- Duplicate mobile rejected within the same company (normalized: spaces/dashes stripped).
+- `usualVehicleId` must belong to the same company when provided.
+- Availability: `AVAILABLE`, `UNAVAILABLE`; status: `ACTIVE`, `INACTIVE`.
