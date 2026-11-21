@@ -284,3 +284,18 @@ Notes:
 - Statuses: `RECORDED`, `CANCELLED`.
 - `update` allowed while `RECORDED` (amount / currency / method / notes; optional `status=CANCELLED`).
 - Company-wide (dispatcher / owner). Tasks: ADD, VIEW, SEARCH, UPDATE.
+
+## FLRC - Receipts Endpoints
+Page code: `FLRC` (section `FLEET_PAYMENT`)
+
+- `POST /api/v1/fleet/receipts/reference-data`
+- `POST /api/v1/fleet/receipts/filter-list`
+- `POST /api/v1/fleet/receipts/view`
+
+Notes:
+- Read-only view over `fleet_trip_fares` (`receiptNumber` = fare number).
+- `filter-list` defaults to status `RECORDED` when `search.status` is empty.
+- `search.ownOnly=true` scopes to the login user's transport requests (passenger app).
+- Ops: leave `ownOnly` false / omit for company-wide; optional `requesterUsername` filter.
+- `view` with `ownOnly=true` rejects other users' receipts.
+- Tasks: VIEW, SEARCH.
