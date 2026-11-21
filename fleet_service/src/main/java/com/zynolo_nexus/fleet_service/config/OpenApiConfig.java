@@ -24,7 +24,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .servers(List.of(new Server()
                         .url("/")
-                        .description("API gateway (port 8099) — Try it out hits the same host you opened Swagger on")))
+                        .description("API gateway (port 8099) - Try it out uses the same host as Swagger UI")))
                 .info(new Info()
                         .title("Zynolo Fleet Service")
                         .description("""
