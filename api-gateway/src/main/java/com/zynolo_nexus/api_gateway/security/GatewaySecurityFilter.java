@@ -63,12 +63,11 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
         String companyHeaderValue = null;
 
         if (!isPublic(path) && !isFleetOpenApiBrowseRequest(request, path)) {
-            String authHeader = request.getHeader(AUTH_HEADER);
-            if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
+            String token = resolveBearerToken(request);
+            if (token == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
-            String token = authHeader.substring(BEARER_PREFIX.length());
             var claims = jwtValidator.validateAndGetClaims(token);
             if (claims == null) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -168,6 +167,28 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
                 || path.equals("/api/v1/fleet/swagger-login-helper.js")
                 || path.startsWith("/api/v1/fleet/swagger-ui/")
                 || path.startsWith("/api/v1/fleet/v3/api-docs");
+    }
+
+    /**
+     * Bearer from Authorization header, or {@code access_token} query for WebSocket/SockJS handshake
+     * (browsers often cannot set Authorization on the upgrade request).
+     */
+    private String resolveBearerToken(HttpServletRequest request) {
+        String authHeader = request.getHeader(AUTH_HEADER);
+        if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
+            return authHeader.substring(BEARER_PREFIX.length());
+        }
+        if (isFleetWebSocketPath(request.getServletPath())) {
+            String queryToken = request.getParameter("access_token");
+            if (queryToken != null && !queryToken.isBlank()) {
+                return queryToken.trim();
+            }
+        }
+        return null;
+    }
+
+    private boolean isFleetWebSocketPath(String path) {
+        return path != null && path.startsWith("/api/v1/fleet/ws");
     }
 
     private static class HeaderRewriteRequestWrapper extends HttpServletRequestWrapper {

@@ -63,6 +63,24 @@ public class FleetTrip extends BaseAuditEntity {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
+    @Column(name = "last_latitude")
+    private Double lastLatitude;
+
+    @Column(name = "last_longitude")
+    private Double lastLongitude;
+
+    @Column(name = "last_accuracy_meters")
+    private Double lastAccuracyMeters;
+
+    @Column(name = "last_speed_kmh")
+    private Double lastSpeedKmh;
+
+    @Column(name = "last_heading_degrees")
+    private Double lastHeadingDegrees;
+
+    @Column(name = "last_location_at")
+    private LocalDateTime lastLocationAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private TripStatus status;

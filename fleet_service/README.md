@@ -208,3 +208,36 @@ Notes:
 - Types: `BREAKDOWN`, `ACCIDENT`, `DELAY`, `PASSENGER`, `OTHER`.
 - Severity: `LOW`, `MEDIUM`, `HIGH`.
 - Tasks: ADD, VIEW, SEARCH.
+
+## FLLT - Live Trip Track Endpoints
+Page code: `FLLT` (section `FLEET_TRACKING`)
+
+- `POST /api/v1/fleet/live-track/reference-data`
+- `POST /api/v1/fleet/live-track/filter-list`
+- `POST /api/v1/fleet/live-track/view`
+
+### WebSocket (STOMP) — live push
+- Endpoint: `ws://<gateway>:8099/api/v1/fleet/ws` (SockJS: same path)
+- Auth: `Authorization: Bearer <jwt>` or query `?access_token=<jwt>`
+- Subscribe: `/topic/trips/{tripId}/location`
+- Event published on each successful **FLLP** `/add`
+
+Notes:
+- Company-wide trackable trips (`STARTED` / `ASSIGNED` by default).
+- `view` returns last location + trail (up to 100 points) + `signalLost` (no ping for 30s).
+- Prefer WebSocket for the map marker; keep `view` for initial load / reconnect.
+- Simple in-memory broker (single fleet instance). Add Redis broker relay when scaling out.
+- Tasks: VIEW, SEARCH.
+
+## FLLP - Location Ping Endpoints
+Page code: `FLLP` (section `FLEET_TRACKING`)
+
+- `POST /api/v1/fleet/location-ping/reference-data`
+- `POST /api/v1/fleet/location-ping/add`
+
+Notes:
+- Driver GPS ingest (REST). Requires `linkedUsername`. Trip must be `STARTED`.
+- Updates trip last-location fields and appends `fleet_trip_locations` history.
+- Stale `recordedAt` (older than last) is stored in history but does not overwrite last location.
+- Tasks: ADD, VIEW.
+- Next production step: WebSocket push + Redis pub/sub on top of this model.
