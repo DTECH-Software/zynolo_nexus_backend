@@ -11,7 +11,7 @@ import lombok.Setter;
 public class AuditRequest {
 
     @NotBlank(message = "channel is required")
-    @Schema(example = "WEB", description = "Client channel code")
+    @Schema(example = "OP", description = "Client channel code")
     private String channel;
 
     @NotBlank(message = "ip is required")
@@ -27,6 +27,6 @@ public class AuditRequest {
     private String userAgent;
 
     @NotBlank(message = "username is required")
-    @Schema(example = "admin", description = "Must match the JWT subject when called via gateway")
+    @Schema(example = "superadmin", description = "Must match the JWT subject when called via gateway")
     private String username;
 }

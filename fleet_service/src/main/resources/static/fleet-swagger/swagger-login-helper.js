@@ -79,7 +79,7 @@
   }
 
   function doLogin() {
-    var username = window.prompt('Username');
+    var username = window.prompt('Username', 'superadmin');
     if (!username) {
       return;
     }
@@ -89,11 +89,11 @@
     }
 
     var body = {
-      channel: 'WEB',
+      channel: 'OP',
       ip: '127.0.0.1',
       message: 'Fleet Swagger login',
       userAgent: navigator.userAgent || 'Swagger-UI',
-      username: username,
+      username: username.trim(),
       password: password,
     };
 
