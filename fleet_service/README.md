@@ -49,7 +49,7 @@ Use **api-gateway** only (same as the UI and mobile apps):
 
 Example (dev): `http://45.79.125.85:8099/api/v1/fleet/swagger-ui.html`
 
-Opening the docs is unauthenticated (GET). Click **Authorize**, paste the JWT from login, then **Try it out** — POST calls go through the gateway with the same rules as production (`username` in body must match token; `X-Company-Id` is set from JWT).
+Opening the docs is unauthenticated (GET). Click **Nexus login** in the Swagger top bar (calls existing `POST /api/v1/auth/login` via gateway — not a fleet API). Then use FLVM/FLDM **Try it out** (`username` in body must match token; `X-Company-Id` from JWT).
 
 ## Planned integrations
 - `auth_service` for auth/authorization (role page-task privileges)

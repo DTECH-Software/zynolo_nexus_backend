@@ -165,6 +165,7 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
             return false;
         }
         return path.equals("/api/v1/fleet/swagger-ui.html")
+                || path.equals("/api/v1/fleet/swagger-login-helper.js")
                 || path.startsWith("/api/v1/fleet/swagger-ui/")
                 || path.startsWith("/api/v1/fleet/v3/api-docs");
     }

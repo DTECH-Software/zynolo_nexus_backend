@@ -11,11 +11,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class FleetSwaggerUiResourceConfig implements WebMvcConfigurer {
 
     public static final String FLEET_DOCS_UI_PATTERN = OpenApiConfig.FLEET_API_PREFIX + "/swagger-ui/**";
+    public static final String FLEET_SWAGGER_LOGIN_HELPER = OpenApiConfig.FLEET_API_PREFIX + "/swagger-login-helper.js";
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler(FLEET_DOCS_UI_PATTERN)
                 .addResourceLocations("classpath:/META-INF/resources/webjars/swagger-ui/")
                 .resourceChain(false);
+        registry.addResourceHandler(FLEET_SWAGGER_LOGIN_HELPER)
+                .addResourceLocations("classpath:/static/fleet-swagger/");
     }
 }
