@@ -8,6 +8,7 @@ import com.zynolo_nexus.fleet_service.dto.response.MyAssignmentReferenceDataDto;
 import com.zynolo_nexus.fleet_service.dto.response.TripDto;
 import com.zynolo_nexus.fleet_service.dto.response.TripFilterResultDto;
 import com.zynolo_nexus.fleet_service.service.MyAssignmentService;
+import com.zynolo_nexus.fleet_service.service.support.ResponseMessageHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,24 +26,25 @@ import java.time.LocalDateTime;
 public class MyAssignmentController {
 
     private final MyAssignmentService myAssignmentService;
+    private final ResponseMessageHelper messages;
 
     @PostMapping("/reference-data")
     public MessageResponseDTO<MyAssignmentReferenceDataDto> referenceData(
             @Valid @RequestBody MyAssignmentReferenceDataRequest request
     ) {
-        return success("Reference data FLDA retrieved successfully", myAssignmentService.getReferenceData(request));
+        return success(messages.get("fleet.my.assignments.reference.success"), myAssignmentService.getReferenceData(request));
     }
 
     @PostMapping("/filter-list")
     public MessageResponseDTO<TripFilterResultDto> filterList(
             @Valid @RequestBody MyAssignmentFilterRequest request
     ) {
-        return success("My assignments filtered successfully", myAssignmentService.filterList(request));
+        return success(messages.get("fleet.my.assignments.filter.success"), myAssignmentService.filterList(request));
     }
 
     @PostMapping("/view")
     public MessageResponseDTO<TripDto> view(@Valid @RequestBody MyAssignmentViewRequest request) {
-        return success("Assignment retrieved successfully", myAssignmentService.view(request));
+        return success(messages.get("fleet.my.assignments.view.success"), myAssignmentService.view(request));
     }
 
     private <T> MessageResponseDTO<T> success(String message, T data) {

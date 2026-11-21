@@ -311,3 +311,17 @@ Notes:
 - Counts: requests submitted that day, open SUBMITTED queue, trips by status for `scheduledPickupAt` day,
   live STARTED trips, fares recorded that day (+ amount total), completed trips without fare.
 - Tasks: VIEW.
+
+## FLOU - Outstanding Endpoints
+Page code: `FLOU` (section `FLEET_REPORT`)
+
+- `POST /api/v1/fleet/outstanding/reference-data`
+- `POST /api/v1/fleet/outstanding/filter-list`
+- `POST /api/v1/fleet/outstanding/view`
+
+Notes:
+- Unified open-work list: `REQUEST_SUBMITTED`, `TRIP_ASSIGNED`, `COMPLETED_WITHOUT_FARE`.
+- Empty `search.itemType` returns all types (merged, sorted by `relevantAt`). Cap 200 per type (pilot).
+- `scheduleDate` filters trip types by `scheduledPickupAt` only.
+- `view` requires `itemType` + `id` (request id or trip id depending on type).
+- Tasks: VIEW, SEARCH.

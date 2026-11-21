@@ -1,10 +1,12 @@
 package com.zynolo_nexus.fleet_service.exception;
 
 import com.zynolo_nexus.fleet_service.dto.api.MessageResponseDTO;
+import com.zynolo_nexus.fleet_service.service.support.ResponseMessageHelper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -14,13 +16,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final ResponseMessageHelper messages;
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<MessageResponseDTO<Object>> handleUnreadable(HttpMessageNotReadableException ex) {
         return ResponseEntity.badRequest().body(MessageResponseDTO.builder()
                 .success(false)
-                .message("Invalid or missing request body")
+                .message(messages.get("common.error.unreadable"))
                 .data(null)
                 .errors(ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : null)
                 .errorCode(400)
@@ -37,7 +42,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(MessageResponseDTO.builder()
                 .success(false)
-                .message("Validation failed")
+                .message(messages.get("common.error.validation"))
                 .data(null)
                 .errors(errors)
                 .errorCode(400)
@@ -73,7 +78,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<MessageResponseDTO<Object>> handleGeneric(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(MessageResponseDTO.builder()
                 .success(false)
-                .message("Unexpected server error")
+                .message(messages.get("common.error.unexpected"))
                 .data(null)
                 .errors(ex.getMessage())
                 .errorCode(500)

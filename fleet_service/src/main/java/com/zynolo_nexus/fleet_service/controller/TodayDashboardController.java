@@ -6,6 +6,7 @@ import com.zynolo_nexus.fleet_service.dto.request.TodayDashboardViewRequest;
 import com.zynolo_nexus.fleet_service.dto.response.TodayDashboardDto;
 import com.zynolo_nexus.fleet_service.dto.response.TodayDashboardReferenceDataDto;
 import com.zynolo_nexus.fleet_service.service.TodayDashboardService;
+import com.zynolo_nexus.fleet_service.service.support.ResponseMessageHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,17 +24,18 @@ import java.time.LocalDateTime;
 public class TodayDashboardController {
 
     private final TodayDashboardService todayDashboardService;
+    private final ResponseMessageHelper messages;
 
     @PostMapping("/reference-data")
     public MessageResponseDTO<TodayDashboardReferenceDataDto> referenceData(
             @Valid @RequestBody TodayDashboardReferenceDataRequest request
     ) {
-        return success("Reference data FLDB retrieved successfully", todayDashboardService.getReferenceData(request));
+        return success(messages.get("fleet.today.dashboard.reference.success"), todayDashboardService.getReferenceData(request));
     }
 
     @PostMapping("/view")
     public MessageResponseDTO<TodayDashboardDto> view(@Valid @RequestBody TodayDashboardViewRequest request) {
-        return success("Today dashboard retrieved successfully", todayDashboardService.view(request));
+        return success(messages.get("fleet.today.dashboard.view.success"), todayDashboardService.view(request));
     }
 
     private <T> MessageResponseDTO<T> success(String message, T data) {

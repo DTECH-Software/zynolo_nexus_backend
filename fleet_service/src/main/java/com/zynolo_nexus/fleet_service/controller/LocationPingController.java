@@ -6,6 +6,7 @@ import com.zynolo_nexus.fleet_service.dto.request.LocationPingReferenceDataReque
 import com.zynolo_nexus.fleet_service.dto.response.LocationPingDto;
 import com.zynolo_nexus.fleet_service.dto.response.LocationPingReferenceDataDto;
 import com.zynolo_nexus.fleet_service.service.LocationPingService;
+import com.zynolo_nexus.fleet_service.service.support.ResponseMessageHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,17 +24,18 @@ import java.time.LocalDateTime;
 public class LocationPingController {
 
     private final LocationPingService locationPingService;
+    private final ResponseMessageHelper messages;
 
     @PostMapping("/reference-data")
     public MessageResponseDTO<LocationPingReferenceDataDto> referenceData(
             @Valid @RequestBody LocationPingReferenceDataRequest request
     ) {
-        return success("Reference data FLLP retrieved successfully", locationPingService.getReferenceData(request));
+        return success(messages.get("fleet.location.ping.reference.success"), locationPingService.getReferenceData(request));
     }
 
     @PostMapping("/add")
     public MessageResponseDTO<LocationPingDto> add(@Valid @RequestBody LocationPingCreateRequest request) {
-        return success("Location ping accepted", locationPingService.ping(request));
+        return success(messages.get("fleet.location.ping.add.success"), locationPingService.ping(request));
     }
 
     private <T> MessageResponseDTO<T> success(String message, T data) {

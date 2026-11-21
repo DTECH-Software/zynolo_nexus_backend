@@ -12,6 +12,7 @@ import com.zynolo_nexus.fleet_service.dto.response.TransportRequestDto;
 import com.zynolo_nexus.fleet_service.dto.response.TransportRequestFilterResultDto;
 import com.zynolo_nexus.fleet_service.dto.response.TripDto;
 import com.zynolo_nexus.fleet_service.service.AssignTripService;
+import com.zynolo_nexus.fleet_service.service.support.ResponseMessageHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,41 +30,42 @@ import java.time.LocalDateTime;
 public class AssignTripController {
 
     private final AssignTripService assignTripService;
+    private final ResponseMessageHelper messages;
 
     @PostMapping("/reference-data")
     public MessageResponseDTO<AssignTripReferenceDataDto> referenceData(
             @Valid @RequestBody AssignTripReferenceDataRequest request
     ) {
-        return success("Reference data FLAT retrieved successfully", assignTripService.getReferenceData(request));
+        return success(messages.get("fleet.assign.trip.reference.success"), assignTripService.getReferenceData(request));
     }
 
     @PostMapping("/filter-list")
     public MessageResponseDTO<TransportRequestFilterResultDto> filterList(
             @Valid @RequestBody TransportRequestFilterRequest request
     ) {
-        return success("Open transport requests filtered successfully", assignTripService.filterOpenRequests(request));
+        return success(messages.get("fleet.assign.trip.filter.success"), assignTripService.filterOpenRequests(request));
     }
 
     @PostMapping("/view-request")
     public MessageResponseDTO<TransportRequestDto> viewRequest(
             @Valid @RequestBody TransportRequestViewRequest request
     ) {
-        return success("Transport request retrieved successfully", assignTripService.viewRequest(request));
+        return success(messages.get("fleet.assign.trip.view.request.success"), assignTripService.viewRequest(request));
     }
 
     @PostMapping("/add")
     public MessageResponseDTO<TripDto> add(@Valid @RequestBody AssignTripCreateRequest request) {
-        return success("Trip assigned successfully", assignTripService.assign(request));
+        return success(messages.get("fleet.assign.trip.add.success"), assignTripService.assign(request));
     }
 
     @PostMapping("/view")
     public MessageResponseDTO<TripDto> view(@Valid @RequestBody AssignTripViewRequest request) {
-        return success("Trip retrieved successfully", assignTripService.view(request));
+        return success(messages.get("fleet.assign.trip.view.success"), assignTripService.view(request));
     }
 
     @PostMapping("/update")
     public MessageResponseDTO<TripDto> update(@Valid @RequestBody AssignTripUpdateRequest request) {
-        return success("Trip assignment updated successfully", assignTripService.update(request));
+        return success(messages.get("fleet.assign.trip.update.success"), assignTripService.update(request));
     }
 
     private <T> MessageResponseDTO<T> success(String message, T data) {

@@ -11,6 +11,7 @@ import com.zynolo_nexus.fleet_service.dto.response.TransportRequestDto;
 import com.zynolo_nexus.fleet_service.dto.response.TransportRequestFilterResultDto;
 import com.zynolo_nexus.fleet_service.dto.response.TransportRequestReferenceDataDto;
 import com.zynolo_nexus.fleet_service.service.TransportRequestCreateService;
+import com.zynolo_nexus.fleet_service.service.support.ResponseMessageHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,39 +29,40 @@ import java.time.LocalDateTime;
 public class TransportRequestCreateController {
 
     private final TransportRequestCreateService transportRequestCreateService;
+    private final ResponseMessageHelper messages;
 
     @PostMapping("/reference-data")
     public MessageResponseDTO<TransportRequestReferenceDataDto> referenceData(
             @Valid @RequestBody TransportRequestReferenceDataRequest request
     ) {
-        return success("Reference data FLNR retrieved successfully", transportRequestCreateService.getReferenceData(request));
+        return success(messages.get("fleet.request.create.reference.success"), transportRequestCreateService.getReferenceData(request));
     }
 
     @PostMapping("/filter-list")
     public MessageResponseDTO<TransportRequestFilterResultDto> filterList(
             @Valid @RequestBody TransportRequestFilterRequest request
     ) {
-        return success("Transport requests filtered successfully", transportRequestCreateService.filterList(request));
+        return success(messages.get("fleet.request.create.filter.success"), transportRequestCreateService.filterList(request));
     }
 
     @PostMapping("/add")
     public MessageResponseDTO<TransportRequestDto> add(@Valid @RequestBody TransportRequestCreateRequest request) {
-        return success("Transport request created successfully", transportRequestCreateService.create(request));
+        return success(messages.get("fleet.request.create.add.success"), transportRequestCreateService.create(request));
     }
 
     @PostMapping("/view")
     public MessageResponseDTO<TransportRequestDto> view(@Valid @RequestBody TransportRequestViewRequest request) {
-        return success("Transport request retrieved successfully", transportRequestCreateService.view(request));
+        return success(messages.get("fleet.request.create.view.success"), transportRequestCreateService.view(request));
     }
 
     @PostMapping("/update")
     public MessageResponseDTO<TransportRequestDto> update(@Valid @RequestBody TransportRequestUpdateRequest request) {
-        return success("Transport request updated successfully", transportRequestCreateService.update(request));
+        return success(messages.get("fleet.request.create.update.success"), transportRequestCreateService.update(request));
     }
 
     @PostMapping("/submit")
     public MessageResponseDTO<TransportRequestDto> submit(@Valid @RequestBody TransportRequestSubmitRequest request) {
-        return success("Transport request submitted successfully", transportRequestCreateService.submit(request));
+        return success(messages.get("fleet.request.create.submit.success"), transportRequestCreateService.submit(request));
     }
 
     private <T> MessageResponseDTO<T> success(String message, T data) {

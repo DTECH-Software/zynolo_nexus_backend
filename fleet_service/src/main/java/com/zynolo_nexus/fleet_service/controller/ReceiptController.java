@@ -8,6 +8,7 @@ import com.zynolo_nexus.fleet_service.dto.response.ReceiptDto;
 import com.zynolo_nexus.fleet_service.dto.response.ReceiptFilterResultDto;
 import com.zynolo_nexus.fleet_service.dto.response.ReceiptReferenceDataDto;
 import com.zynolo_nexus.fleet_service.service.ReceiptService;
+import com.zynolo_nexus.fleet_service.service.support.ResponseMessageHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,24 +26,25 @@ import java.time.LocalDateTime;
 public class ReceiptController {
 
     private final ReceiptService receiptService;
+    private final ResponseMessageHelper messages;
 
     @PostMapping("/reference-data")
     public MessageResponseDTO<ReceiptReferenceDataDto> referenceData(
             @Valid @RequestBody ReceiptReferenceDataRequest request
     ) {
-        return success("Reference data FLRC retrieved successfully", receiptService.getReferenceData(request));
+        return success(messages.get("fleet.receipts.reference.success"), receiptService.getReferenceData(request));
     }
 
     @PostMapping("/filter-list")
     public MessageResponseDTO<ReceiptFilterResultDto> filterList(
             @Valid @RequestBody ReceiptFilterRequest request
     ) {
-        return success("Receipts filtered successfully", receiptService.filterList(request));
+        return success(messages.get("fleet.receipts.filter.success"), receiptService.filterList(request));
     }
 
     @PostMapping("/view")
     public MessageResponseDTO<ReceiptDto> view(@Valid @RequestBody ReceiptViewRequest request) {
-        return success("Receipt retrieved successfully", receiptService.view(request));
+        return success(messages.get("fleet.receipts.view.success"), receiptService.view(request));
     }
 
     private <T> MessageResponseDTO<T> success(String message, T data) {

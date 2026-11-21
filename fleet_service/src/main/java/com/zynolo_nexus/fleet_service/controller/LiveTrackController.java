@@ -8,6 +8,7 @@ import com.zynolo_nexus.fleet_service.dto.response.LiveTrackDto;
 import com.zynolo_nexus.fleet_service.dto.response.LiveTrackFilterResultDto;
 import com.zynolo_nexus.fleet_service.dto.response.LiveTrackReferenceDataDto;
 import com.zynolo_nexus.fleet_service.service.LiveTrackService;
+import com.zynolo_nexus.fleet_service.service.support.ResponseMessageHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,24 +26,25 @@ import java.time.LocalDateTime;
 public class LiveTrackController {
 
     private final LiveTrackService liveTrackService;
+    private final ResponseMessageHelper messages;
 
     @PostMapping("/reference-data")
     public MessageResponseDTO<LiveTrackReferenceDataDto> referenceData(
             @Valid @RequestBody LiveTrackReferenceDataRequest request
     ) {
-        return success("Reference data FLLT retrieved successfully", liveTrackService.getReferenceData(request));
+        return success(messages.get("fleet.live.track.reference.success"), liveTrackService.getReferenceData(request));
     }
 
     @PostMapping("/filter-list")
     public MessageResponseDTO<LiveTrackFilterResultDto> filterList(
             @Valid @RequestBody LiveTrackFilterRequest request
     ) {
-        return success("Live track trips filtered successfully", liveTrackService.filterList(request));
+        return success(messages.get("fleet.live.track.filter.success"), liveTrackService.filterList(request));
     }
 
     @PostMapping("/view")
     public MessageResponseDTO<LiveTrackDto> view(@Valid @RequestBody LiveTrackViewRequest request) {
-        return success("Live track retrieved successfully", liveTrackService.view(request));
+        return success(messages.get("fleet.live.track.view.success"), liveTrackService.view(request));
     }
 
     private <T> MessageResponseDTO<T> success(String message, T data) {

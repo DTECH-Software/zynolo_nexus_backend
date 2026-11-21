@@ -9,6 +9,7 @@ import com.zynolo_nexus.fleet_service.dto.response.RequestQueueReferenceDataDto;
 import com.zynolo_nexus.fleet_service.dto.response.TransportRequestDto;
 import com.zynolo_nexus.fleet_service.dto.response.TransportRequestFilterResultDto;
 import com.zynolo_nexus.fleet_service.service.RequestQueueService;
+import com.zynolo_nexus.fleet_service.service.support.ResponseMessageHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,29 +27,30 @@ import java.time.LocalDateTime;
 public class RequestQueueController {
 
     private final RequestQueueService requestQueueService;
+    private final ResponseMessageHelper messages;
 
     @PostMapping("/reference-data")
     public MessageResponseDTO<RequestQueueReferenceDataDto> referenceData(
             @Valid @RequestBody RequestQueueReferenceDataRequest request
     ) {
-        return success("Reference data FLRQ retrieved successfully", requestQueueService.getReferenceData(request));
+        return success(messages.get("fleet.request.queue.reference.success"), requestQueueService.getReferenceData(request));
     }
 
     @PostMapping("/filter-list")
     public MessageResponseDTO<TransportRequestFilterResultDto> filterList(
             @Valid @RequestBody TransportRequestFilterRequest request
     ) {
-        return success("Request queue filtered successfully", requestQueueService.filterList(request));
+        return success(messages.get("fleet.request.queue.filter.success"), requestQueueService.filterList(request));
     }
 
     @PostMapping("/view")
     public MessageResponseDTO<TransportRequestDto> view(@Valid @RequestBody TransportRequestViewRequest request) {
-        return success("Transport request retrieved successfully", requestQueueService.view(request));
+        return success(messages.get("fleet.request.queue.view.success"), requestQueueService.view(request));
     }
 
     @PostMapping("/update")
     public MessageResponseDTO<TransportRequestDto> update(@Valid @RequestBody RequestQueueUpdateRequest request) {
-        return success("Request queue item updated successfully", requestQueueService.update(request));
+        return success(messages.get("fleet.request.queue.update.success"), requestQueueService.update(request));
     }
 
     private <T> MessageResponseDTO<T> success(String message, T data) {

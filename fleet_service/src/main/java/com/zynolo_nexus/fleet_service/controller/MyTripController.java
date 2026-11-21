@@ -8,6 +8,7 @@ import com.zynolo_nexus.fleet_service.dto.response.MyTripReferenceDataDto;
 import com.zynolo_nexus.fleet_service.dto.response.TripDto;
 import com.zynolo_nexus.fleet_service.dto.response.TripFilterResultDto;
 import com.zynolo_nexus.fleet_service.service.MyTripService;
+import com.zynolo_nexus.fleet_service.service.support.ResponseMessageHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,24 +26,25 @@ import java.time.LocalDateTime;
 public class MyTripController {
 
     private final MyTripService myTripService;
+    private final ResponseMessageHelper messages;
 
     @PostMapping("/reference-data")
     public MessageResponseDTO<MyTripReferenceDataDto> referenceData(
             @Valid @RequestBody MyTripReferenceDataRequest request
     ) {
-        return success("Reference data FLMT retrieved successfully", myTripService.getReferenceData(request));
+        return success(messages.get("fleet.my.trips.reference.success"), myTripService.getReferenceData(request));
     }
 
     @PostMapping("/filter-list")
     public MessageResponseDTO<TripFilterResultDto> filterList(
             @Valid @RequestBody MyTripFilterRequest request
     ) {
-        return success("My trips filtered successfully", myTripService.filterList(request));
+        return success(messages.get("fleet.my.trips.filter.success"), myTripService.filterList(request));
     }
 
     @PostMapping("/view")
     public MessageResponseDTO<TripDto> view(@Valid @RequestBody MyTripViewRequest request) {
-        return success("Trip retrieved successfully", myTripService.view(request));
+        return success(messages.get("fleet.my.trips.view.success"), myTripService.view(request));
     }
 
     private <T> MessageResponseDTO<T> success(String message, T data) {

@@ -11,6 +11,7 @@ import com.zynolo_nexus.fleet_service.dto.response.VehicleDto;
 import com.zynolo_nexus.fleet_service.dto.response.VehicleFilterResultDto;
 import com.zynolo_nexus.fleet_service.dto.response.VehicleReferenceDataDto;
 import com.zynolo_nexus.fleet_service.service.VehicleService;
+import com.zynolo_nexus.fleet_service.service.support.ResponseMessageHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,35 +29,36 @@ import java.time.LocalDateTime;
 public class VehicleController {
 
     private final VehicleService vehicleService;
+    private final ResponseMessageHelper messages;
 
     @PostMapping("/reference-data")
     public MessageResponseDTO<VehicleReferenceDataDto> referenceData(@Valid @RequestBody VehicleReferenceDataRequest request) {
-        return success("Reference data FLVM retrieved successfully", vehicleService.getReferenceData(request));
+        return success(messages.get("fleet.vehicle.reference.success"), vehicleService.getReferenceData(request));
     }
 
     @PostMapping("/filter-list")
     public MessageResponseDTO<VehicleFilterResultDto> filterList(@Valid @RequestBody VehicleFilterRequest request) {
-        return success("Vehicles filtered successfully", vehicleService.filterList(request));
+        return success(messages.get("fleet.vehicle.filter.success"), vehicleService.filterList(request));
     }
 
     @PostMapping("/add")
     public MessageResponseDTO<VehicleDto> add(@Valid @RequestBody VehicleCreateRequest request) {
-        return success("Vehicle created successfully", vehicleService.create(request));
+        return success(messages.get("fleet.vehicle.create.success"), vehicleService.create(request));
     }
 
     @PostMapping("/view")
     public MessageResponseDTO<VehicleDto> view(@Valid @RequestBody VehicleViewRequest request) {
-        return success("Vehicle retrieved successfully", vehicleService.view(request));
+        return success(messages.get("fleet.vehicle.view.success"), vehicleService.view(request));
     }
 
     @PostMapping("/update")
     public MessageResponseDTO<VehicleDto> update(@Valid @RequestBody VehicleUpdateRequest request) {
-        return success("Vehicle updated successfully", vehicleService.update(request));
+        return success(messages.get("fleet.vehicle.update.success"), vehicleService.update(request));
     }
 
     @PostMapping("/status-update")
     public MessageResponseDTO<VehicleDto> statusUpdate(@Valid @RequestBody VehicleStatusUpdateRequest request) {
-        return success("Vehicle status updated successfully", vehicleService.updateStatus(request));
+        return success(messages.get("fleet.vehicle.status.success"), vehicleService.updateStatus(request));
     }
 
     private <T> MessageResponseDTO<T> success(String message, T data) {

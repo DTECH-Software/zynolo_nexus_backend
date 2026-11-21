@@ -6,6 +6,7 @@ import com.zynolo_nexus.fleet_service.dto.request.TripDetailViewRequest;
 import com.zynolo_nexus.fleet_service.dto.response.TripDetailDto;
 import com.zynolo_nexus.fleet_service.dto.response.TripDetailReferenceDataDto;
 import com.zynolo_nexus.fleet_service.service.TripDetailService;
+import com.zynolo_nexus.fleet_service.service.support.ResponseMessageHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,17 +24,18 @@ import java.time.LocalDateTime;
 public class TripDetailController {
 
     private final TripDetailService tripDetailService;
+    private final ResponseMessageHelper messages;
 
     @PostMapping("/reference-data")
     public MessageResponseDTO<TripDetailReferenceDataDto> referenceData(
             @Valid @RequestBody TripDetailReferenceDataRequest request
     ) {
-        return success("Reference data FLTD retrieved successfully", tripDetailService.getReferenceData(request));
+        return success(messages.get("fleet.trip.detail.reference.success"), tripDetailService.getReferenceData(request));
     }
 
     @PostMapping("/view")
     public MessageResponseDTO<TripDetailDto> view(@Valid @RequestBody TripDetailViewRequest request) {
-        return success("Trip detail retrieved successfully", tripDetailService.view(request));
+        return success(messages.get("fleet.trip.detail.view.success"), tripDetailService.view(request));
     }
 
     private <T> MessageResponseDTO<T> success(String message, T data) {
