@@ -152,3 +152,16 @@ Notes:
 - Vehicle capacity must be >= request passenger count.
 - `update` reassigns vehicle/driver while trip is still `ASSIGNED`.
 - Tasks: ADD, VIEW, SEARCH, UPDATE.
+
+## FLTS - Today's Schedule Endpoints
+Page code: `FLTS` (section `FLEET_SCHEDULING`)
+
+- `POST /api/v1/fleet/today-schedule/reference-data`
+- `POST /api/v1/fleet/today-schedule/filter-list`
+- `POST /api/v1/fleet/today-schedule/view`
+- `POST /api/v1/fleet/today-schedule/update`
+
+Notes:
+- Lists trips by `scheduledPickupAt` for `search.scheduleDate` (defaults to today).
+- `update` reassigns vehicle/driver while trip is `ASSIGNED`.
+- Tasks: VIEW, SEARCH, UPDATE.
