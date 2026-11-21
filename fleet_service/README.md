@@ -90,3 +90,20 @@ Notes:
 - Duplicate mobile rejected within the same company (normalized: spaces/dashes stripped).
 - `usualVehicleId` must belong to the same company when provided.
 - Availability: `AVAILABLE`, `UNAVAILABLE`; status: `ACTIVE`, `INACTIVE`.
+
+## FLNR - New Request Endpoints
+Page code: `FLNR` (section `FLEET_REQUEST`)
+
+- `POST /api/v1/fleet/request-create/reference-data`
+- `POST /api/v1/fleet/request-create/filter-list`
+- `POST /api/v1/fleet/request-create/add`
+- `POST /api/v1/fleet/request-create/view`
+- `POST /api/v1/fleet/request-create/update`
+- `POST /api/v1/fleet/request-create/submit`
+
+Notes:
+- Creates `fleet_transport_requests` via `ddl-auto=update`.
+- `add` creates status `DRAFT`; `submit` moves `DRAFT` → `SUBMITTED` (visible later in Request Queue).
+- `view` / `update` / `filter-list` / `submit` are scoped to the requester (`username`).
+- Only `DRAFT` can be updated or submitted.
+- Statuses: `DRAFT`, `SUBMITTED`, `CANCELLED`.
