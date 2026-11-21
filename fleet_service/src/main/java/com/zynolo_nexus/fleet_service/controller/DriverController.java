@@ -11,6 +11,7 @@ import com.zynolo_nexus.fleet_service.dto.response.DriverDto;
 import com.zynolo_nexus.fleet_service.dto.response.DriverFilterResultDto;
 import com.zynolo_nexus.fleet_service.dto.response.DriverReferenceDataDto;
 import com.zynolo_nexus.fleet_service.service.DriverService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/fleet/drivers")
+@Tag(name = "FLDM - Driver Master", description = "Page code FLDM (`FLEET_MASTER`)")
 public class DriverController {
 
     private final DriverService driverService;

@@ -11,6 +11,7 @@ import com.zynolo_nexus.fleet_service.dto.response.VehicleDto;
 import com.zynolo_nexus.fleet_service.dto.response.VehicleFilterResultDto;
 import com.zynolo_nexus.fleet_service.dto.response.VehicleReferenceDataDto;
 import com.zynolo_nexus.fleet_service.service.VehicleService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/fleet/vehicles")
+@Tag(name = "FLVM - Vehicle Master", description = "Page code FLVM (`FLEET_MASTER`)")
 public class VehicleController {
 
     private final VehicleService vehicleService;

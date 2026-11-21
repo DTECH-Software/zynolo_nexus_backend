@@ -62,7 +62,7 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
 
         String companyHeaderValue = null;
 
-        if (!isPublic(path)) {
+        if (!isPublic(path) && !isFleetOpenApiBrowseRequest(request, path)) {
             String authHeader = request.getHeader(AUTH_HEADER);
             if (authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -157,6 +157,16 @@ public class GatewaySecurityFilter extends OncePerRequestFilter {
             }
         }
         return false;
+    }
+
+    /** Swagger UI and OpenAPI JSON are GET-only; Try it out POSTs still require JWT. */
+    private boolean isFleetOpenApiBrowseRequest(HttpServletRequest request, String path) {
+        if (path == null || !"GET".equalsIgnoreCase(request.getMethod())) {
+            return false;
+        }
+        return path.equals("/api/v1/fleet/swagger-ui.html")
+                || path.startsWith("/api/v1/fleet/swagger-ui/")
+                || path.startsWith("/api/v1/fleet/v3/api-docs");
     }
 
     private static class HeaderRewriteRequestWrapper extends HttpServletRequestWrapper {

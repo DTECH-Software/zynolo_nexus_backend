@@ -40,6 +40,17 @@ Uses shared MySQL from `application.properties` (same as other domain services).
 ## API base
 - `/api/v1/fleet/**` (routed via `api-gateway`)
 
+## Swagger UI (live contract)
+
+Use **api-gateway** only (same as the UI and mobile apps):
+
+- **Swagger UI:** `http://<gateway-host>:8099/api/v1/fleet/swagger-ui.html`
+- **OpenAPI JSON:** `http://<gateway-host>:8099/api/v1/fleet/v3/api-docs`
+
+Example (dev): `http://45.79.125.85:8099/api/v1/fleet/swagger-ui.html`
+
+Opening the docs is unauthenticated (GET). Click **Authorize**, paste the JWT from login, then **Try it out** — POST calls go through the gateway with the same rules as production (`username` in body must match token; `X-Company-Id` is set from JWT).
+
 ## Planned integrations
 - `auth_service` for auth/authorization (role page-task privileges)
 - `setting_service` for master/reference data integration
