@@ -1,0 +1,27 @@
+@startuml
+title 02c - Auth Verify Reset OTP
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Auth Service :8091" as AUTH
+database "Auth DB" as ADB
+
+FE -> GW: POST /api/v1/auth/verify-reset-otp\n{username, otp}
+GW -> AUTH: Forward (public endpoint)
+
+AUTH -> ADB: Find latest unused OTP token by\nusername + otp
+ADB --> AUTH: token or empty
+
+alt token exists and not expired
+  AUTH -> AUTH: Generate resetToken(UUID)
+  AUTH -> ADB: Mark otpVerified + verifiedAt\nset resetToken + new expiry
+  AUTH --> GW: resetToken
+  GW --> FE: 200 Success
+else invalid or expired OTP
+  AUTH --> GW: 400 invalid
+  GW --> FE: Error
+end
+
+@enduml
+

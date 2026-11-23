@@ -1,0 +1,35 @@
+@startuml
+title Role Module Management (URMM) - Part 1
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Setting Role Access Services" as SRA
+participant "Auth Internal API :8091" as IAUTH
+database "Auth DB" as ADB
+database "Setting DB" as SDB
+
+group Reference Data
+  FE -> GW: POST /api/v1/setting/role-modules/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load active roles + active modules + privileges
+  SET --> GW: reference-data
+  GW --> FE: Response
+end
+
+group View
+  FE -> GW: POST /api/v1/setting/role-modules/view\n{roleCode or roleId}
+  GW -> SET: Forward
+  SET -> SRA: Build internal request
+  SRA -> IAUTH: POST /internal/role-modules/{roleCode}/get
+  IAUTH -> ADB: Read role_module_access by role + company
+  ADB --> IAUTH: role module access list
+  IAUTH --> SRA: modules with canView
+  SRA --> SET: mapped response
+  SET --> GW: view response
+  GW --> FE: Response
+end
+
+@enduml
+

@@ -1,0 +1,29 @@
+@startuml
+title 05b - User Management Add User
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Setting Filters\n(CompanyContext + AuditLog)" as SF
+database "Setting DB" as SDB
+
+FE -> GW: POST /api/v1/setting/users\n(actor username + newUsername + password + profile)
+GW -> SET: Forward
+
+SET -> SF: Audit USER_CREATE
+
+SET -> SDB: Validate username policy
+SET -> SDB: Validate password policy
+SET -> SDB: Validate unique username
+SET -> SDB: Validate unique email
+SET -> SDB: Resolve role + company
+
+SET -> SDB: Insert user (ACTIVE)
+SET -> SDB: Insert default user_company mapping
+
+SET --> GW: created profile (newUsername)
+GW --> FE: Response
+
+@enduml
+

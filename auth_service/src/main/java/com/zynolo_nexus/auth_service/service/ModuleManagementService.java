@@ -13,5 +13,7 @@ public interface ModuleManagementService {
 
     List<ModuleDto> getAllModules();
 
+    List<ModuleDto> getAllModulesAll();
+
     void deactivateModule(String code);
 }

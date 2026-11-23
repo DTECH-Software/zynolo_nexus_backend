@@ -1,8 +1,10 @@
 package com.zynolo_nexus.auth_service.controller.internal;
 
 import com.zynolo_nexus.auth_service.service.SectionManagementService;
+import com.zynolo_nexus.auth_service.config.AuditUserContext;
 import com.zynolo_nexus.contracts.pages.SectionDto;
 import com.zynolo_nexus.contracts.pages.SectionRequest;
+import com.zynolo_nexus.contracts.pages.SectionStatusRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,20 +27,33 @@ public class SectionInternalController {
 
     @PostMapping
     public SectionDto createSection(@RequestBody SectionRequest request) {
-        return sectionManagementService.createSection(request);
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> sectionManagementService.createSection(request));
     }
 
-    @PutMapping("/{code}")
+    @PostMapping("/{code}/update")
     public SectionDto updateSection(@PathVariable String code, @RequestBody SectionRequest request) {
-        return sectionManagementService.updateSection(code, request);
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> sectionManagementService.updateSection(code, request));
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public List<SectionDto> getAllSections(@RequestParam(required = false) String moduleCode) {
         return sectionManagementService.getAllSections(moduleCode);
     }
 
-    @DeleteMapping("/{code}")
+    @PostMapping("/list-all")
+    public List<SectionDto> getAllSectionsAll() {
+        return sectionManagementService.getAllSectionsAll();
+    }
+
+    @PostMapping("/{code}/status")
+    public SectionDto updateStatus(@PathVariable String code, @RequestBody SectionStatusRequest request) {
+        return AuditUserContext.runWith(request != null ? request.getUsername() : null,
+                () -> sectionManagementService.updateSectionStatus(code, request != null ? request.getStatus() : null));
+    }
+
+    @PostMapping("/{code}/deactivate")
     public void deactivateSection(@PathVariable String code) {
         sectionManagementService.deactivateSection(code);
     }

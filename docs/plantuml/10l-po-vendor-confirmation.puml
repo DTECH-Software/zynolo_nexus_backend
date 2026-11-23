@@ -1,0 +1,30 @@
+@startuml
+title 10l - Vendor Confirmation (POVC)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Queue + View
+  FE -> GW: POST /api/v1/po/po-vendor-confirmation/reference-data
+  FE -> GW: POST /api/v1/po/po-vendor-confirmation/filter-list
+  FE -> GW: POST /api/v1/po/po-vendor-confirmation/view
+  GW -> PO: Forward
+  PO -> PDB: Read SENT + vendor-reviewed POs
+  PO -> AUTH: Load POVC privileges
+  PO --> FE: queue + PO details
+end
+
+group Confirm Vendor Response
+  FE -> GW: POST /api/v1/po/po-vendor-confirmation/confirm
+  GW -> PO: Forward
+  PO -> PDB: Save vendorReferenceNo / expectedDeliveryDate / remark
+  PO -> PDB: Save approvedQuantity per PO item
+  PO -> PDB: SENT -> VENDOR_CONFIRMED / PARTIALLY_APPROVED / VENDOR_REJECTED
+  PO --> FE: confirmation result
+end
+
+@enduml

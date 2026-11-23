@@ -1,0 +1,35 @@
+package com.zynolo_nexus.fleet_service.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    public static final String WS_ENDPOINT = "/api/v1/fleet/ws";
+    public static final String TOPIC_PREFIX = "/topic";
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint(WS_ENDPOINT)
+                .setAllowedOriginPatterns("*");
+        registry.addEndpoint(WS_ENDPOINT)
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
+    }
+
+    @Override
+    public void configureMessageBroker(MessageBrokerRegistry registry) {
+        registry.enableSimpleBroker(TOPIC_PREFIX);
+        registry.setApplicationDestinationPrefixes("/app");
+    }
+
+    /** Topic pattern: /topic/trips/{tripId}/location */
+    public static String tripLocationTopic(Long tripId) {
+        return TOPIC_PREFIX + "/trips/" + tripId + "/location";
+    }
+}

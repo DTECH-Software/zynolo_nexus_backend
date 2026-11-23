@@ -1,0 +1,29 @@
+@startuml
+title 10r - PO Tracking (POTR)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Reference + Filter + View
+  FE -> GW: POST /api/v1/po/tracking/reference-data
+  FE -> GW: POST /api/v1/po/tracking/filter-list
+  FE -> GW: POST /api/v1/po/tracking/view
+  GW -> PO: Forward
+  PO -> PDB: Join request + PO + receipt + invoice + match + payment
+  PO -> AUTH: Load POTR privileges
+  PO --> FE: lifecycle inquiry grid + full detail
+end
+
+group Timeline + Export
+  FE -> GW: POST /api/v1/po/tracking/timeline
+  FE -> GW: POST /api/v1/po/tracking/export
+  GW -> PO: Forward
+  PO -> PDB: Build event timeline + export rows
+  PO --> FE: timeline or export payload
+end
+
+@enduml

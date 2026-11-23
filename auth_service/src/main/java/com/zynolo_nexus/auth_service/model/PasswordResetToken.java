@@ -32,6 +32,14 @@ public class PasswordResetToken {
     @Column(nullable = false)
     private LocalDateTime expiresAt;
 
+    @Column(length = 64)
+    private String resetToken;
+
+    @Column(nullable = false)
+    private boolean otpVerified = false;
+
+    private LocalDateTime verifiedAt;
+
     @Column(nullable = false)
     private boolean used = false;
 

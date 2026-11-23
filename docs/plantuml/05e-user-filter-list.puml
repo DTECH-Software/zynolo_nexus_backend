@@ -1,0 +1,23 @@
+@startuml
+title 05e - User Management Filter List
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Setting Filters\n(CompanyContext + AuditLog)" as SF
+database "Setting DB" as SDB
+
+FE -> GW: POST /api/v1/setting/users/filter-list\n(page,size,sort,search)
+GW -> SET: Forward
+
+SET -> SF: Audit USER_FILTER_LIST
+SET -> SDB: Load users
+SET -> SET: Apply search filters\n(newUsername, role, nic, email,\nmobile, firstName, lastName,\nstatus, loginStatus)
+SET -> SET: Apply sorting + pagination
+
+SET --> GW: content[] + totalRecords + totalPages\n(content.username key = newUsername)
+GW --> FE: Response
+
+@enduml
+

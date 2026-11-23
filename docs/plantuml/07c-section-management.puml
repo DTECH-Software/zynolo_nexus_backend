@@ -1,0 +1,57 @@
+@startuml
+title 07c - Section Management (SECM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Auth Internal API :8091" as IAUTH
+database "Setting DB" as SDB
+database "Auth DB" as ADB
+
+group Reference Data
+  FE -> GW: POST /api/v1/setting/sections/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load modules + statuses + privileges
+  SET --> FE: reference-data
+end
+
+group Add
+  FE -> GW: POST /api/v1/setting/sections
+  GW -> SET: Forward
+  SET -> IAUTH: Create section
+  IAUTH -> ADB: Insert section
+  SET -> SDB: Save local section data
+  SET --> FE: created section
+end
+
+group View / Update / Status
+  FE -> GW: POST /api/v1/setting/sections/view
+  GW -> SET: Forward
+  SET -> SDB: Find by id
+  SET --> FE: section details
+
+  FE -> GW: POST /api/v1/setting/sections/update
+  GW -> SET: Forward
+  SET -> IAUTH: Update section
+  IAUTH -> ADB: Update section
+  SET -> SDB: Update local section data
+  SET --> FE: updated section
+
+  FE -> GW: POST /api/v1/setting/sections/status
+  GW -> SET: Forward
+  SET -> IAUTH: Update section status
+  IAUTH -> ADB: Status update
+  SET -> SDB: Status update
+  SET --> FE: updated section
+end
+
+group Filter List
+  FE -> GW: POST /api/v1/setting/sections/filter-list
+  GW -> SET: Forward
+  SET -> SDB: Filter + sort + paginate
+  SET --> FE: content[] + totalRecords
+end
+
+@enduml
+

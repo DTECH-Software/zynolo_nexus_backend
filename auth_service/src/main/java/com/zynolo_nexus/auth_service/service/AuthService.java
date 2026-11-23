@@ -2,11 +2,17 @@ package com.zynolo_nexus.auth_service.service;
 
 import com.zynolo_nexus.auth_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.auth_service.dto.request.ForgotPasswordRequest;
+import com.zynolo_nexus.auth_service.dto.request.ChangePasswordRequest;
 import com.zynolo_nexus.auth_service.dto.request.LoginRequest;
 import com.zynolo_nexus.auth_service.dto.request.LogoutRequest;
 import com.zynolo_nexus.auth_service.dto.request.ResetPasswordRequest;
+import com.zynolo_nexus.auth_service.dto.request.SwitchCompanyRequest;
+import com.zynolo_nexus.auth_service.dto.request.VerifyResetOtpRequest;
 import com.zynolo_nexus.auth_service.dto.response.LoginData;
+import com.zynolo_nexus.auth_service.dto.response.ModuleDashboardSectionDto;
+import com.zynolo_nexus.auth_service.dto.response.ResetTokenResponse;
 import com.zynolo_nexus.auth_service.dto.response.ReferenceDataDto;
+import java.util.Map;
 
 public interface AuthService {
 
@@ -16,7 +22,15 @@ public interface AuthService {
 
     MessageResponseDTO<String> forgotPassword(ForgotPasswordRequest request);
 
+    MessageResponseDTO<ResetTokenResponse> verifyResetOtp(VerifyResetOtpRequest request);
+
     MessageResponseDTO<String> resetPassword(ResetPasswordRequest request);
 
+    MessageResponseDTO<String> changePassword(String username, ChangePasswordRequest request);
+
     MessageResponseDTO<ReferenceDataDto> getReferenceData(String username);
+
+    MessageResponseDTO<Map<String, ModuleDashboardSectionDto>> getModuleDashboard(String username, String moduleCode);
+
+    MessageResponseDTO<LoginData> switchCompany(String username, SwitchCompanyRequest request);
 }

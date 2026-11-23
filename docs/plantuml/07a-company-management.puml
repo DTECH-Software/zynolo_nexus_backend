@@ -1,0 +1,50 @@
+@startuml
+title 07a - Company Management (COMM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+database "Setting DB" as SDB
+
+group Reference Data
+  FE -> GW: POST /api/v1/setting/companies/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load status options + privileges
+  SET --> FE: reference-data
+end
+
+group Add
+  FE -> GW: POST /api/v1/setting/companies
+  GW -> SET: Forward
+  SET -> SDB: Validate unique code
+  SET -> SDB: Insert company
+  SET --> FE: created company
+end
+
+group View / Update / Status
+  FE -> GW: POST /api/v1/setting/companies/view
+  GW -> SET: Forward
+  SET -> SDB: Find by id
+  SET --> FE: company details
+
+  FE -> GW: POST /api/v1/setting/companies/update
+  GW -> SET: Forward
+  SET -> SDB: Update company
+  SET --> FE: updated company
+
+  FE -> GW: POST /api/v1/setting/companies/status
+  GW -> SET: Forward
+  SET -> SDB: Update ACTIVE/INACTIVE
+  SET --> FE: updated company
+end
+
+group Filter List
+  FE -> GW: POST /api/v1/setting/companies/filter-list
+  GW -> SET: Forward
+  SET -> SDB: Filter + sort + paginate
+  SET --> FE: content[] + totalRecords
+end
+
+@enduml
+

@@ -28,7 +28,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Section {
+public class Section extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,6 +46,9 @@ public class Section {
 
     @Column(length = 255)
     private String description;
+
+    @Column(length = 255)
+    private String url;
 
     @Builder.Default
     @Column(nullable = false)

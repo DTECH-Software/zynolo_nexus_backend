@@ -19,12 +19,12 @@ public interface ModuleClient {
     @PostMapping("/api/v1/modules")
     MessageResponseDTO<ModuleDto> create(@RequestBody ModuleRequest request);
 
-    @PutMapping("/api/v1/modules/{code}")
+    @PostMapping("/api/v1/modules/{code}/update")
     MessageResponseDTO<ModuleDto> update(@PathVariable("code") String code, @RequestBody ModuleRequest request);
 
-    @GetMapping("/api/v1/modules")
+    @PostMapping("/api/v1/modules/list")
     MessageResponseDTO<List<ModuleDto>> getAll();
 
-    @DeleteMapping("/api/v1/modules/{code}")
+    @PostMapping("/api/v1/modules/{code}/deactivate")
     MessageResponseDTO<String> deactivate(@PathVariable("code") String code);
 }

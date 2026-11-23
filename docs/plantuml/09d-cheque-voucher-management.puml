@@ -1,0 +1,66 @@
+@startuml
+title 09d - Cheque Voucher Management (CHVC / CHVM / CHAM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Cheque Service :8093" as CHQ
+database "Cheque DB" as CDB
+participant "Auth Service :8091" as AUTH
+
+group Voucher Create (CHVC)
+  FE -> GW: POST /api/v1/cheque/voucher-create
+  GW -> CHQ: Forward
+  CHQ -> CDB: Validate company/customer/bank ACTIVE
+  CHQ -> CDB: Insert cheque_vouchers (status=DRAFT)
+  CHQ -> CDB: Insert cheque_voucher_invoices[]
+  CHQ --> FE: created voucher
+
+  FE -> GW: POST /api/v1/cheque/voucher-create/reference-data
+  GW -> CHQ: Forward
+  CHQ -> CDB: Load active companies/customers/banks
+  CHQ -> AUTH: /internal/role-page-tasks/{roleCode}/get
+  CHQ --> FE: reference-data + privileges
+end
+
+group Voucher Manage (CHVM)
+  FE -> GW: POST /api/v1/cheque/vouchers/view
+  FE -> GW: POST /api/v1/cheque/vouchers/update
+  FE -> GW: POST /api/v1/cheque/vouchers/filter-list
+  GW -> CHQ: Forward
+  CHQ -> CDB: Read/update/filter DRAFT+REJECTED
+  CHQ --> FE: response
+
+  FE -> GW: POST /api/v1/cheque/vouchers/submit-for-approval
+  GW -> CHQ: Forward
+  CHQ -> CDB: DRAFT/REJECTED -> PENDING_APPROVAL
+  CHQ --> FE: submitted
+end
+
+group Voucher Approval (CHAM)
+  FE -> GW: POST /api/v1/cheque/vouchers/approval/filter-list
+  FE -> GW: POST /api/v1/cheque/vouchers/approval/view
+  GW -> CHQ: Forward
+  CHQ -> CDB: Read PENDING_APPROVAL+APPROVED
+  CHQ --> FE: response
+
+  FE -> GW: POST /api/v1/cheque/vouchers/approve
+  GW -> CHQ: Forward
+  CHQ -> CDB: PENDING_APPROVAL -> APPROVED
+  CHQ --> FE: approved
+
+  FE -> GW: POST /api/v1/cheque/vouchers/reject
+  GW -> CHQ: Forward
+  CHQ -> CDB: PENDING_APPROVAL -> REJECTED
+  CHQ --> FE: rejected
+end
+
+group Voucher PDF
+  FE -> GW: POST /api/v1/cheque/vouchers/export-pdf\nor /export-pdf-download
+  GW -> CHQ: Forward
+  CHQ -> CDB: Load voucher + invoices
+  CHQ -> CHQ: Render Jasper voucher PDF
+  CHQ --> FE: base64/doc OR file download
+end
+
+@enduml

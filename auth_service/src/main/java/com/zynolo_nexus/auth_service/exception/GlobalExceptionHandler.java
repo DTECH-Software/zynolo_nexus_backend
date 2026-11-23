@@ -38,6 +38,11 @@ public class GlobalExceptionHandler {
         return buildResponse(ex.getMessage(), HttpStatus.UNAUTHORIZED, null);
     }
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<MessageResponseDTO<Object>> handleConflict(ConflictException ex) {
+        return buildResponse(ex.getMessage(), HttpStatus.CONFLICT, null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<MessageResponseDTO<Object>> handleValidation(MethodArgumentNotValidException ex) {
         String errors = ex.getBindingResult().getFieldErrors()

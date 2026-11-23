@@ -1,0 +1,52 @@
+@startuml
+title 09e - Cheque Print + Reprint Request (CHCP)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Cheque Service :8093" as CHQ
+database "Cheque DB" as CDB
+participant "Auth Service :8091" as AUTH
+
+group Reference + List + View
+  FE -> GW: POST /api/v1/cheque/cheques/reference-data
+  GW -> CHQ: Forward
+  CHQ -> CDB: Load status + print status + companies + customers + banks
+  CHQ -> AUTH: /internal/role-page-tasks/{roleCode}/get
+  CHQ --> FE: reference-data + privileges
+
+  FE -> GW: POST /api/v1/cheque/cheques/filter-list
+  GW -> CHQ: Forward
+  CHQ -> CDB: Filter APPROVED + CHEQUE_CREATED
+  CHQ --> FE: content[] + totalRecords
+
+  FE -> GW: POST /api/v1/cheque/cheques/view
+  GW -> CHQ: Forward
+  CHQ -> CDB: Validate status in APPROVED/CHEQUE_CREATED
+  CHQ --> FE: cheque details
+end
+
+group First Print
+  FE -> GW: POST /api/v1/cheque/cheques/print\nor /print-download
+  GW -> CHQ: Forward
+  CHQ -> CDB: Validate voucher APPROVED/CHEQUE_CREATED
+  CHQ -> CHQ: Render cheque Jasper PDF
+  CHQ -> CDB: printCount+1, printStatus=PRINTED,\nlastPrintedBy/Date
+  CHQ -> CDB: If status=APPROVED then set CHEQUE_CREATED
+  CHQ --> FE: PDF/base64 or download
+end
+
+group Reprint Request
+  FE -> GW: POST /api/v1/cheque/cheques/request-reprint
+  GW -> CHQ: Forward
+  CHQ -> CDB: Require voucher already printed
+  CHQ -> CDB: Insert cheque_reprint_requests\nstatus=REPRINT_PENDING
+  CHQ --> FE: request submitted
+end
+
+note over CHQ,CDB
+If printCount > 0, next print requires
+an approved reprint request.
+end note
+
+@enduml

@@ -4,6 +4,7 @@ import feign.RequestInterceptor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import com.zynolo_nexus.setting_service.context.CompanyContext;
 
 @Configuration
 public class FeignInternalAuthConfig {
@@ -16,6 +17,10 @@ public class FeignInternalAuthConfig {
         return template -> {
             if (internalToken != null) {
                 template.header("X-Internal-Token", internalToken);
+            }
+            Long companyId = CompanyContext.getCompanyId();
+            if (companyId != null) {
+                template.header("X-Company-Id", String.valueOf(companyId));
             }
         };
     }

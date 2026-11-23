@@ -13,7 +13,7 @@ public class CreateUserRequestValidator {
         if (request == null) {
             throw new BadRequestException("user.create.invalid");
         }
-        if (!StringUtils.hasText(request.getUsername())) {
+        if (!StringUtils.hasText(request.getTargetUsername())) {
             throw new BadRequestException("user.create.username.required");
         }
         if (!StringUtils.hasText(request.getPassword())) {

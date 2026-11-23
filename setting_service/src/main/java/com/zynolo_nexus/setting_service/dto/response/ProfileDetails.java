@@ -25,7 +25,6 @@ public class ProfileDetails {
     private String lastModifiedBy;
 
     private Long id;
-    private String username;
     private String newUsername;
 
     private String email;
@@ -52,6 +51,6 @@ public class ProfileDetails {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate passwordExpiredDate;
 
-    private String proImg;
+    private ProfileImageDto profileImg;
     private Boolean reset;
 }

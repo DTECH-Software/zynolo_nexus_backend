@@ -1,0 +1,34 @@
+@startuml
+title 06d - Role Page Task Management (YRTM) - Part 2
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Auth Internal API :8091" as IAUTH
+database "Auth DB" as ADB
+
+group Update By Id
+  FE -> GW: POST /api/v1/setting/role-page-tasks/update-by-id\n{roleCode/roleId,tasks[]}
+  GW -> SET: Forward
+  SET -> IAUTH: POST /internal/role-page-tasks/update
+  IAUTH -> ADB: Upsert role_page_task_access\n(unique role,page_task,company)
+  ADB --> IAUTH: success/error
+  IAUTH --> SET: update result
+  SET --> GW: response
+  GW --> FE: Response
+end
+
+group Check Privilege
+  FE -> GW: POST /api/v1/setting/role-page-tasks/check\n{roleCode/pageCode/taskCode}
+  GW -> SET: Forward
+  SET -> IAUTH: Read canAccess by role + page + task + company
+  IAUTH -> ADB: Query role_page_task_access
+  ADB --> IAUTH: canAccess true/false
+  IAUTH --> SET: check result
+  SET --> GW: check response
+  GW --> FE: Response
+end
+
+@enduml
+

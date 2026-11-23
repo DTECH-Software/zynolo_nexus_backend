@@ -20,7 +20,7 @@ import lombok.Setter;
 @Table(
         name = "role_page_task_access",
         uniqueConstraints = {
-                @UniqueConstraint(name = "UK_role_page_task", columnNames = {"role_id", "page_task_id"})
+                @UniqueConstraint(name = "UK_role_page_task_company", columnNames = {"role_id", "page_task_id", "company_id"})
         }
 )
 @Getter
@@ -41,6 +41,9 @@ public class RolePageTaskAccess {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "page_task_id", nullable = false)
     private PageTask pageTask;
+
+    @Column(name = "company_id", nullable = false)
+    private Long companyId;
 
     @Builder.Default
     @Column(nullable = false)

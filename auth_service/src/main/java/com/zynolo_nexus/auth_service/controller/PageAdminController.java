@@ -31,13 +31,13 @@ public class PageAdminController {
         return wrap(page, "page.create.success");
     }
 
-    @PutMapping("/{code}")
+    @PostMapping("/{code}/update")
     public MessageResponseDTO<PageDto> update(@PathVariable String code, @RequestBody PageRequest request) {
         PageDto page = pageManagementService.updatePage(code, request);
         return wrap(page, "page.update.success");
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public MessageResponseDTO<List<PageDto>> getAll(@RequestParam(required = false) String sectionCode) {
         List<PageDto> pages = pageManagementService.getAllPages(sectionCode);
         return MessageResponseDTO.<List<PageDto>>builder()
@@ -50,7 +50,7 @@ public class PageAdminController {
                 .build();
     }
 
-    @DeleteMapping("/{code}")
+    @PostMapping("/{code}/deactivate")
     public MessageResponseDTO<String> deactivate(@PathVariable String code) {
         pageManagementService.deactivatePage(code);
         return MessageResponseDTO.<String>builder()

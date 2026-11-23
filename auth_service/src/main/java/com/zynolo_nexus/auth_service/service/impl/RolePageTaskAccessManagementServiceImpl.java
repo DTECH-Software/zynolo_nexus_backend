@@ -1,25 +1,30 @@
 package com.zynolo_nexus.auth_service.service.impl;
 
-import com.zynolo_nexus.auth_service.enums.RoleCode;
+import com.zynolo_nexus.auth_service.context.CompanyContext;
 import com.zynolo_nexus.auth_service.exception.BadRequestException;
 import com.zynolo_nexus.auth_service.exception.NotFoundException;
+import com.zynolo_nexus.auth_service.enums.ModuleStatus;
 import com.zynolo_nexus.auth_service.model.Module;
 import com.zynolo_nexus.auth_service.model.Page;
 import com.zynolo_nexus.auth_service.model.PageTask;
 import com.zynolo_nexus.auth_service.model.Role;
 import com.zynolo_nexus.auth_service.model.RolePageTaskAccess;
 import com.zynolo_nexus.auth_service.model.Section;
+import com.zynolo_nexus.auth_service.model.Task;
 import com.zynolo_nexus.auth_service.repository.ModuleRepository;
 import com.zynolo_nexus.auth_service.repository.PageRepository;
 import com.zynolo_nexus.auth_service.repository.PageTaskRepository;
 import com.zynolo_nexus.auth_service.repository.RolePageTaskAccessRepository;
 import com.zynolo_nexus.auth_service.repository.RoleRepository;
 import com.zynolo_nexus.auth_service.repository.SectionRepository;
+import com.zynolo_nexus.auth_service.repository.TaskRepository;
 import com.zynolo_nexus.auth_service.service.RolePageTaskAccessManagementService;
 import com.zynolo_nexus.contracts.pages.RolePageTaskAccessDto;
 import com.zynolo_nexus.contracts.pages.RolePageTaskAccessUpdateRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +33,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAccessManagementService {
 
@@ -36,16 +42,21 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
     private final SectionRepository sectionRepository;
     private final PageRepository pageRepository;
     private final PageTaskRepository pageTaskRepository;
+    private final TaskRepository taskRepository;
     private final RolePageTaskAccessRepository rolePageTaskAccessRepository;
+
+    @Value("${app.default.company-id:1}")
+    private Long defaultCompanyId;
 
     @Override
     public RolePageTaskAccessDto getRolePageTaskAccess(String roleCode) {
         Role role = resolveRole(roleCode);
+        Long companyId = resolveCompanyId();
 
-        List<Module> modules = moduleRepository.findAllByActiveTrueOrderBySortOrderAsc();
+        List<Module> modules = moduleRepository.findAllActiveOrderBySortOrderAsc(ModuleStatus.ACTIVE);
         List<Section> sections = sectionRepository.findAllByActiveTrueOrderBySortOrderAsc();
         List<Page> pages = pageRepository.findAllByActiveTrueOrderBySortOrderAsc();
-        List<PageTask> tasks = pageTaskRepository.findAllByActiveTrueOrderBySortOrderAsc();
+        List<PageTask> tasks = pageTaskRepository.findAllByOrderByIdAsc();
 
         Map<Long, List<Section>> sectionsByModule = new HashMap<>();
         for (Section section : sections) {
@@ -62,7 +73,7 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
             tasksByPage.computeIfAbsent(task.getPage().getId(), k -> new ArrayList<>()).add(task);
         }
 
-        Map<Long, Boolean> accessMap = rolePageTaskAccessRepository.findByRole(role).stream()
+        Map<Long, Boolean> accessMap = rolePageTaskAccessRepository.findByRoleAndCompanyId(role, companyId).stream()
                 .collect(Collectors.toMap(
                         a -> a.getPageTask().getId(),
                         a -> Boolean.TRUE.equals(a.getCanAccess()),
@@ -78,8 +89,8 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
                     List<PageTask> pageTasks = tasksByPage.getOrDefault(page.getId(), List.of());
                     List<RolePageTaskAccessDto.TaskPermissionItem> taskItems = pageTasks.stream()
                             .map(task -> RolePageTaskAccessDto.TaskPermissionItem.builder()
-                                    .taskCode(task.getCode())
-                                    .taskName(task.getName())
+                                    .taskCode(task.getTask().getCode())
+                                    .taskName(task.getTask().getName())
                                     .canAccess(accessMap.getOrDefault(task.getId(), Boolean.FALSE))
                                     .build())
                             .toList();
@@ -110,28 +121,46 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
         }
 
         Role role = resolveRole(request.getRoleCode());
-
-        List<RolePageTaskAccess> existing = rolePageTaskAccessRepository.findByRole(role);
-        rolePageTaskAccessRepository.deleteAll(existing);
+        Long companyId = resolveCompanyId();
 
         if (request.getTasks() != null) {
             for (RolePageTaskAccessUpdateRequest.PageTaskPermission perm : request.getTasks()) {
-                if (!perm.isCanAccess()) {
+                if (perm == null) {
                     continue;
                 }
 
                 Page page = pageRepository.findByCode(perm.getPageCode())
                         .orElseThrow(() -> new NotFoundException("page.notfound"));
 
-                PageTask task = pageTaskRepository.findByPageAndCode(page, perm.getTaskCode())
-                        .orElseThrow(() -> new NotFoundException("page.task.notfound"));
+                Task taskEntity = taskRepository.findByCode(perm.getTaskCode())
+                        .orElseThrow(() -> new NotFoundException("task.notfound"));
 
-                RolePageTaskAccess access = RolePageTaskAccess.builder()
-                        .role(role)
-                        .pageTask(task)
-                        .canAccess(true)
-                        .build();
-                rolePageTaskAccessRepository.save(access);
+                PageTask task = pageTaskRepository.findByPageAndTask(page, taskEntity)
+                        .orElseGet(() -> pageTaskRepository.save(PageTask.builder()
+                                .page(page)
+                                .task(taskEntity)
+                                .build()));
+
+                RolePageTaskAccess existing = rolePageTaskAccessRepository
+                        .findByRoleAndPageTaskAndCompanyId(role, task, companyId)
+                        .orElse(null);
+
+                if (perm.isCanAccess()) {
+                    if (existing == null) {
+                        RolePageTaskAccess access = RolePageTaskAccess.builder()
+                                .role(role)
+                                .pageTask(task)
+                                .companyId(companyId)
+                                .canAccess(true)
+                                .build();
+                        rolePageTaskAccessRepository.save(access);
+                    } else if (!Boolean.TRUE.equals(existing.getCanAccess())) {
+                        existing.setCanAccess(true);
+                        rolePageTaskAccessRepository.save(existing);
+                    }
+                } else if (existing != null) {
+                    rolePageTaskAccessRepository.deleteByRoleAndPageTaskAndCompanyId(role, task, companyId);
+                }
             }
         }
 
@@ -139,12 +168,15 @@ public class RolePageTaskAccessManagementServiceImpl implements RolePageTaskAcce
     }
 
     private Role resolveRole(String roleCode) {
-        try {
-            RoleCode rc = RoleCode.valueOf(roleCode);
-            return roleRepository.findByCode(rc)
-                    .orElseThrow(() -> new NotFoundException("role.page.task.notfound"));
-        } catch (IllegalArgumentException ex) {
+        if (!org.springframework.util.StringUtils.hasText(roleCode)) {
             throw new BadRequestException("role.page.task.invalid");
         }
+        return roleRepository.findByCodeIgnoreCase(roleCode)
+                .orElseThrow(() -> new NotFoundException("role.page.task.notfound"));
+    }
+
+    private Long resolveCompanyId() {
+        Long companyId = CompanyContext.getCompanyId();
+        return companyId != null ? companyId : defaultCompanyId;
     }
 }

@@ -1,0 +1,29 @@
+@startuml
+title 10o - Three-Way Match (POTM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Queue + View
+  FE -> GW: POST /api/v1/po/three-way-match/reference-data
+  FE -> GW: POST /api/v1/po/three-way-match/filter-list
+  FE -> GW: POST /api/v1/po/three-way-match/view
+  GW -> PO: Forward
+  PO -> PDB: Compare PO vs GRN vs invoice lines
+  PO -> AUTH: Load POTM privileges
+  PO --> FE: line-level and overall match view
+end
+
+group Match
+  FE -> GW: POST /api/v1/po/three-way-match/match
+  GW -> PO: Forward
+  PO -> PDB: Save match_status / matchedBy / matchedDate / matchRemark
+  PO -> PDB: Result = MATCHED / PARTIALLY_MATCHED / MISMATCHED
+  PO --> FE: match result
+end
+
+@enduml

@@ -11,6 +11,8 @@ public interface RoleModuleAccessRepository extends JpaRepository<RoleModuleAcce
 
     List<RoleModuleAccess> findByRole(Role role);
 
+    List<RoleModuleAccess> findByRoleAndCompanyId(Role role, Long companyId);
+
     @Transactional
     void deleteByRole(Role role);
 }

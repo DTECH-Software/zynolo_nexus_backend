@@ -1,0 +1,20 @@
+package com.zynolo_nexus.meeting_room_booking_service.service;
+
+import com.zynolo_nexus.meeting_room_booking_service.dto.api.MessageResponseDTO;
+import com.zynolo_nexus.meeting_room_booking_service.dto.request.MeetingSupportServiceActiveStatusRequest;
+import com.zynolo_nexus.meeting_room_booking_service.dto.request.MeetingSupportServiceCreateRequest;
+import com.zynolo_nexus.meeting_room_booking_service.dto.request.MeetingSupportServiceFilterRequest;
+import com.zynolo_nexus.meeting_room_booking_service.dto.request.MeetingSupportServiceReferenceDataRequest;
+import com.zynolo_nexus.meeting_room_booking_service.dto.request.MeetingSupportServiceUpdateRequest;
+import com.zynolo_nexus.meeting_room_booking_service.dto.response.MeetingSupportServiceDto;
+import com.zynolo_nexus.meeting_room_booking_service.dto.response.MeetingSupportServiceFilterResultDto;
+import com.zynolo_nexus.meeting_room_booking_service.dto.response.MeetingSupportServiceReferenceDataDto;
+
+public interface MeetingSupportServiceMasterService {
+    MessageResponseDTO<MeetingSupportServiceDto> create(MeetingSupportServiceCreateRequest request);
+    MessageResponseDTO<MeetingSupportServiceDto> update(MeetingSupportServiceUpdateRequest request);
+    MessageResponseDTO<MeetingSupportServiceDto> view(Long id);
+    MessageResponseDTO<MeetingSupportServiceDto> updateActiveStatus(MeetingSupportServiceActiveStatusRequest request);
+    MessageResponseDTO<MeetingSupportServiceFilterResultDto> filterList(MeetingSupportServiceFilterRequest request);
+    MessageResponseDTO<MeetingSupportServiceReferenceDataDto> referenceData(MeetingSupportServiceReferenceDataRequest request);
+}

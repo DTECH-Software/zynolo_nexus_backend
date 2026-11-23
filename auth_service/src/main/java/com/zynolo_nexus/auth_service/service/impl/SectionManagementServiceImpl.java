@@ -9,14 +9,17 @@ import com.zynolo_nexus.auth_service.repository.SectionRepository;
 import com.zynolo_nexus.auth_service.service.SectionManagementService;
 import com.zynolo_nexus.contracts.pages.SectionDto;
 import com.zynolo_nexus.contracts.pages.SectionRequest;
+import com.zynolo_nexus.contracts.pages.SectionStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class SectionManagementServiceImpl implements SectionManagementService {
 
@@ -38,6 +41,7 @@ public class SectionManagementServiceImpl implements SectionManagementService {
                 .code(request.getCode())
                 .name(request.getName())
                 .description(request.getDescription())
+                .url(request.getUrl())
                 .sortOrder(request.getSortOrder())
                 .active(true)
                 .build();
@@ -59,6 +63,7 @@ public class SectionManagementServiceImpl implements SectionManagementService {
         section.setModule(module);
         section.setName(request.getName());
         section.setDescription(request.getDescription());
+        section.setUrl(request.getUrl());
         section.setSortOrder(request.getSortOrder());
 
         Section saved = sectionRepository.save(section);
@@ -80,6 +85,26 @@ public class SectionManagementServiceImpl implements SectionManagementService {
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SectionDto> getAllSectionsAll() {
+        return sectionRepository.findAllByOrderBySortOrderAsc()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public SectionDto updateSectionStatus(String code, SectionStatus status) {
+        if (status == null) {
+            throw new BadRequestException("section.status.invalid");
+        }
+        Section section = sectionRepository.findByCode(code)
+                .orElseThrow(() -> new NotFoundException("section.notfound"));
+        section.setActive(status == SectionStatus.ACTIVE);
+        Section saved = sectionRepository.save(section);
+        return toDto(saved);
     }
 
     @Override
@@ -106,8 +131,15 @@ public class SectionManagementServiceImpl implements SectionManagementService {
                 .code(section.getCode())
                 .name(section.getName())
                 .description(section.getDescription())
+                .url(section.getUrl())
                 .active(Boolean.TRUE.equals(section.getActive()))
+                .status(Boolean.TRUE.equals(section.getActive()) ? "ACTIVE" : "INACTIVE")
+                .statusDescription(Boolean.TRUE.equals(section.getActive()) ? "Active" : "Inactive")
                 .sortOrder(section.getSortOrder())
+                .createdDate(section.getCreatedDate())
+                .lastModifiedDate(section.getLastModifiedDate())
+                .createdBy(section.getCreatedBy())
+                .lastModifiedBy(section.getLastModifiedBy())
                 .build();
     }
 }

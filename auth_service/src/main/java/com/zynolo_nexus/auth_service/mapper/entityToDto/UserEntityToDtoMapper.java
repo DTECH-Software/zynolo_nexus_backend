@@ -1,8 +1,10 @@
 package com.zynolo_nexus.auth_service.mapper.entityToDto;
 
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import com.zynolo_nexus.auth_service.dto.response.ProfileDetails;
+import com.zynolo_nexus.auth_service.dto.response.ProfileImageDto;
 import com.zynolo_nexus.auth_service.dto.response.UserRoleDto;
 import com.zynolo_nexus.auth_service.model.User;
 
@@ -12,9 +14,21 @@ public class UserEntityToDtoMapper {
     public ProfileDetails toProfileDetails(User user) {
         UserRoleDto roleDto = new UserRoleDto(
                 user.getRole().getId(),
-                user.getRole().getCode().name(),
+                user.getRole().getCode(),
                 user.getRole().getDescription()
         );
+
+        ProfileImageDto profileImage = null;
+        if (StringUtils.hasText(user.getProfileImgDoc())
+                || StringUtils.hasText(user.getProfileImgFileName())
+                || StringUtils.hasText(user.getProfileImgFileType())) {
+            profileImage = ProfileImageDto.builder()
+                    .type(user.getProfileImgFileType())
+                    .fileName(user.getProfileImgFileName())
+                    .fileType(user.getProfileImgFileType())
+                    .doc(user.getProfileImgDoc())
+                    .build();
+        }
 
         return ProfileDetails.builder()
                 .createdDate(user.getCreatedDate() != null ? user.getCreatedDate().toLocalDate() : null)
@@ -26,9 +40,9 @@ public class UserEntityToDtoMapper {
                 .email(user.getEmail())
                 .mobile(user.getMobile())
                 .status(user.getStatus() != null ? user.getStatus().name() : null)
-                .statusDescription("Active") // TODO map properly
+                .statusDescription(statusDescription(user))
                 .loginStatus(user.getLoginStatus() != null ? user.getLoginStatus().name() : null)
-                .loginStatusDescription("Active") // TODO map properly
+                .loginStatusDescription(loginStatusDescription(user))
                 .userRole(roleDto)
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
@@ -37,8 +51,30 @@ public class UserEntityToDtoMapper {
                 .lastLoggedDate(user.getLastLoggedDate())
                 .expectingFirstTimeLogging(user.getExpectingFirstTimeLogging())
                 .passwordExpiredDate(user.getPasswordExpiredDate())
-                .proImg(null)
+                .profileImg(profileImage)
                 .reset(user.getReset())
                 .build();
+    }
+
+    private String statusDescription(User user) {
+        if (user == null || user.getStatus() == null) {
+            return null;
+        }
+        return switch (user.getStatus()) {
+            case ACTIVE -> "Active";
+            case INACTIVE -> "Inactive";
+            case LOCKED -> "Locked";
+        };
+    }
+
+    private String loginStatusDescription(User user) {
+        if (user == null || user.getLoginStatus() == null) {
+            return null;
+        }
+        return switch (user.getLoginStatus()) {
+            case ACTIVE -> "Active";
+            case DISABLED -> "Disabled";
+            case PASSWORD_EXPIRED -> "Password Expired";
+        };
     }
 }

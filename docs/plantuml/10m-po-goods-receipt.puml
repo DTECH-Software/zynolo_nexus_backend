@@ -1,0 +1,31 @@
+@startuml
+title 10m - Goods Receipt (POGR)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Queue + View
+  FE -> GW: POST /api/v1/po/goods-receipt/reference-data
+  FE -> GW: POST /api/v1/po/goods-receipt/filter-list
+  FE -> GW: POST /api/v1/po/goods-receipt/view
+  GW -> PO: Forward
+  PO -> PDB: Read confirmed POs + approved balances
+  PO -> AUTH: Load POGR privileges
+  PO --> FE: queue + balance details
+end
+
+group Receive + History
+  FE -> GW: POST /api/v1/po/goods-receipt/receive
+  FE -> GW: POST /api/v1/po/goods-receipt/history
+  GW -> PO: Forward
+  PO -> PDB: Insert goods_receipts + goods_receipt_items[]
+  PO -> PDB: Validate received <= approved balance
+  PO -> PDB: Update PO -> PARTIALLY_RECEIVED / RECEIVED
+  PO --> FE: receipt result or history
+end
+
+@enduml

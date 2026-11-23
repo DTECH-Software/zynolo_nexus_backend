@@ -9,8 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.zynolo_nexus.auth_service.enums.LoginStatus;
-import com.zynolo_nexus.auth_service.enums.RoleCode;
 import com.zynolo_nexus.auth_service.enums.UserStatus;
+import com.zynolo_nexus.auth_service.enums.RoleStatus;
 import com.zynolo_nexus.auth_service.model.Role;
 import com.zynolo_nexus.auth_service.model.User;
 import com.zynolo_nexus.auth_service.repository.RoleRepository;
@@ -56,8 +56,12 @@ public class SuperAdminSeeder implements CommandLineRunner {
             return;
         }
 
-        Role role = roleRepository.findByCode(RoleCode.SPADMIN)
+        Role role = roleRepository.findByCodeIgnoreCase("SPADMIN")
                 .orElseThrow(() -> new IllegalStateException("SPADMIN role not found. Seed user cannot be created."));
+
+        if (role.getStatus() != null && role.getStatus() != RoleStatus.ACTIVE) {
+            throw new IllegalStateException("SPADMIN role is inactive. Seed user cannot be created.");
+        }
 
         User user = User.builder()
                 .username(username)

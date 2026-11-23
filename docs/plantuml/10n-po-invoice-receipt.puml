@@ -1,0 +1,30 @@
+@startuml
+title 10n - Invoice Receipt (POIR)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Queue + View
+  FE -> GW: POST /api/v1/po/invoice-receipt/reference-data
+  FE -> GW: POST /api/v1/po/invoice-receipt/filter-list
+  FE -> GW: POST /api/v1/po/invoice-receipt/view
+  GW -> PO: Forward
+  PO -> PDB: Read RECEIVED / PARTIALLY_RECEIVED POs
+  PO -> AUTH: Load POIR privileges
+  PO --> FE: queue + invoice balances
+end
+
+group Receive + History
+  FE -> GW: POST /api/v1/po/invoice-receipt/receive
+  FE -> GW: POST /api/v1/po/invoice-receipt/history
+  GW -> PO: Forward
+  PO -> PDB: Insert invoice_receipts + invoice_receipt_items[]
+  PO -> PDB: Validate invoiced <= received balance
+  PO --> FE: invoice result or history
+end
+
+@enduml

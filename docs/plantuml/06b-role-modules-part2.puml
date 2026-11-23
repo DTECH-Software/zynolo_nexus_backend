@@ -1,0 +1,37 @@
+@startuml
+title Role Module Management (URMM) - Part 2
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Setting Role Access Services" as SRA
+participant "Auth Internal API :8091" as IAUTH
+database "Auth DB" as ADB
+
+group Update By Id
+  FE -> GW: POST /api/v1/setting/role-modules/update-by-id\n{roleCode/roleId, modules[]}
+  GW -> SET: Forward
+  SET -> SRA: Validate payload
+  SRA -> IAUTH: POST /internal/role-modules/update
+  IAUTH -> ADB: Upsert role_module_access\n(unique role,module,company)
+  ADB --> IAUTH: update result
+  IAUTH --> SRA: success
+  SRA --> SET: success
+  SET --> GW: response
+  GW --> FE: Response
+end
+
+group Check Privilege
+  FE -> GW: POST /api/v1/setting/role-modules/check\n{roleCode/roleId,moduleCode/moduleId}
+  GW -> SET: Forward
+  SET -> IAUTH: Read role module access
+  IAUTH -> ADB: Query by role + module + company
+  ADB --> IAUTH: canView true/false
+  IAUTH --> SET: check result
+  SET --> GW: check response
+  GW --> FE: Response
+end
+
+@enduml
+

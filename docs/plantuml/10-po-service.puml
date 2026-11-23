@@ -1,0 +1,73 @@
+@startuml
+title 10 - Purchase Order Service Blocks (Overview)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group 1) Master Data (CURM / DEPM / POVM / PRDM / VPMP / CCEM)
+  FE -> GW: POST /api/v1/po/currencies/*
+  FE -> GW: POST /api/v1/po/departments/*
+  FE -> GW: POST /api/v1/po/vendors/*
+  FE -> GW: POST /api/v1/po/products/*
+  FE -> GW: POST /api/v1/po/vendor-products/*
+  FE -> GW: POST /api/v1/po/cost-centers/*
+  GW -> PO: Forward
+  PO -> PDB: CRUD + filter + status
+  PO -> AUTH: /internal/role-page-tasks/{roleCode}/get
+  PO --> FE: response
+end
+
+group 2) Request Flow (PORC / PORM / PORA)
+  FE -> GW: POST /api/v1/po/request-create/*
+  FE -> GW: POST /api/v1/po/request-management/*
+  FE -> GW: POST /api/v1/po/request-approval/*
+  GW -> PO: Forward
+  PO -> PDB: DRAFT -> SUBMITTED -> APPROVED/REJECTED
+  PO --> FE: response
+end
+
+group 3) Purchase Order Flow (POCR / POMG / POVC)
+  FE -> GW: POST /api/v1/po/po-creation/*
+  FE -> GW: POST /api/v1/po/po-management/*
+  FE -> GW: POST /api/v1/po/po-vendor-confirmation/*
+  GW -> PO: Forward
+  PO -> PDB: APPROVED request -> DRAFT PO -> SENT
+  PO -> PDB: SENT -> VENDOR_CONFIRMED/\nPARTIALLY_APPROVED/VENDOR_REJECTED
+  PO --> FE: response
+end
+
+group 4) Downstream Flow (POGR / POIR / POTM / POPY / POCL)
+  FE -> GW: POST /api/v1/po/goods-receipt/*
+  FE -> GW: POST /api/v1/po/invoice-receipt/*
+  FE -> GW: POST /api/v1/po/three-way-match/*
+  FE -> GW: POST /api/v1/po/payment/*
+  FE -> GW: POST /api/v1/po/closure/*
+  GW -> PO: Forward
+  PO -> PDB: Receive goods + invoices
+  PO -> PDB: Match PO vs GRN vs Invoice
+  PO -> PDB: Store cheque payments + close PO
+  PO --> FE: response
+end
+
+group 5) Monitoring (PODB / POTR)
+  FE -> GW: POST /api/v1/po/dashboard/*
+  FE -> GW: POST /api/v1/po/tracking/*
+  GW -> PO: Forward
+  PO -> PDB: Aggregate lifecycle data
+  PO --> FE: dashboard + inquiry views
+end
+
+note over FE,PO
+Detailed page diagrams:
+- 10a-10f: master data
+- 10g-10i: request flow
+- 10j-10l: PO flow
+- 10m-10p: fulfillment + finance
+- 10q-10s: monitoring + closure
+end note
+
+@enduml

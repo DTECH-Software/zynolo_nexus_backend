@@ -1,5 +1,6 @@
 package com.zynolo_nexus.auth_service.repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,4 +16,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     void deleteByToken(String token);
 
     void deleteByUsername(String username);
+
+    boolean existsByUsernameAndSessionIdAndExpiresAtAfter(String username, String sessionId, LocalDateTime now);
 }

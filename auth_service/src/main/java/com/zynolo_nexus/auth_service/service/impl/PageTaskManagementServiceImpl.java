@@ -4,24 +4,31 @@ import com.zynolo_nexus.auth_service.exception.BadRequestException;
 import com.zynolo_nexus.auth_service.exception.NotFoundException;
 import com.zynolo_nexus.auth_service.model.Page;
 import com.zynolo_nexus.auth_service.model.PageTask;
+import com.zynolo_nexus.auth_service.model.Task;
 import com.zynolo_nexus.auth_service.repository.PageRepository;
 import com.zynolo_nexus.auth_service.repository.PageTaskRepository;
+import com.zynolo_nexus.auth_service.repository.RolePageTaskAccessRepository;
+import com.zynolo_nexus.auth_service.repository.TaskRepository;
 import com.zynolo_nexus.auth_service.service.PageTaskManagementService;
 import com.zynolo_nexus.contracts.pages.PageTaskDto;
 import com.zynolo_nexus.contracts.pages.PageTaskRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class PageTaskManagementServiceImpl implements PageTaskManagementService {
 
     private final PageRepository pageRepository;
     private final PageTaskRepository pageTaskRepository;
+    private final TaskRepository taskRepository;
+    private final RolePageTaskAccessRepository rolePageTaskAccessRepository;
 
     @Override
     public PageTaskDto createTask(PageTaskRequest request) {
@@ -30,44 +37,42 @@ public class PageTaskManagementServiceImpl implements PageTaskManagementService 
         Page page = pageRepository.findByCode(request.getPageCode())
                 .orElseThrow(() -> new NotFoundException("page.notfound"));
 
-        pageTaskRepository.findByPageAndCode(page, request.getCode())
+        Task taskEntity = taskRepository.findByCode(request.getCode())
+                .orElseThrow(() -> new NotFoundException("task.notfound"));
+
+        pageTaskRepository.findByPageAndTask(page, taskEntity)
                 .ifPresent(t -> { throw new BadRequestException("page.task.code.exists"); });
 
-        PageTask task = PageTask.builder()
+        PageTask pageTask = PageTask.builder()
                 .page(page)
-                .code(request.getCode())
-                .name(request.getName())
-                .description(request.getDescription())
-                .sortOrder(request.getSortOrder())
-                .active(true)
+                .task(taskEntity)
                 .build();
 
-        PageTask saved = pageTaskRepository.save(task);
+        PageTask saved = pageTaskRepository.save(pageTask);
         return toDto(saved);
     }
 
     @Override
     public PageTaskDto updateTask(String pageCode, String taskCode, PageTaskRequest request) {
-        validate(request);
-        if (StringUtils.hasText(request.getPageCode()) && !pageCode.equals(request.getPageCode())) {
+        if (!StringUtils.hasText(pageCode) || !StringUtils.hasText(taskCode)) {
             throw new BadRequestException("page.task.invalid");
         }
-        if (StringUtils.hasText(request.getCode()) && !taskCode.equals(request.getCode())) {
-            throw new BadRequestException("page.task.invalid");
+        if (request != null) {
+            if (StringUtils.hasText(request.getPageCode()) && !pageCode.equals(request.getPageCode())) {
+                throw new BadRequestException("page.task.invalid");
+            }
+            if (StringUtils.hasText(request.getCode()) && !taskCode.equals(request.getCode())) {
+                throw new BadRequestException("page.task.invalid");
+            }
         }
 
         Page page = pageRepository.findByCode(pageCode)
                 .orElseThrow(() -> new NotFoundException("page.notfound"));
 
-        PageTask task = pageTaskRepository.findByPageAndCode(page, taskCode)
+        PageTask task = pageTaskRepository.findByPageAndTask_Code(page, taskCode)
                 .orElseThrow(() -> new NotFoundException("page.task.notfound"));
 
-        task.setName(request.getName());
-        task.setDescription(request.getDescription());
-        task.setSortOrder(request.getSortOrder());
-
-        PageTask saved = pageTaskRepository.save(task);
-        return toDto(saved);
+        return toDto(task);
     }
 
     @Override
@@ -75,13 +80,13 @@ public class PageTaskManagementServiceImpl implements PageTaskManagementService 
         if (StringUtils.hasText(pageCode)) {
             Page page = pageRepository.findByCode(pageCode)
                     .orElseThrow(() -> new NotFoundException("page.notfound"));
-            return pageTaskRepository.findAllByPageAndActiveTrueOrderBySortOrderAsc(page)
+            return pageTaskRepository.findAllByPageOrderByIdAsc(page)
                     .stream()
                     .map(this::toDto)
                     .collect(Collectors.toList());
         }
 
-        return pageTaskRepository.findAllByActiveTrueOrderBySortOrderAsc()
+        return pageTaskRepository.findAllByOrderByIdAsc()
                 .stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
@@ -91,17 +96,16 @@ public class PageTaskManagementServiceImpl implements PageTaskManagementService 
     public void deactivateTask(String pageCode, String taskCode) {
         Page page = pageRepository.findByCode(pageCode)
                 .orElseThrow(() -> new NotFoundException("page.notfound"));
-        PageTask task = pageTaskRepository.findByPageAndCode(page, taskCode)
+        PageTask task = pageTaskRepository.findByPageAndTask_Code(page, taskCode)
                 .orElseThrow(() -> new NotFoundException("page.task.notfound"));
-        task.setActive(false);
-        pageTaskRepository.save(task);
+        rolePageTaskAccessRepository.deleteByPageTask(task);
+        pageTaskRepository.delete(task);
     }
 
     private void validate(PageTaskRequest request) {
         if (request == null
                 || !StringUtils.hasText(request.getPageCode())
-                || !StringUtils.hasText(request.getCode())
-                || !StringUtils.hasText(request.getName())) {
+                || !StringUtils.hasText(request.getCode())) {
             throw new BadRequestException("page.task.invalid");
         }
     }
@@ -110,11 +114,9 @@ public class PageTaskManagementServiceImpl implements PageTaskManagementService 
         return PageTaskDto.builder()
                 .id(task.getId())
                 .pageCode(task.getPage().getCode())
-                .code(task.getCode())
-                .name(task.getName())
-                .description(task.getDescription())
-                .active(Boolean.TRUE.equals(task.getActive()))
-                .sortOrder(task.getSortOrder())
+                .code(task.getTask().getCode())
+                .name(task.getTask().getName())
+                .description(task.getTask().getDescription())
                 .build();
     }
 }

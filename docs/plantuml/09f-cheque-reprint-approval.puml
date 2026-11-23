@@ -1,0 +1,48 @@
+@startuml
+title 09f - Cheque Reprint Approval (CHAP)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Cheque Service :8093" as CHQ
+database "Cheque DB" as CDB
+participant "Auth Service :8091" as AUTH
+
+group Reference Data
+  FE -> GW: POST /api/v1/cheque/cheque-approvals/reference-data
+  GW -> CHQ: Forward
+  CHQ -> CDB: Load REPRINT statuses + companies + banks + customers
+  CHQ -> AUTH: /internal/role-page-tasks/{roleCode}/get
+  CHQ --> FE: reference-data + privileges
+end
+
+group Filter + View
+  FE -> GW: POST /api/v1/cheque/cheque-approvals/filter-list
+  GW -> CHQ: Forward
+  CHQ -> CDB: Filter cheque_reprint_requests + voucher joins
+  CHQ --> FE: content[] + totalRecords
+
+  FE -> GW: POST /api/v1/cheque/cheque-approvals/view
+  GW -> CHQ: Forward
+  CHQ -> CDB: Load request by id
+  CHQ --> FE: details
+end
+
+group Decision
+  FE -> GW: POST /api/v1/cheque/cheque-approvals/approve
+  GW -> CHQ: Forward
+  CHQ -> CDB: REPRINT_PENDING -> REPRINT_APPROVED
+  CHQ --> FE: approved
+
+  FE -> GW: POST /api/v1/cheque/cheque-approvals/reject
+  GW -> CHQ: Forward
+  CHQ -> CDB: REPRINT_PENDING -> REPRINT_REJECTED
+  CHQ --> FE: rejected
+end
+
+note over CHQ,CDB
+Approved reprint is consumed on next print call.
+Rejected request keeps voucher printable state unchanged.
+end note
+
+@enduml

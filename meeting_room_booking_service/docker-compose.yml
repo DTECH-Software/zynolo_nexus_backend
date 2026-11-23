@@ -1,0 +1,8 @@
+services:
+  meeting-room-booking-service:
+    build: .
+    container_name: meeting-room-booking-service
+    ports:
+      - "8095:8095"
+    environment:
+      SPRING_PROFILES_ACTIVE: default

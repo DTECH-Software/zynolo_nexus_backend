@@ -12,6 +12,7 @@ public class LoginRequest {
     private String ip;
     private String message;
     private String userAgent;
+    private String channel;
     private String username;
     private String password;
 }

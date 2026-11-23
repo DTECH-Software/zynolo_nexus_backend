@@ -1,0 +1,34 @@
+@startuml
+title 05a - User Management Reference Data
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Setting Filters\n(CompanyContext + AuditLog)" as SF
+participant "Auth Internal Client" as AIC
+database "Setting DB" as SDB
+database "Auth DB" as ADB
+
+FE -> GW: POST /api/v1/setting/users/reference-data
+GW -> SET: Forward
+
+SET -> SF: Apply company context + audit event
+
+SET -> SDB: Load active companies
+SET -> SDB: Load active roles
+SET -> SDB: Load user status options
+SET -> SDB: Load login status options
+SET -> SDB: Load usernamePolicy
+SET -> SDB: Load passwordPolicy
+
+SET -> AIC: Get page privileges for actor role (USER)
+AIC -> ADB: Read role-page-task access
+ADB --> AIC: privileges
+AIC --> SET: privileges
+
+SET --> GW: reference-data\n(companies, roles, statuses,\nusernamePolicy, passwordPolicy, privileges)
+GW --> FE: Response
+
+@enduml
+

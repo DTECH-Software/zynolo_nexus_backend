@@ -1,0 +1,15 @@
+[Unit]
+Description=Zynolo Nexus Auth Service
+After=network.target
+
+[Service]
+User=dtech
+WorkingDirectory=/opt/zynolo-nexus/auth_service
+ExecStart=/usr/bin/java -jar /opt/zynolo-nexus/auth_service/auth_service.jar
+SuccessExitStatus=143
+Restart=always
+RestartSec=5
+Environment=SPRING_PROFILES_ACTIVE=dev
+
+[Install]
+WantedBy=multi-user.target

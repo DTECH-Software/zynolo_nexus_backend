@@ -13,4 +13,6 @@ public class LoginData {
 
     private ProfileDetails profileDetails;
     private TokenDetails tokenDetails;
+    private Long defaultCompanyId;
+    private java.util.List<CompanySummaryDto> companies;
 }

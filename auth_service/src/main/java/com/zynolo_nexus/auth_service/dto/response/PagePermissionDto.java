@@ -15,5 +15,6 @@ public class PagePermissionDto {
 
     private String code;
     private String name;
+    private String url;
     private List<PageTaskPermissionDto> tasks;
 }

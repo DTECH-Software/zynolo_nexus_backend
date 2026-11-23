@@ -1,0 +1,30 @@
+@startuml
+title 10j - Purchase Order Creation (POCR)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Reference + Approved Requests
+  FE -> GW: POST /api/v1/po/po-creation/reference-data
+  FE -> GW: POST /api/v1/po/po-creation/approved-requests
+  FE -> GW: POST /api/v1/po/po-creation/request-view
+  GW -> PO: Forward
+  PO -> PDB: Load approved requests not yet converted to PO
+  PO -> AUTH: Load POCR privileges
+  PO --> FE: source request list + details
+end
+
+group Create PO
+  FE -> GW: POST /api/v1/po/po-creation
+  GW -> PO: Forward
+  PO -> PDB: Generate po_no
+  PO -> PDB: Insert purchase_orders status=DRAFT
+  PO -> PDB: Copy po_request_items[] -> purchase_order_items[]
+  PO --> FE: created PO
+end
+
+@enduml

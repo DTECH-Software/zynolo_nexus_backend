@@ -1,0 +1,47 @@
+@startuml
+title 09c - Cheque Bank Management (CHBM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Cheque Service :8093" as CHQ
+database "Cheque DB" as CDB
+participant "Auth Service :8091" as AUTH
+
+group Create / Update / View / Status
+  FE -> GW: POST /api/v1/cheque/banks
+  GW -> CHQ: Forward
+  CHQ -> CDB: Insert bank
+  CHQ --> FE: created
+
+  FE -> GW: POST /api/v1/cheque/banks/update
+  GW -> CHQ: Forward
+  CHQ -> CDB: Update by id
+  CHQ --> FE: updated
+
+  FE -> GW: POST /api/v1/cheque/banks/view
+  GW -> CHQ: Forward
+  CHQ -> CDB: Find by id
+  CHQ --> FE: details
+
+  FE -> GW: POST /api/v1/cheque/banks/status
+  GW -> CHQ: Forward
+  CHQ -> CDB: ACTIVE/INACTIVE by id
+  CHQ --> FE: updated
+end
+
+group Filter + Reference Data
+  FE -> GW: POST /api/v1/cheque/banks/filter-list
+  GW -> CHQ: Forward
+  CHQ -> CDB: Filter + sort + paginate
+  CHQ --> FE: content[] + totalRecords
+
+  FE -> GW: POST /api/v1/cheque/banks/reference-data
+  GW -> CHQ: Forward
+  CHQ -> CDB: Resolve user + role by username
+  CHQ -> AUTH: /internal/role-page-tasks/{roleCode}/get
+  CHQ -> CHQ: Build privileges + default statuses
+  CHQ --> FE: reference-data
+end
+
+@enduml

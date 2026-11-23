@@ -1,0 +1,57 @@
+@startuml
+title 07f - Role and Policy Management (USRM + PSPM + UNPM)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+database "Setting DB" as SDB
+
+group User Role Management (USRM)
+  FE -> GW: POST /api/v1/setting/roles/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load statuses + privileges
+  SET --> FE: reference-data
+
+  FE -> GW: POST /api/v1/setting/roles\n(create/update/view/status/delete/filter-list)
+  GW -> SET: Forward
+  SET -> SDB: CRUD + filter roles
+  SET --> FE: role response
+end
+
+group Password Policy (PSPM)
+  FE -> GW: POST /api/v1/setting/password-policy/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load privileges
+  SET --> FE: reference-data
+
+  FE -> GW: POST /api/v1/setting/password-policy/view
+  GW -> SET: Forward
+  SET -> SDB: Read single policy row
+  SET --> FE: policy
+
+  FE -> GW: POST /api/v1/setting/password-policy/update or /reset
+  GW -> SET: Forward
+  SET -> SDB: Update/reset policy row
+  SET --> FE: policy
+end
+
+group Username Policy (UNPM)
+  FE -> GW: POST /api/v1/setting/username-policy/reference-data
+  GW -> SET: Forward
+  SET -> SDB: Load privileges
+  SET --> FE: reference-data
+
+  FE -> GW: POST /api/v1/setting/username-policy/view
+  GW -> SET: Forward
+  SET -> SDB: Read single policy row
+  SET --> FE: policy
+
+  FE -> GW: POST /api/v1/setting/username-policy/update or /reset
+  GW -> SET: Forward
+  SET -> SDB: Update/reset policy row
+  SET --> FE: policy
+end
+
+@enduml
+

@@ -1,0 +1,30 @@
+@startuml
+title 10p - PO Payment (POPY)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Queue + View
+  FE -> GW: POST /api/v1/po/payment/reference-data
+  FE -> GW: POST /api/v1/po/payment/filter-list
+  FE -> GW: POST /api/v1/po/payment/view
+  GW -> PO: Forward
+  PO -> PDB: Read MATCHED / PARTIALLY_MATCHED POs with invoices
+  PO -> AUTH: Load POPY privileges
+  PO --> FE: payment queue + summary
+end
+
+group Pay + History
+  FE -> GW: POST /api/v1/po/payment/pay
+  FE -> GW: POST /api/v1/po/payment/history
+  GW -> PO: Forward
+  PO -> PDB: Insert purchase_order_payments
+  PO -> PDB: Save chequeNo / paymentReferenceNo / paidAmount / paymentDate
+  PO --> FE: payment result or history
+end
+
+@enduml

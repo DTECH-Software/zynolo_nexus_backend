@@ -20,7 +20,7 @@ import lombok.Setter;
 @Table(
         name = "page_tasks",
         uniqueConstraints = {
-                @UniqueConstraint(name = "UK_page_task_code", columnNames = {"page_id", "code"})
+                @UniqueConstraint(name = "UK_page_task", columnNames = {"page_id", "task_id"})
         }
 )
 @Getter
@@ -38,19 +38,7 @@ public class PageTask {
     @JoinColumn(name = "page_id", nullable = false)
     private Page page;
 
-    @Column(nullable = false, length = 50)
-    private String code;
-
-    @Column(nullable = false, length = 100)
-    private String name;
-
-    @Column(length = 255)
-    private String description;
-
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean active = true;
-
-    @Column(name = "sort_order")
-    private Integer sortOrder;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "task_id", nullable = false)
+    private Task task;
 }

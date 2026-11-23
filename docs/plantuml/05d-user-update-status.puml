@@ -1,0 +1,44 @@
+@startuml
+title 05d - User Management Update and Status
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "Setting Service :8092" as SET
+participant "Setting Filters\n(CompanyContext + AuditLog)" as SF
+database "Setting DB" as SDB
+
+group Update User
+  FE -> GW: POST /api/v1/setting/users/update\n{id, profile fields, role/company}
+  GW -> SET: Forward
+
+  SET -> SF: Audit USER_UPDATE
+  SET -> SDB: Find user by id
+  SET -> SDB: Validate email uniqueness (if changed)
+  SET -> SDB: Resolve role/company (if provided)
+  SET -> SDB: Update user fields
+  SET -> SDB: Sync default user_company mapping
+
+  SET --> GW: updated profile
+  GW --> FE: Response
+end
+
+group Update Status
+  FE -> GW: POST /api/v1/setting/users/status\n{id, status}
+  GW -> SET: Forward
+
+  SET -> SF: Audit USER_STATUS
+  SET -> SDB: Find user by id
+  SET -> SDB: Update status
+  alt status = INACTIVE
+    SET -> SDB: Set loginStatus = DISABLED
+  else status = ACTIVE and loginStatus was DISABLED
+    SET -> SDB: Set loginStatus = ACTIVE
+  end
+
+  SET --> GW: updated profile
+  GW --> FE: Response
+end
+
+@enduml
+

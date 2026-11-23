@@ -1,0 +1,29 @@
+@startuml
+title 10s - PO Closure (POCL)
+autonumber
+
+actor "Frontend / Postman" as FE
+participant "Gateway :8099" as GW
+participant "PO Service :8094" as PO
+database "PO DB" as PDB
+participant "Auth Service :8091" as AUTH
+
+group Queue + View
+  FE -> GW: POST /api/v1/po/closure/reference-data
+  FE -> GW: POST /api/v1/po/closure/filter-list
+  FE -> GW: POST /api/v1/po/closure/view
+  GW -> PO: Forward
+  PO -> PDB: Read closable and closed POs
+  PO -> AUTH: Load POCL privileges
+  PO --> FE: closure queue + validation
+end
+
+group Close
+  FE -> GW: POST /api/v1/po/closure/close
+  GW -> PO: Forward
+  PO -> PDB: Validate fully received + invoiced + matched + paid
+  PO -> PDB: Update status=CLOSED and save close audit fields
+  PO --> FE: closed PO
+end
+
+@enduml

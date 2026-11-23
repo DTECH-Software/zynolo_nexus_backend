@@ -4,6 +4,7 @@ import com.zynolo_nexus.auth_service.dto.api.MessageResponseDTO;
 import com.zynolo_nexus.auth_service.service.SectionManagementService;
 import com.zynolo_nexus.contracts.pages.SectionDto;
 import com.zynolo_nexus.contracts.pages.SectionRequest;
+import com.zynolo_nexus.contracts.pages.SectionStatusRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,13 +32,13 @@ public class SectionAdminController {
         return wrap(section, "section.create.success");
     }
 
-    @PutMapping("/{code}")
+    @PostMapping("/{code}/update")
     public MessageResponseDTO<SectionDto> update(@PathVariable String code, @RequestBody SectionRequest request) {
         SectionDto section = sectionManagementService.updateSection(code, request);
         return wrap(section, "section.update.success");
     }
 
-    @GetMapping
+    @PostMapping("/list")
     public MessageResponseDTO<List<SectionDto>> getAll(@RequestParam(required = false) String moduleCode) {
         List<SectionDto> sections = sectionManagementService.getAllSections(moduleCode);
         return MessageResponseDTO.<List<SectionDto>>builder()
@@ -50,7 +51,27 @@ public class SectionAdminController {
                 .build();
     }
 
-    @DeleteMapping("/{code}")
+    @PostMapping("/list-all")
+    public MessageResponseDTO<List<SectionDto>> getAllSectionsAll() {
+        List<SectionDto> sections = sectionManagementService.getAllSectionsAll();
+        return MessageResponseDTO.<List<SectionDto>>builder()
+                .success(true)
+                .message("section.fetch.success")
+                .data(sections)
+                .errors(null)
+                .errorCode(0)
+                .responseTime(LocalDateTime.now())
+                .build();
+    }
+
+    @PostMapping("/{code}/status")
+    public MessageResponseDTO<SectionDto> updateStatus(@PathVariable String code,
+                                                       @RequestBody SectionStatusRequest request) {
+        SectionDto section = sectionManagementService.updateSectionStatus(code, request != null ? request.getStatus() : null);
+        return wrap(section, "section.status.updated");
+    }
+
+    @PostMapping("/{code}/deactivate")
     public MessageResponseDTO<String> deactivate(@PathVariable String code) {
         sectionManagementService.deactivateSection(code);
         return MessageResponseDTO.<String>builder()

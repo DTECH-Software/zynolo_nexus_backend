@@ -16,6 +16,4 @@ public class PageTaskDto {
     private String code;
     private String name;
     private String description;
-    private boolean active;
-    private Integer sortOrder;
 }
